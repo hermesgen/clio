@@ -48,12 +48,10 @@ func NewApp(name, version string, fs embed.FS, opts ...Option) *App {
 
 	if core.Log() == nil {
 		core.SetLog(NewLogger("info"))
-		// opts = append(opts, WithLog(core.Log())) // REMOVED - migrating to XParams
 	}
 
 	if core.Cfg() == nil {
 		core.SetCfg(NewConfig())
-		// opts = append(opts, WithCfg(core.Cfg())) // REMOVED - migrating to XParams
 	}
 
 	app := &App{

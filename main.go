@@ -29,7 +29,6 @@ func main() {
 	log := am.NewLogger("info")
 	cfg := am.LoadCfg(namespace, am.Flags)
 	
-	// opts := am.DefOpts(log, cfg) // REMOVED - migrating to XParams
 	
 	// XParams for components that only need log + config
 	xparams := am.XParams{Cfg: cfg, Log: log}

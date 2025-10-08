@@ -119,8 +119,6 @@ func (c *BaseCore) Stop(ctx context.Context) error {
 // Option defines a type for setting optional parameters in BaseCore.
 type Option func(Core)
 
-// WithLog and WithCfg REMOVED - Use XParams instead
-// This forces migration to the XParams pattern
 
 // WithConfigValue sets a specific key-value pair in the Config.
 func WithConfigValue(key string, value interface{}) Option {
