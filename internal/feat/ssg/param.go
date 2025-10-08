@@ -17,6 +17,7 @@ type Param struct {
 	ID      uuid.UUID `json:"id" db:"id"`
 	mType   string
 	ShortID string `json:"-" db:"short_id"` // Note: short_id was removed from DB migration, but kept here for consistency with other models' Go struct definitions.
+	ref     string `json:"-"`
 
 	Name        string `json:"name" db:"name"`
 	Description string `json:"description" db:"description"`
@@ -145,4 +146,12 @@ func (p *Param) IsZero() bool {
 // Slug returns a slug for the param.
 func (p *Param) Slug() string {
 	return hm.Normalize(p.Name) + "-" + p.GetShortID()
+}
+
+func (p *Param) Ref() string {
+	return p.ref
+}
+
+func (p *Param) SetRef(ref string) {
+	p.ref = ref
 }

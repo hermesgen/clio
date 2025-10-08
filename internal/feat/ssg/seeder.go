@@ -32,9 +32,9 @@ type SeedFile struct {
 	Params      []map[string]any `json:"params"`
 }
 
-func NewSeeder(assetsFS embed.FS, engine string, repo Repo) *Seeder {
+func NewSeeder(assetsFS embed.FS, engine string, repo Repo, params hm.XParams) *Seeder {
 	return &Seeder{
-		JSONSeeder: hm.NewJSONSeeder(ssgFeat, assetsFS, engine),
+		JSONSeeder: hm.NewJSONSeeder(ssgFeat, assetsFS, engine, params),
 		repo:       repo,
 	}
 }

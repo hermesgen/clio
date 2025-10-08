@@ -46,7 +46,7 @@ type ImageManager struct {
 
 // NewImageManagerWithParams creates an ImageManager with XParams.
 func NewImageManager(params hm.XParams) *ImageManager {
-	core := hm.NewCoreWithParams("image-manager", params)
+	core := hm.NewCore("image-manager", params)
 	imagesPath := core.Cfg().StrValOrDef(hm.Key.SSGImagesPath, "_workspace/documents/assets/images")
 	return &ImageManager{
 		Core:          core,

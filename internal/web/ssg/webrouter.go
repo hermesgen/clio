@@ -4,8 +4,8 @@ import (
 	hm "github.com/hermesgen/hm"
 )
 
-func NewWebRouter(handler *WebHandler, mw []hm.Middleware, opts ...hm.Option) *hm.Router {
-	core := hm.NewWebRouter("app-ssg-web-router", opts...)
+func NewWebRouter(handler *WebHandler, mw []hm.Middleware, params hm.XParams) *hm.Router {
+	core := hm.NewWebRouter("app-ssg-web-router", params)
 	core.SetMiddlewares(mw)
 
 	// Content routes

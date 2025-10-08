@@ -14,7 +14,7 @@ type App struct {
 }
 
 func NewApp(name, version string, fs embed.FS, params hm.XParams) *App {
-	core := hm.NewAppWithParams(name, version, fs, params)
+	core := hm.NewApp(name, version, fs, params)
 	app := &App{
 		App: core,
 	}

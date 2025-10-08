@@ -24,9 +24,9 @@ type APIHandler struct {
 	svc Service
 }
 
-func NewAPIHandler(name string, service Service, options ...hm.Option) *APIHandler {
+func NewAPIHandler(name string, service Service, params hm.XParams) *APIHandler {
 	return &APIHandler{
-		APIHandler: hm.NewAPIHandler(name, options...),
+		APIHandler: hm.NewAPIHandler(name, params),
 		svc:        service,
 	}
 }

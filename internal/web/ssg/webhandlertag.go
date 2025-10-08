@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"time"
 
 	hm "github.com/hermesgen/hm"
 	feat "github.com/hermesgen/clio/internal/feat/ssg"
@@ -107,7 +108,7 @@ func (h *WebHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 
 	if hm.IsHTMXRequest(r) {
 		w.Header().Set("Content-Type", "text/html")
-		_, _ = w.Write([]byte("<div id=\"save-status\" data-timestamp=\"" + hm.Now().Format(hm.TimeFormat) + "\"></div>"))
+		_, _ = w.Write([]byte("<div id=\"save-status\" data-timestamp=\"" + time.Now().Format(hm.TimeFormat) + "\"></div>"))
 		return
 	}
 

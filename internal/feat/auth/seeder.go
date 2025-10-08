@@ -19,9 +19,9 @@ type SeedData struct {
 	Users []User `json:"users"`
 }
 
-func NewSeeder(assetsFS embed.FS, engine string, repo Repo, opts ...hm.Option) *Seeder {
+func NewSeeder(assetsFS embed.FS, engine string, repo Repo, params hm.XParams) *Seeder {
 	return &Seeder{
-		JSONSeeder: hm.NewJSONSeeder("auth", assetsFS, engine, opts...),
+		JSONSeeder: hm.NewJSONSeeder("auth", assetsFS, engine, params),
 		repo:       repo,
 	}
 }

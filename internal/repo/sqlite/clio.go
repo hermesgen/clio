@@ -17,9 +17,9 @@ type ClioRepo struct {
 	db *sqlx.DB
 }
 
-func NewClioRepo(qm *hm.QueryManager, opts ...hm.Option) *ClioRepo {
+func NewClioRepo(qm *hm.QueryManager, params hm.XParams) *ClioRepo {
 	return &ClioRepo{
-		BaseRepo: hm.NewRepo("sqlite-auth-repo", qm, opts...),
+		BaseRepo: hm.NewRepo("sqlite-auth-repo", qm, params),
 	}
 }
 

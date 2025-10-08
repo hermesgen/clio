@@ -13,7 +13,7 @@ type ParamManager struct {
 
 // NewParamManagerWithParams creates a ParamManager with XParams.
 func NewParamManager(repo Repo, params hm.XParams) *ParamManager {
-	core := hm.NewCoreWithParams("param-manager", params)
+	core := hm.NewCore("param-manager", params)
 	return &ParamManager{
 		Core: core,
 		repo: repo,

@@ -49,7 +49,7 @@ type publisher struct {
 // NewPublisherWithParams creates a Publisher with XParams.
 func NewPublisher(gitClient hm.GitClient, params hm.XParams) *publisher {
 	return &publisher{
-		Core:      hm.NewCoreWithParams("ssg-pub", params),
+		Core:      hm.NewCore("ssg-pub", params),
 		gitClient: gitClient,
 	}
 }

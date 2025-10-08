@@ -32,16 +32,13 @@ func main() {
 	// XParams for components that only need log + config
 	xparams := hm.XParams{Cfg: cfg, Log: log}
 
-	// Opts for legacy components still using variadic pattern
-	opts := []hm.Option{}
-
-	fm := hm.NewFlashManager()
-	workspace := core.NewWorkspace(opts...)
+	fm := hm.NewFlashManager(xparams)
+	workspace := core.NewWorkspace(xparams)
 	app := core.NewApp(name, version, assetsFS, xparams)
 	queryManager := hm.NewQueryManager(assetsFS, engine, xparams)
 	templateManager := hm.NewTemplateManager(assetsFS, xparams)
-	repo := sqlite.NewClioRepo(queryManager)
-	migrator := hm.NewMigrator(assetsFS, engine)
+	repo := sqlite.NewClioRepo(queryManager, xparams)
+	migrator := hm.NewMigrator(assetsFS, engine, xparams)
 	fileServer := hm.NewFileServer(assetsFS, xparams)
 
 	app.MountFileServer("/", fileServer)
@@ -54,29 +51,29 @@ func main() {
 	apiRouter := hm.NewAPIRouter("api-router", xparams)
 
 	// GitAuth feature
-	authSeeder := auth.NewSeeder(assetsFS, engine, repo)
+	authSeeder := auth.NewSeeder(assetsFS, engine, repo, xparams)
 	authService := auth.NewService(repo, xparams)
-	authAPIHandler := auth.NewAPIHandler("auth-api-handler", authService, opts...)
+	authAPIHandler := auth.NewAPIHandler("auth-api-handler", authService, xparams)
 	authAPIRouter := auth.NewAPIRouter(authAPIHandler, nil, xparams) // No middleware for now
 	apiRouter.Mount("/auth", authAPIRouter)
 
 	// SSG feature
 	gitClient := github.NewClient(xparams)
 	ssgPublisher := ssg.NewPublisher(gitClient, xparams)
-	ssgSeeder := ssg.NewSeeder(assetsFS, engine, repo)
+	ssgSeeder := ssg.NewSeeder(assetsFS, engine, repo, xparams)
 	ssgGenerator := ssg.NewGenerator(xparams)
 	ssgParamManager := ssg.NewParamManager(repo, xparams)
 	ssgImageManager := ssg.NewImageManager(xparams)
 	ssgService := ssg.NewService(assetsFS, repo, ssgGenerator, ssgPublisher, ssgParamManager, ssgImageManager, xparams)
-	ssgAPIHandler := ssg.NewAPIHandler("ssg-api-handler", ssgService)
+	ssgAPIHandler := ssg.NewAPIHandler("ssg-api-handler", ssgService, xparams)
 	ssgAPIRouter := ssg.NewAPIRouter(ssgAPIHandler, []hm.Middleware{hm.CORSMw}, xparams)
 	apiRouter.Mount("/ssg", ssgAPIRouter)
 
 	app.MountAPI("/api/v1", apiRouter)
 
 	// Web app
-	ssgWebHandler := webssg.NewWebHandler(templateManager, fm, opts...)
-	ssgWebRouter := webssg.NewWebRouter(ssgWebHandler, append(fm.Middlewares(), hm.LogHeadersMw))
+	ssgWebHandler := webssg.NewWebHandler(templateManager, fm, xparams)
+	ssgWebRouter := webssg.NewWebRouter(ssgWebHandler, append(fm.Middlewares(), hm.LogHeadersMw), xparams)
 
 	app.MountWeb("/ssg", ssgWebRouter)
 

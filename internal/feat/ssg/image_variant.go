@@ -17,6 +17,7 @@ type ImageVariant struct {
 	ID      uuid.UUID `json:"id" db:"id"`
 	mType   string
 	ShortID string `json:"-" db:"short_id"`
+	ref     string `json:"-"`
 
 	ImageID      uuid.UUID `json:"image_id" db:"image_id"`
 	Kind         string    `json:"kind" db:"kind"` // e.g., 'original', 'web', 'thumb'
@@ -145,4 +146,12 @@ func (iv *ImageVariant) IsZero() bool {
 // Slug returns a slug for the image variant.
 func (iv *ImageVariant) Slug() string {
 	return hm.Normalize(iv.Kind) + "-" + iv.GetShortID()
+}
+
+func (iv *ImageVariant) Ref() string {
+	return iv.ref
+}
+
+func (iv *ImageVariant) SetRef(ref string) {
+	iv.ref = ref
 }

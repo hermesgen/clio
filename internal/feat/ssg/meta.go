@@ -12,6 +12,7 @@ type Meta struct {
 	ID              uuid.UUID `json:"id" db:"id"`
 	mType           string
 	ShortID         string    `json:"-" db:"short_id"`
+	ref             string    `json:"-"`
 	ContentID       uuid.UUID `json:"content_id" db:"content_id"`
 	Summary         string    `json:"summary" db:"summary"`
 	Excerpt         string    `json:"excerpt" db:"excerpt"`
@@ -115,4 +116,12 @@ func (m *Meta) IsZero() bool {
 
 func (m *Meta) Slug() string {
 	return m.GetShortID()
+}
+
+func (m *Meta) Ref() string {
+	return m.ref
+}
+
+func (m *Meta) SetRef(ref string) {
+	m.ref = ref
 }

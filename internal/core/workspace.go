@@ -14,8 +14,8 @@ type Workspace struct {
 	hm.Core
 }
 
-func NewWorkspace(opts ...hm.Option) *Workspace {
-	core := hm.NewCore("ssg-workspace", opts...)
+func NewWorkspace(params hm.XParams) *Workspace {
+	core := hm.NewCore("ssg-workspace", params)
 	w := &Workspace{
 		Core: core,
 	}

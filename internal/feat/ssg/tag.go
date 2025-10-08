@@ -13,6 +13,7 @@ type Tag struct {
 	// Common
 	ID      uuid.UUID `json:"id" db:"id"`
 	ShortID string    `json:"-" db:"short_id"`
+	ref     string    `json:"-"`
 
 	// Tag specific fields
 	Name      string `json:"name" db:"name"`
@@ -146,4 +147,12 @@ func (t *Tag) OptValue() string {
 
 func (t *Tag) OptLabel() string {
 	return t.Name
+}
+
+func (t *Tag) Ref() string {
+	return t.ref
+}
+
+func (t *Tag) SetRef(ref string) {
+	t.ref = ref
 }

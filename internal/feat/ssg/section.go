@@ -13,6 +13,7 @@ type Section struct {
 	// Common
 	ID      uuid.UUID `json:"id" db:"id"`
 	ShortID string    `json:"-" db:"short_id"`
+	ref     string    `json:"-"`
 
 	// Section specific fields
 	Name        string    `json:"name" db:"name"`
@@ -149,4 +150,12 @@ func (s *Section) OptValue() string {
 
 func (s *Section) OptLabel() string {
 	return s.Name
+}
+
+func (s *Section) Ref() string {
+	return s.ref
+}
+
+func (s *Section) SetRef(ref string) {
+	s.ref = ref
 }

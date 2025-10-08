@@ -11,6 +11,7 @@ import (
 type Content struct {
 	ID      uuid.UUID `json:"id" db:"id"`
 	ShortID string    `json:"-" db:"short_id"`
+	ref     string    `json:"-"`
 
 	UserID      uuid.UUID  `json:"user_id" db:"user_id"`
 	SectionID   uuid.UUID  `json:"section_id" db:"section_id"`
@@ -155,4 +156,12 @@ func (c *Content) OptValue() string {
 
 func (c *Content) OptLabel() string {
 	return c.Heading
+}
+
+func (c *Content) Ref() string {
+	return c.ref
+}
+
+func (c *Content) SetRef(ref string) {
+	c.ref = ref
 }

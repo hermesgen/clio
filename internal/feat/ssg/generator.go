@@ -15,7 +15,7 @@ type Generator struct {
 }
 
 func NewGenerator(params hm.XParams) *Generator {
-	core := hm.NewCoreWithParams("ssg-generator", params)
+	core := hm.NewCore("ssg-generator", params)
 	g := &Generator{
 		Core: core,
 	}

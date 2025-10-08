@@ -19,9 +19,9 @@ type WebHandler struct {
 	apiClient *hm.APIClient
 }
 
-func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, opts ...hm.Option) *WebHandler {
-	handler := hm.NewWebHandler(tm, flash, opts...)
-	apiClient := hm.NewAPIClient("web-api-client", func() string { return "" }, defaultAPIBaseURL, opts...)
+func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, params hm.XParams) *WebHandler {
+	handler := hm.NewWebHandler(tm, flash, params)
+	apiClient := hm.NewAPIClient("web-api-client", func() string { return "" }, defaultAPIBaseURL, params)
 	return &WebHandler{
 		WebHandler: handler,
 		apiClient:  apiClient,

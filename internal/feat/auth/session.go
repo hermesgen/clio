@@ -24,8 +24,8 @@ type SessionManager struct {
 }
 
 // NewSessionManager creates a new SessionManager.
-func NewSessionManager(opts ...hm.Option) *SessionManager {
-	core := hm.NewCore("session-manager", opts...) // Changed to hm.NewCore
+func NewSessionManager(params hm.XParams) *SessionManager {
+	core := hm.NewCore("session-manager", params)
 	return &SessionManager{
 		BaseCore: core,
 	}

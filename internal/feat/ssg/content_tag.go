@@ -13,6 +13,7 @@ type ContentTag struct {
 	// Common
 	ID      uuid.UUID `json:"id" db:"id"`
 	ShortID string    `json:"-" db:"short_id"`
+	ref     string    `json:"-"`
 
 	ContentID uuid.UUID `json:"content_id" db:"content_id"`
 	TagID     uuid.UUID `json:"tag_id" db:"tag_id"`
@@ -143,4 +144,12 @@ func (ct *ContentTag) OptValue() string {
 
 func (ct *ContentTag) OptLabel() string {
 	return ct.GetShortID()
+}
+
+func (ct *ContentTag) Ref() string {
+	return ct.ref
+}
+
+func (ct *ContentTag) SetRef(ref string) {
+	ct.ref = ref
 }

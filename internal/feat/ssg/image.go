@@ -17,6 +17,7 @@ type Image struct {
 	ID      uuid.UUID `json:"id" db:"id"`
 	mType   string
 	ShortID string `json:"-" db:"short_id"`
+	ref     string `json:"-"`
 
 	ContentHash  string `json:"content_hash" db:"content_hash"`
 	Mime         string `json:"mime" db:"mime"`
@@ -160,4 +161,12 @@ func (i *Image) Slug() string {
 		return hm.Normalize(i.Title) + "-" + i.GetShortID()
 	}
 	return hm.Normalize(i.ContentHash) + "-" + i.GetShortID()
+}
+
+func (i *Image) Ref() string {
+	return i.ref
+}
+
+func (i *Image) SetRef(ref string) {
+	i.ref = ref
 }
