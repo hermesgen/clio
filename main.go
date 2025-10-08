@@ -74,7 +74,7 @@ func main() {
 	ssgAPIRouter := ssg.NewAPIRouter(ssgAPIHandler, []am.Middleware{am.CORSMw})
 	apiRouter.Mount("/ssg", ssgAPIRouter)
 
-	app.MountAPI("v1", "/", apiRouter)
+app.MountAPI("/api/v1", apiRouter)
 
 	// Web app
 	ssgWebHandler := webssg.NewWebHandler(templateManager, fm, opts...)

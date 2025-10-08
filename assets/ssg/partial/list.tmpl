@@ -2,11 +2,8 @@
     {{ range . }}
         <div class="list-card">
             <a href="{{ .SectionPath }}/{{ .Slug }}/" class="list-card-link">
-                {{ if .Image }}
-                    <img class="list-card-image" src="{{ .Image }}" alt="Featured image for {{ .Heading }}">
-                {{ else }}
-                    <div class="list-card-image-placeholder"></div>
-                {{ end }}
+                <!-- TODO: Implement image through ContentImage relation -->
+                <div class="list-card-image-placeholder"></div>
                 <div class="list-card-content">
                     <h2 class="list-card-title">{{ .Heading }}</h2>
                     <!-- <p class="text-gray-600 text-sm mb-4">{{ .Summary }}</p> -->

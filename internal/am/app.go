@@ -27,13 +27,12 @@ type App struct {
 	Version    string
 	Router     *Router
 	APIRouter  *Router
-	APIRouters map[string]*Router
 
 	deps          map[string]*Dep
 	depOrder      []string
 	depsMutex     sync.Mutex
 	fs            embed.FS
-	InternalToken string // NOTE: Find a better name
+	InternalToken string
 }
 
 func (a *App) InternalAuthToken() string {
@@ -61,12 +60,11 @@ func NewApp(name, version string, fs embed.FS, opts ...Option) *App {
 		opts:       opts,
 		Core:       core,
 		Router:     NewWebRouter("web-router", opts...),
-		APIRouter:  NewWebRouter("api-router", opts...),
-		APIRouters: make(map[string]*Router),
+		APIRouter:  NewAPIRouter("api-router", opts...),
 
 		fs:            fs,
 		deps:          make(map[string]*Dep),
-		InternalToken: uuid.NewString(), // Initialize InternalToken with a new UUID
+		InternalToken: uuid.NewString(),
 	}
 
 	return app
@@ -84,8 +82,7 @@ func NewAppWithParams(name, version string, fs embed.FS, params XParams) *App {
 		opts:       opts,
 		Core:       core,
 		Router:     NewWebRouter("web-router", opts...),
-		APIRouter:  NewWebRouter("api-router", opts...),
-		APIRouters: make(map[string]*Router),
+		APIRouter:  NewAPIRouter("api-router", opts...),
 		Version:    version,
 		fs:         fs,
 		deps:       make(map[string]*Dep),
@@ -271,17 +268,8 @@ func (a *App) StartServer(server *http.Server, addr string) {
 	a.Log().Info("Server stopped gracefully")
 }
 
-func (a *App) MountAPI(version, path string, handler http.Handler) {
-	version = fmt.Sprintf("/%s", version)
-	versionPath := fmt.Sprintf("%s%s", path, version)
-	router, exists := a.APIRouters[version]
-	if !exists {
-		name := fmt.Sprintf("api-router-%s", versionPath)
-		router = NewWebRouter(name, a.opts...)
-		router.Mount(path, handler)
-		a.APIRouters[versionPath] = router
-	}
-	a.APIRouter.Mount("/api"+version, router)
+func (a *App) MountAPI(path string, handler http.Handler) {
+	a.APIRouter.Mount(path, handler)
 }
 
 func (a *App) MountFileServer(path string, fs *FileServer) {
