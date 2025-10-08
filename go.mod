@@ -15,9 +15,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-// Local development - remove after hm is published
-replace github.com/hermesgen/hm => ../hm
-
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gertd/go-pluralize v0.2.1 // indirect
