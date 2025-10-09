@@ -11,5 +11,6 @@ _workspace/
 node_modules/
 assets/ssg/static/css/prose.compiled.css
 scripts/priv/
+.snapshots/
 # Go workspace files (local development only)
 go.work*

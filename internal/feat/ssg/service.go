@@ -373,12 +373,24 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 
 	postsPerPage := int(svc.Cfg().IntVal(SSGKey.IndexMaxItems, 9))
 
-	for _, index := range indexes {
-		// Check if a manual index page exists for this path
-		if manualIndexPages[index.Path] {
-			svc.Log().Info(fmt.Sprintf("Skipping index generation for '%s': manual index page found.", index.Path))
-			continue
-		}
+		for _, index := range indexes {
+			// Check if a manual index page exists for this path
+			if manualIndexPages[index.Path] {
+				svc.Log().Info(fmt.Sprintf("Skipping index generation for '%s': manual index page found.", index.Path))
+				continue
+			}
+
+			// Get section header image for this index
+			var sectionHeaderImage string
+			for _, section := range sections {
+				if section.Path == index.Path {
+					headerPath, err := svc.GetSectionHeaderImage(ctx, section.ID)
+					if err == nil && headerPath != "" {
+						sectionHeaderImage = "/static/images/" + headerPath
+					}
+					break
+				}
+			}
 
 		// Paginate the content
 		totalContent := len(index.Content)
@@ -422,13 +434,14 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 			}
 
 			data := PageData{
-				HeaderStyle:     headerStyle,
-				AssetPath:       assetPath,
-				Menu:            menuSections,
-				IsIndex:         true,
-				ListPageContent: pageContent,
-				Pagination:      pagination,
-				Search:          searchData,
+				HeaderStyle:        headerStyle,
+				AssetPath:          assetPath,
+				Menu:               menuSections,
+				IsIndex:            true,
+				ListPageContent:    pageContent,
+				Pagination:         pagination,
+				Search:             searchData,
+				SectionHeaderImage: sectionHeaderImage,
 			}
 
 			var buf bytes.Buffer

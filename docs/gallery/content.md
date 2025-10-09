@@ -2,6 +2,12 @@
 
 This gallery showcases the content management features of Clio.
 
+## Index Page
+
+The main index page showing the section with its header image and content listings.
+
+![Index Page](../img/index.png)
+
 ## Content List
 
 The main view for listing all the content available in the system. Soon, the listed results will be paginated to avoid long scrolls.

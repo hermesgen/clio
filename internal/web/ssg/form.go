@@ -170,7 +170,7 @@ func ToContentForm(r *http.Request, content feat.Content) ContentForm {
 	form.Draft = content.Draft
 	form.Featured = content.Featured
 	if content.PublishedAt != nil {
-		form.PublishedAt = content.PublishedAt.Format("2006-01-02T15:04:05") // Format for datetime-local input
+		form.PublishedAt = content.PublishedAt.Format(time.RFC3339) // Preserve original format with timezone
 	}
 
 	// Create a comma-separated string of tag names

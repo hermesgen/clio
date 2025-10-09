@@ -168,5 +168,60 @@ reset-db:
 	$(call backup_db,$(DB_BACKUP_DIR))
 	@echo "A fresh database will be created on next application start"
 
+# Snapshot current images and their database relations
+# Used to recreate image state for gallery captures
+snapshot-images:
+	@TIMESTAMP=$$(date +%Y%m%d_%H%M%S); \
+	echo "Creating image snapshot: $$TIMESTAMP"; \
+	mkdir -p .snapshots/$$TIMESTAMP; \
+	if [ -d "_workspace/documents/assets/images" ]; then \
+		cp -r _workspace/documents/assets/images .snapshots/$$TIMESTAMP/; \
+		echo "Images copied to .snapshots/$$TIMESTAMP/images"; \
+	else \
+		echo "No images directory found"; \
+	fi; \
+	if [ -f "$(DB_FILE)" ]; then \
+		sqlite3 $(DB_FILE) ".dump images" > .snapshots/$$TIMESTAMP/images_table.sql; \
+		sqlite3 $(DB_FILE) ".dump content_images" > .snapshots/$$TIMESTAMP/content_images_table.sql; \
+		echo "Database relations exported to .snapshots/$$TIMESTAMP/"; \
+	else \
+		echo "No database file found"; \
+	fi; \
+	echo "Snapshot created: $$TIMESTAMP"
+
+# Restore images from a specific snapshot
+# Used to recreate image state for gallery captures
+restore-images:
+	@echo "Available snapshots:"; \
+	ls -1 .snapshots/ 2>/dev/null || echo "No snapshots found"; \
+	read -p "Enter snapshot name: " snapshot; \
+	if [ ! -d ".snapshots/$$snapshot" ]; then \
+		echo "Snapshot $$snapshot not found"; \
+		exit 1; \
+	fi; \
+	echo "Restoring images from snapshot: $$snapshot"; \
+	if [ -d ".snapshots/$$snapshot/images" ]; then \
+		rm -rf _workspace/documents/assets/images; \
+		cp -r .snapshots/$$snapshot/images _workspace/documents/assets/; \
+		echo "Images restored from snapshot"; \
+	else \
+		echo "No images found in snapshot"; \
+	fi; \
+	if [ -f ".snapshots/$$snapshot/images_table.sql" ] && [ -f ".snapshots/$$snapshot/content_images_table.sql" ]; then \
+		echo "Restoring database relations..."; \
+		sqlite3 $(DB_FILE) "DELETE FROM content_images; DELETE FROM images;"; \
+		sqlite3 $(DB_FILE) < .snapshots/$$snapshot/images_table.sql; \
+		sqlite3 $(DB_FILE) < .snapshots/$$snapshot/content_images_table.sql; \
+		echo "Database relations restored"; \
+	else \
+		echo "No database relations found in snapshot"; \
+	fi; \
+	echo "Restore complete"
+
+# List available image snapshots
+list-snapshots:
+	@echo "Available image snapshots:"; \
+	ls -1 .snapshots/ 2>/dev/null || echo "No snapshots found"
+
 # Phony targets
-.PHONY: all build run runflags setenv clean backup-db reset-db generate-markdown generate-html publish test run-stacked run-overlay run-boxed run-text-only build-css
+.PHONY: all build run runflags setenv clean backup-db reset-db generate-markdown generate-html publish test run-stacked run-overlay run-boxed run-text-only build-css snapshot-images restore-images list-snapshots

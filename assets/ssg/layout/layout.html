@@ -21,14 +21,51 @@
     </nav>
 
     {{if .IsIndex}}
-        <div class="site-container">
-            <h1 class="site-h1">Index</h1>
-        </div>
-        <div class="site-container">
-            <main>
-                {{template "list.tmpl" .ListPageContent}}
-            </main>
-        </div>
+        {{if .SectionHeaderImage}}
+            {{if eq .HeaderStyle "overlay"}}
+                <div class="hero-wrapper overlay">
+                    <img class="hero-image" src="{{.SectionHeaderImage}}" alt="Section Header">
+                    <h1 class="hero-title">Index</h1>
+                </div>
+                <div class="site-container">
+                    <hr>
+                    <main>
+                        {{template "list.tmpl" .ListPageContent}}
+                    </main>
+                </div>
+            {{else if eq .HeaderStyle "boxed"}}
+                <div class="hero-wrapper boxed">
+                    <img class="hero-image" src="{{.SectionHeaderImage}}" alt="Section Header">
+                    <div class="hero-title-box">
+                        <h1 class="hero-title">Index</h1>
+                    </div>
+                </div>
+                <div class="site-container">
+                    <main>
+                        {{template "list.tmpl" .ListPageContent}}
+                    </main>
+                </div>
+            {{else}}
+                <img class="hero-image hero-stacked-image" src="{{.SectionHeaderImage}}" alt="Section Header">
+                <div class="site-container">
+                    <h1 class="site-h1">Index</h1>
+                </div>
+                <div class="site-container">
+                    <main>
+                        {{template "list.tmpl" .ListPageContent}}
+                    </main>
+                </div>
+            {{end}}
+        {{else}}
+            <div class="site-container">
+                <h1 class="site-h1">Index</h1>
+            </div>
+            <div class="site-container">
+                <main>
+                    {{template "list.tmpl" .ListPageContent}}
+                </main>
+            </div>
+        {{end}}
         <div class="site-container">
             {{template "pagination.tmpl" .}}
     {{else}}

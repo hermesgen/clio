@@ -54,4 +54,4 @@ LEFT JOIN
 LEFT JOIN
     images i ON ci.image_id = i.id
 ORDER BY
-    c.created_at DESC, ci.purpose ASC, t.name ASC;
+    c.published_at DESC, c.created_at DESC, c.id ASC;

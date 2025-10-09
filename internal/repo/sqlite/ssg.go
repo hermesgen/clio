@@ -248,6 +248,7 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 		contents[i] = *contentMap[id]
 	}
 
+
 	return contents, nil
 }
 
