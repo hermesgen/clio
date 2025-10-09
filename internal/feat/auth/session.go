@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 const ( // TODO: Move to config

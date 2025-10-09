@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 

@@ -3,7 +3,7 @@ package fake
 import (
 	"context"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 // GithubClient is a fake implementation of hm.GitClient for testing.

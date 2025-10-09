@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 // PublisherConfig holds all configuration needed for a publishing operation.

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/fake"
 	"github.com/hermesgen/clio/internal/feat/ssg"
 )

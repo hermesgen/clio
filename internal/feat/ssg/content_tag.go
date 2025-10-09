@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 // ContentTag model represents the many-to-many relationship between Content and Tag.

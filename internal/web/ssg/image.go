@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 

@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 
 	"github.com/google/uuid"
 )

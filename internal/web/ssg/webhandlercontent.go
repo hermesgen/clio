@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/feat/auth"
 	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )

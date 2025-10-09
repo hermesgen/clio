@@ -1,7 +1,7 @@
 package ssg
 
 import (
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 func NewWebRouter(handler *WebHandler, mw []hm.Middleware, params hm.XParams) *hm.Router {

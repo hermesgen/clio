@@ -3,7 +3,7 @@ package ssg
 import (
 	"context"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 type ParamManager struct {

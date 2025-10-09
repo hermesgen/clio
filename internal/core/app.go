@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 type App struct {

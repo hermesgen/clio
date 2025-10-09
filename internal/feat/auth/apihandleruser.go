@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 // User related API handlers

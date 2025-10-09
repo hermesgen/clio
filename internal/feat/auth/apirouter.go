@@ -1,7 +1,7 @@
 package auth
 
 import (
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 func NewAPIRouter(handler *APIHandler, mw []hm.Middleware, params hm.XParams) *hm.Router {

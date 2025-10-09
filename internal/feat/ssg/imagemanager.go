@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 // CLEANUP_ORPHANED_IMAGES controls whether to automatically clean up orphaned images

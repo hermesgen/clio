@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 // Service defines the interface for the ssg service.
