@@ -4,14 +4,18 @@ import (
 	"context"
 	"embed"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	hm "github.com/hermesgen/hm"
-	"github.com/hermesgen/hm/github"
 	"github.com/hermesgen/clio/internal/core"
 	"github.com/hermesgen/clio/internal/feat/auth"
 	"github.com/hermesgen/clio/internal/feat/ssg"
 	"github.com/hermesgen/clio/internal/repo/sqlite"
 	webssg "github.com/hermesgen/clio/internal/web/ssg"
+	"github.com/hermesgen/hm"
+	"github.com/hermesgen/hm/github"
 )
 
 const (
@@ -105,8 +109,28 @@ func main() {
 		return
 	}
 
-	err = app.Start(ctx)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+
+	go func() {
+		err := app.Start(ctx)
+		if err != nil {
+			log.Errorf("Cannot start %s(%s): %v", name, version, err)
+		}
+	}()
+
+	log.Infof("%s(%s) started successfully", name, version)
+
+	<-stop
+
+	log.Infof("Shutting down %s(%s)...", name, version)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	err = app.Stop(shutdownCtx)
 	if err != nil {
-		log.Errorf("Cannot start %s(%s): %v", name, version, err)
+		log.Errorf("Error during shutdown: %v", err)
+	} else {
+		log.Infof("%s(%s) stopped gracefully", name, version)
 	}
 }
