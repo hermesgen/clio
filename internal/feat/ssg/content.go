@@ -27,6 +27,9 @@ type Content struct {
 	Tags        []Tag      `json:"tags"`
 	Meta        Meta       `json:"meta"`
 
+	ThumbnailURL   string `json:"thumbnail_url,omitempty" db:"-"`
+	HeaderImageURL string `json:"header_image_url,omitempty" db:"-"`
+
 	SectionPath string `json:"section_path,omitempty" db:"section_path"`
 	SectionName string `json:"section_name,omitempty" db:"section_name"`
 
@@ -51,7 +54,6 @@ func NewContent(heading, body string) Content {
 func (c *Content) Type() string {
 	return "content"
 }
-
 
 // GetID returns the unique identifier of the entity.
 func (c *Content) GetID() uuid.UUID {
