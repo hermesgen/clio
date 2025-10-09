@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/core"
 	"github.com/hermesgen/clio/internal/feat/ssg"
 )

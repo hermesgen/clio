@@ -3,7 +3,7 @@ package ssg
 import (
 	"net/http"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 // ParamPage extends hm.Page to include a specific Param for templates.

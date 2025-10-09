@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 type Generator struct {

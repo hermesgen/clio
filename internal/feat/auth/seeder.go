@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 type Seeder struct {

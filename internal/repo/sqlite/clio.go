@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )

@@ -3,7 +3,7 @@ package ssg
 import (
 	"html/template"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 // PageData holds all the data needed to render a complete HTML page.

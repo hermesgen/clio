@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/fake"
 )
 

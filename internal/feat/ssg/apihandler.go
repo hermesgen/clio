@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm"
 )
 
 const (
