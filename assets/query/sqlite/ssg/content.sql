@@ -36,7 +36,9 @@ SELECT
     c.created_by, c.updated_by, c.created_at, c.updated_at,
     s.path AS section_path, s.name AS section_name,
     m.id AS meta_id, m.description, m.keywords, m.robots, m.canonical_url, m.sitemap, m.table_of_contents, m.share, m.comments,
-    t.id AS tag_id, t.short_id AS tag_short_id, t.name AS tag_name, t.slug AS tag_slug
+    t.id AS tag_id, t.short_id AS tag_short_id, t.name AS tag_name, t.slug AS tag_slug,
+    ci.image_id AS content_image_id, ci.purpose AS image_purpose, 
+    i.file_path AS image_file_path
 FROM
     content c
 LEFT JOIN
@@ -47,5 +49,9 @@ LEFT JOIN
     content_tag ct ON c.id = ct.content_id
 LEFT JOIN
     tag t ON ct.tag_id = t.id
+LEFT JOIN
+    content_images ci ON c.id = ci.content_id AND ci.is_active = TRUE AND ci.purpose IN ('header', 'thumbnail', 'content')
+LEFT JOIN
+    images i ON ci.image_id = i.id
 ORDER BY
-    c.created_at DESC, t.name ASC;
+    c.created_at DESC, ci.purpose ASC, t.name ASC;

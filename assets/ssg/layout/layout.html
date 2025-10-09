@@ -13,9 +13,9 @@
 <body class="site-body">
     <nav class="site-nav">
         <div class="site-container">
-            <a class="site-nav-link" href="{{.AssetPath}}index.html">Home</a>
+            <a class="site-nav-link" href="/">Home</a>
             {{range .Menu}}
-            <a class="site-nav-link" href="{{$.AssetPath}}{{.Path}}/index.html">{{.Name}}</a>
+            <a class="site-nav-link" href="{{.Path}}/">{{.Name}}</a>
             {{end}}
         </div>
     </nav>

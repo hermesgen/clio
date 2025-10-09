@@ -7,15 +7,14 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/hermesgen/hm"
 )
 
-// CLEANUP_ORPHANED_IMAGES controls whether to automatically clean up orphaned images
-// Currently set to false - manual cleanup for now, automated later
-const CLEANUP_ORPHANED_IMAGES = false
+const cleanupOrphanedImages = false
 
 // ImageType represents the type of image being processed
 type ImageType string
@@ -94,6 +93,22 @@ func (im *ImageManager) ProcessUpload(ctx context.Context, file multipart.File, 
 	return result, nil
 }
 
+// sanitizeForURL sanitizes a string for safe use in URLs and file paths
+func (im *ImageManager) sanitizeForURL(str string) string {
+	// Replace problematic characters with hyphens
+	re := regexp.MustCompile(`[^a-zA-Z0-9\-_.]`)
+	sanitized := re.ReplaceAllString(str, "-")
+	
+	// Remove multiple consecutive hyphens
+	re2 := regexp.MustCompile(`-+`)
+	sanitized = re2.ReplaceAllString(sanitized, "-")
+	
+	// Remove leading/trailing hyphens
+	sanitized = strings.Trim(sanitized, "-")
+	
+	return strings.ToLower(sanitized)
+}
+
 // generateDirectoryPath creates the directory path based on content hierarchy
 func (im *ImageManager) generateDirectoryPath(content *Content, section *Section, imageType ImageType) (string, error) {
 	switch imageType {
@@ -103,10 +118,10 @@ func (im *ImageManager) generateDirectoryPath(content *Content, section *Section
 		}
 
 		if section == nil || section.Path == "/" || section.Path == "" {
-			return content.Slug(), nil
+			return im.sanitizeForURL(content.Slug()), nil
 		}
 
-		return filepath.Join(section.Path, content.Slug()), nil
+	return filepath.Join(section.Path, im.sanitizeForURL(content.Slug())), nil
 
 	case ImageTypeSectionHeader:
 		if section == nil {
@@ -141,13 +156,13 @@ func (im *ImageManager) generateFilename(content *Content, section *Section, ima
 		if content == nil {
 			return "", fmt.Errorf("content is required for content images")
 		}
-		return fmt.Sprintf("%s_%d%s", content.Slug(), timestamp, extension), nil
+	return fmt.Sprintf("%s_%d%s", im.sanitizeForURL(content.Slug()), timestamp, extension), nil
 
 	case ImageTypeHeader:
 		if content == nil {
 			return "", fmt.Errorf("content is required for header images")
 		}
-		return fmt.Sprintf("%s_header_%d%s", content.Slug(), timestamp, extension), nil
+	return fmt.Sprintf("%s_header_%d%s", im.sanitizeForURL(content.Slug()), timestamp, extension), nil
 
 	case ImageTypeSectionHeader:
 		if section == nil {
@@ -183,7 +198,7 @@ func (im *ImageManager) handleReplacement(directory string, imageType ImageType,
 		if content == nil {
 			return fmt.Errorf("content is required for header image replacement")
 		}
-		pattern = content.Slug() + "_header_*"
+		pattern = im.sanitizeForURL(content.Slug()) + "_header_*"
 	case ImageTypeSectionHeader:
 		pattern = "section_header_*"
 	case ImageTypeBlogHeader:
@@ -265,7 +280,7 @@ func (im *ImageManager) GetContentImages(ctx context.Context, content *Content, 
 // CleanupOrphanedImages removes images that no longer have associated content
 // This is a placeholder for future implementation
 func (im *ImageManager) CleanupOrphanedImages(ctx context.Context) error {
-	if !CLEANUP_ORPHANED_IMAGES {
+	if !cleanupOrphanedImages {
 		im.Log().Debug("Orphaned image cleanup is disabled")
 		return nil
 	}

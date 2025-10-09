@@ -251,6 +251,16 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		return fmt.Errorf("cannot copy static assets: %w", err)
 	}
 
+	// Copy dynamic images from assets/images to html/static/images
+	workspaceDir := svc.Cfg().StrValOrDef(SSGKey.WorkspacePath, "_workspace")
+	docsDir := filepath.Join(workspaceDir, "documents") // This gives us _workspace/documents
+	svc.Log().Info("Copying dynamic images", "from", filepath.Join(docsDir, "assets", "images"), "to", filepath.Join(htmlPath, "static", "images"))
+	if err := CopyDynamicImages(docsDir, htmlPath); err != nil {
+		svc.Log().Error("Failed to copy dynamic images", "error", err)
+		return fmt.Errorf("cannot copy dynamic images: %w", err)
+	}
+	svc.Log().Info("Dynamic images copied successfully")
+
 	headerStyle := svc.Cfg().StrValOrDef(SSGKey.HeaderStyle, "boxed", true)
 	imageExtensions := []string{".png", ".jpg", ".jpeg", ".webp"}
 
@@ -269,31 +279,35 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 			continue
 		}
 
-		// Paths and Asset Logic
-		contentDir := filepath.Join(htmlPath, content.SectionPath, content.Slug())
-		contentImgDir := filepath.Join(contentDir, "img")
 		headerImagePath := ""
-
-		foundSpecificHeader := false
-		for _, ext := range imageExtensions {
-			checkPath := filepath.Join("assets", "content", content.SectionPath, content.Slug(), "img", "header"+ext)
-			if f, err := svc.assetsFS.Open(checkPath); err == nil {
-				f.Close()
-				if err := os.MkdirAll(contentImgDir, 0755); err != nil {
-					return fmt.Errorf("cannot create img directory: %w", err)
+		
+		if content.HeaderImageURL != "" {
+			headerImagePath = content.HeaderImageURL
+		} else {
+			contentDir := filepath.Join(htmlPath, content.SectionPath, content.Slug())
+			contentImgDir := filepath.Join(contentDir, "img")
+			
+			foundSpecificHeader := false
+			for _, ext := range imageExtensions {
+				checkPath := filepath.Join("assets", "content", content.SectionPath, content.Slug(), "img", "header"+ext)
+				if f, err := svc.assetsFS.Open(checkPath); err == nil {
+					f.Close()
+					if err := os.MkdirAll(contentImgDir, 0755); err != nil {
+						return fmt.Errorf("cannot create img directory: %w", err)
+					}
+					dst := filepath.Join(contentImgDir, "header"+ext)
+					if err := copyFile(svc.assetsFS, checkPath, dst); err != nil {
+						return fmt.Errorf("cannot copy specific header: %w", err)
+					}
+					headerImagePath = "img/header" + ext
+					foundSpecificHeader = true
+					break
 				}
-				dst := filepath.Join(contentImgDir, "header"+ext)
-				if err := copyFile(svc.assetsFS, checkPath, dst); err != nil {
-					return fmt.Errorf("cannot copy specific header: %w", err)
-				}
-				headerImagePath = "img/header" + ext
-				foundSpecificHeader = true
-				break
 			}
-		}
-
-		if !foundSpecificHeader {
-			headerImagePath = "/static/img/header.png"
+			
+			if !foundSpecificHeader {
+				headerImagePath = "/static/img/header.png"
+			}
 		}
 
 		assetPath := "/"

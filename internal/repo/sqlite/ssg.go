@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,6 +24,29 @@ var (
 	resImage        = "image"
 	resImageVariant = "image_variant"
 )
+
+// sanitizeURLPath sanitizes a file path for safe use in URLs
+func sanitizeURLPath(path string) string {
+	// Split path into directory and filename components
+	parts := strings.Split(path, "/")
+	for i, part := range parts {
+		if part != "" { // Don't sanitize empty parts (preserves leading slashes)
+			// Replace problematic characters with hyphens
+			re := regexp.MustCompile(`[^a-zA-Z0-9\-_.]`)
+			sanitized := re.ReplaceAllString(part, "-")
+			
+			// Remove multiple consecutive hyphens
+			re2 := regexp.MustCompile(`-+`)
+			sanitized = re2.ReplaceAllString(sanitized, "-")
+			
+			// Remove leading/trailing hyphens
+			sanitized = strings.Trim(sanitized, "-")
+			
+			parts[i] = strings.ToLower(sanitized)
+		}
+	}
+	return strings.Join(parts, "/")
+}
 
 // Content related
 
@@ -41,7 +66,7 @@ func (repo *ClioRepo) CreateContent(ctx context.Context, c *ssg.Content) (err er
 	}()
 
 	// Create Content
-	contentQuery, err := repo.Query().Get(featSSG, resContent, "Create")
+	contentQuery, err := repo.BaseRepo.Query().Get(featSSG, resContent, "Create")
 	if err != nil {
 		return fmt.Errorf("cannot get create content query: %w", err)
 	}
@@ -53,7 +78,7 @@ func (repo *ClioRepo) CreateContent(ctx context.Context, c *ssg.Content) (err er
 	c.Meta.ContentID = c.ID
 	c.Meta.GenID()
 	c.Meta.GenCreateValues(c.CreatedBy)
-	metaQuery, err := repo.Query().Get(featSSG, resMeta, "Create")
+	metaQuery, err := repo.BaseRepo.Query().Get(featSSG, resMeta, "Create")
 	if err != nil {
 		return fmt.Errorf("cannot get create meta query: %w", err)
 	}
@@ -95,7 +120,7 @@ func (repo *ClioRepo) UpdateContent(ctx context.Context, c *ssg.Content) (err er
 	}()
 
 	// Update Content
-	contentQuery, err := repo.Query().Get(featSSG, resContent, "Update")
+	contentQuery, err := repo.BaseRepo.Query().Get(featSSG, resContent, "Update")
 	if err != nil {
 		return fmt.Errorf("cannot get update content query: %w", err)
 	}
@@ -104,7 +129,7 @@ func (repo *ClioRepo) UpdateContent(ctx context.Context, c *ssg.Content) (err er
 	}
 
 	// Update Meta
-	metaQuery, err := repo.Query().Get(featSSG, resMeta, "Update")
+	metaQuery, err := repo.BaseRepo.Query().Get(featSSG, resMeta, "Update")
 	if err != nil {
 		return fmt.Errorf("cannot get update meta query: %w", err)
 	}
@@ -116,7 +141,7 @@ func (repo *ClioRepo) UpdateContent(ctx context.Context, c *ssg.Content) (err er
 }
 
 func (repo *ClioRepo) DeleteContent(ctx context.Context, id uuid.UUID) error {
-	query, err := repo.Query().Get(featSSG, resContent, "Delete")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resContent, "Delete")
 	if err != nil {
 		return err
 	}
@@ -126,7 +151,7 @@ func (repo *ClioRepo) DeleteContent(ctx context.Context, id uuid.UUID) error {
 }
 
 func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content, error) {
-	query, err := repo.Query().Get(featSSG, resContent, "GetAllContentWithMeta")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resContent, "GetAllContentWithMeta")
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +177,7 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 		var tableOfContents, share, comments sql.NullBool
 
 		var tagID, tagShortID, tagName, tagSlug sql.NullString
+		var contentImageID, imagePurpose, imageFilePath sql.NullString
 
 		err := rows.Scan(
 			&c.ID, &c.UserID, &c.SectionID, &c.Kind, &c.Heading, &c.Body, &c.Draft, &c.Featured, &publishedAt, &c.ShortID,
@@ -159,6 +185,7 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 			&sectionPath, &sectionName,
 			&metaID, &description, &keywords, &robots, &canonicalURL, &sitemap, &tableOfContents, &share, &comments,
 			&tagID, &tagShortID, &tagName, &tagSlug,
+			&contentImageID, &imagePurpose, &imageFilePath,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error scanning row: %w", err)
@@ -189,6 +216,24 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 			contentOrder = append(contentOrder, c.ID)
 		}
 
+		// Handle images
+		if contentImageID.Valid && imageFilePath.Valid {
+			// Sanitize the file path for URL safety
+			sanitizedPath := sanitizeURLPath(imageFilePath.String)
+			// Convert file_path to URL (add /static/images prefix)
+			imageURL := "/static/images" + sanitizedPath
+			if imagePurpose.String == "thumbnail" {
+				contentMap[c.ID].ThumbnailURL = imageURL
+			} else if imagePurpose.String == "header" {
+				contentMap[c.ID].HeaderImageURL = imageURL
+			} else if imagePurpose.String == "content" {
+				// Use content images as fallback for thumbnails if no thumbnail exists
+				if contentMap[c.ID].ThumbnailURL == "" {
+					contentMap[c.ID].ThumbnailURL = imageURL
+				}
+			}
+		}
+
 		if tagID.Valid {
 			t.ID, _ = uuid.Parse(tagID.String)
 			t.SetShortID(tagShortID.String)
@@ -209,7 +254,7 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 // Section related
 
 func (repo *ClioRepo) CreateSection(ctx context.Context, section ssg.Section) error {
-	query, err := repo.Query().Get(featSSG, resSection, "Create")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resSection, "Create")
 	if err != nil {
 		return err
 	}
@@ -230,7 +275,7 @@ func (repo *ClioRepo) CreateSection(ctx context.Context, section ssg.Section) er
 }
 
 func (repo *ClioRepo) GetSections(ctx context.Context) ([]ssg.Section, error) {
-	query, err := repo.Query().Get(featSSG, resSection, "GetAll")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resSection, "GetAll")
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +303,7 @@ func (repo *ClioRepo) GetSections(ctx context.Context) ([]ssg.Section, error) {
 }
 
 func (repo *ClioRepo) GetSection(ctx context.Context, id uuid.UUID) (ssg.Section, error) {
-	query, err := repo.Query().Get(featSSG, resSection, "Get")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resSection, "Get")
 	if err != nil {
 		return ssg.Section{}, err
 	}
@@ -304,7 +349,7 @@ func (repo *ClioRepo) GetSection(ctx context.Context, id uuid.UUID) (ssg.Section
 }
 
 func (repo *ClioRepo) UpdateSection(ctx context.Context, section ssg.Section) error {
-	query, err := repo.Query().Get(featSSG, resSection, "Update")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resSection, "Update")
 	if err != nil {
 		return err
 	}
@@ -314,7 +359,7 @@ func (repo *ClioRepo) UpdateSection(ctx context.Context, section ssg.Section) er
 }
 
 func (repo *ClioRepo) DeleteSection(ctx context.Context, id uuid.UUID) error {
-	query, err := repo.Query().Get(featSSG, resSection, "Delete")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resSection, "Delete")
 	if err != nil {
 		return err
 	}
@@ -326,7 +371,7 @@ func (repo *ClioRepo) DeleteSection(ctx context.Context, id uuid.UUID) error {
 // Layout related
 
 func (repo *ClioRepo) CreateLayout(ctx context.Context, layout ssg.Layout) error {
-	query, err := repo.Query().Get(featSSG, "layout", "Create")
+	query, err := repo.BaseRepo.Query().Get(featSSG, "layout", "Create")
 	if err != nil {
 		return err
 	}
@@ -346,7 +391,7 @@ func (repo *ClioRepo) CreateLayout(ctx context.Context, layout ssg.Layout) error
 }
 
 func (repo *ClioRepo) GetAllLayouts(ctx context.Context) ([]ssg.Layout, error) {
-	query, err := repo.Query().Get(featSSG, resLayout, "GetAll")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resLayout, "GetAll")
 	if err != nil {
 		return nil, err
 	}
@@ -403,7 +448,7 @@ func (repo *ClioRepo) GetAllLayouts(ctx context.Context) ([]ssg.Layout, error) {
 }
 
 func (repo *ClioRepo) GetLayout(ctx context.Context, id uuid.UUID) (ssg.Layout, error) {
-	query, err := repo.Query().Get(featSSG, "layout", "Get")
+	query, err := repo.BaseRepo.Query().Get(featSSG, "layout", "Get")
 	if err != nil {
 		return ssg.Layout{}, err
 	}
@@ -418,7 +463,7 @@ func (repo *ClioRepo) GetLayout(ctx context.Context, id uuid.UUID) (ssg.Layout, 
 }
 
 func (repo *ClioRepo) UpdateLayout(ctx context.Context, layout ssg.Layout) error {
-	query, err := repo.Query().Get(featSSG, resLayout, "Update")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resLayout, "Update")
 	if err != nil {
 		return err
 	}
@@ -436,7 +481,7 @@ func (repo *ClioRepo) UpdateLayout(ctx context.Context, layout ssg.Layout) error
 }
 
 func (repo *ClioRepo) DeleteLayout(ctx context.Context, id uuid.UUID) error {
-	query, err := repo.Query().Get(featSSG, resLayout, "Delete")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resLayout, "Delete")
 	if err != nil {
 		return err
 	}
@@ -448,7 +493,7 @@ func (repo *ClioRepo) DeleteLayout(ctx context.Context, id uuid.UUID) error {
 // Tag related
 
 func (repo *ClioRepo) CreateTag(ctx context.Context, tag ssg.Tag) error {
-	query, err := repo.Query().Get(featSSG, resTag, "Create")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resTag, "Create")
 	if err != nil {
 		return err
 	}
@@ -458,7 +503,7 @@ func (repo *ClioRepo) CreateTag(ctx context.Context, tag ssg.Tag) error {
 }
 
 func (repo *ClioRepo) GetTag(ctx context.Context, id uuid.UUID) (ssg.Tag, error) {
-	query, err := repo.Query().Get(featSSG, resTag, "Get")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resTag, "Get")
 	if err != nil {
 		return ssg.Tag{}, err
 	}
@@ -473,7 +518,7 @@ func (repo *ClioRepo) GetTag(ctx context.Context, id uuid.UUID) (ssg.Tag, error)
 }
 
 func (repo *ClioRepo) GetTagByName(ctx context.Context, name string) (ssg.Tag, error) {
-	query, err := repo.Query().Get(featSSG, resTag, "GetByName")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resTag, "GetByName")
 	if err != nil {
 		return ssg.Tag{}, err
 	}
@@ -488,7 +533,7 @@ func (repo *ClioRepo) GetTagByName(ctx context.Context, name string) (ssg.Tag, e
 }
 
 func (repo *ClioRepo) GetAllTags(ctx context.Context) ([]ssg.Tag, error) {
-	query, err := repo.Query().Get(featSSG, resTag, "GetAll")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resTag, "GetAll")
 	if err != nil {
 		return nil, err
 	}
@@ -503,7 +548,7 @@ func (repo *ClioRepo) GetAllTags(ctx context.Context) ([]ssg.Tag, error) {
 }
 
 func (repo *ClioRepo) UpdateTag(ctx context.Context, tag ssg.Tag) error {
-	query, err := repo.Query().Get(featSSG, resTag, "Update")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resTag, "Update")
 	if err != nil {
 		return err
 	}
@@ -513,7 +558,7 @@ func (repo *ClioRepo) UpdateTag(ctx context.Context, tag ssg.Tag) error {
 }
 
 func (repo *ClioRepo) DeleteTag(ctx context.Context, id uuid.UUID) error {
-	query, err := repo.Query().Get(featSSG, resTag, "Delete")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resTag, "Delete")
 	if err != nil {
 		return err
 	}
@@ -525,7 +570,7 @@ func (repo *ClioRepo) DeleteTag(ctx context.Context, id uuid.UUID) error {
 // Param related
 
 func (repo *ClioRepo) CreateParam(ctx context.Context, p *ssg.Param) (err error) {
-	query, err := repo.Query().Get(featSSG, resParam, "Create")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resParam, "Create")
 	if err != nil {
 		return fmt.Errorf("cannot get create param query: %w", err)
 	}
@@ -536,7 +581,7 @@ func (repo *ClioRepo) CreateParam(ctx context.Context, p *ssg.Param) (err error)
 }
 
 func (repo *ClioRepo) GetParam(ctx context.Context, id uuid.UUID) (ssg.Param, error) {
-	query, err := repo.Query().Get(featSSG, resParam, "Get")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resParam, "Get")
 	if err != nil {
 		return ssg.Param{}, fmt.Errorf("cannot get get param query: %w", err)
 	}
@@ -552,7 +597,7 @@ func (repo *ClioRepo) GetParam(ctx context.Context, id uuid.UUID) (ssg.Param, er
 }
 
 func (repo *ClioRepo) GetParamByName(ctx context.Context, name string) (ssg.Param, error) {
-	query, err := repo.Query().Get(featSSG, resParam, "GetByName")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resParam, "GetByName")
 	if err != nil {
 		return ssg.Param{}, fmt.Errorf("cannot get get param by name query: %w", err)
 	}
@@ -568,7 +613,7 @@ func (repo *ClioRepo) GetParamByName(ctx context.Context, name string) (ssg.Para
 }
 
 func (repo *ClioRepo) GetParamByRefKey(ctx context.Context, refKey string) (ssg.Param, error) {
-	query, err := repo.Query().Get(featSSG, resParam, "GetByRefKey")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resParam, "GetByRefKey")
 	if err != nil {
 		return ssg.Param{}, fmt.Errorf("cannot get get param by ref key query: %w", err)
 	}
@@ -584,7 +629,7 @@ func (repo *ClioRepo) GetParamByRefKey(ctx context.Context, refKey string) (ssg.
 }
 
 func (repo *ClioRepo) ListParams(ctx context.Context) ([]ssg.Param, error) {
-	query, err := repo.Query().Get(featSSG, resParam, "List")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resParam, "List")
 	if err != nil {
 		return nil, fmt.Errorf("cannot get list params query: %w", err)
 	}
@@ -597,7 +642,7 @@ func (repo *ClioRepo) ListParams(ctx context.Context) ([]ssg.Param, error) {
 }
 
 func (repo *ClioRepo) UpdateParam(ctx context.Context, p *ssg.Param) (err error) {
-	query, err := repo.Query().Get(featSSG, resParam, "Update")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resParam, "Update")
 	if err != nil {
 		return fmt.Errorf("cannot get update param query: %w", err)
 	}
@@ -608,7 +653,7 @@ func (repo *ClioRepo) UpdateParam(ctx context.Context, p *ssg.Param) (err error)
 }
 
 func (repo *ClioRepo) DeleteParam(ctx context.Context, id uuid.UUID) error {
-	query, err := repo.Query().Get(featSSG, resParam, "Delete")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resParam, "Delete")
 	if err != nil {
 		return fmt.Errorf("cannot get delete param query: %w", err)
 	}
@@ -636,7 +681,7 @@ func (repo *ClioRepo) CreateImage(ctx context.Context, img *ssg.Image) (err erro
 		err = tx.Commit()
 	}()
 
-	imageQuery, err := repo.Query().Get(featSSG, resImage, "Create")
+	imageQuery, err := repo.BaseRepo.Query().Get(featSSG, resImage, "Create")
 	if err != nil {
 		return fmt.Errorf("cannot get create image query: %w", err)
 	}
@@ -648,7 +693,7 @@ func (repo *ClioRepo) CreateImage(ctx context.Context, img *ssg.Image) (err erro
 }
 
 func (repo *ClioRepo) GetImage(ctx context.Context, id uuid.UUID) (ssg.Image, error) {
-	query, err := repo.Query().Get(featSSG, resImage, "Get")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resImage, "Get")
 	if err != nil {
 		return ssg.Image{}, fmt.Errorf("cannot get image query: %w", err)
 	}
@@ -666,7 +711,7 @@ func (repo *ClioRepo) GetImage(ctx context.Context, id uuid.UUID) (ssg.Image, er
 }
 
 func (repo *ClioRepo) GetImageByShortID(ctx context.Context, shortID string) (ssg.Image, error) {
-	query, err := repo.Query().Get(featSSG, resImage, "GetImageByShortID")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resImage, "GetImageByShortID")
 	if err != nil {
 		return ssg.Image{}, fmt.Errorf("cannot get image by short ID query: %w", err)
 	}
@@ -684,7 +729,7 @@ func (repo *ClioRepo) GetImageByShortID(ctx context.Context, shortID string) (ss
 }
 
 func (repo *ClioRepo) GetImageByContentHash(ctx context.Context, contentHash string) (ssg.Image, error) {
-	query, err := repo.Query().Get(featSSG, resImage, "GetImageByContentHash")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resImage, "GetImageByContentHash")
 	if err != nil {
 		return ssg.Image{}, fmt.Errorf("cannot get image by content hash query: %w", err)
 	}
@@ -702,7 +747,7 @@ func (repo *ClioRepo) GetImageByContentHash(ctx context.Context, contentHash str
 }
 
 func (repo *ClioRepo) ListImages(ctx context.Context) ([]ssg.Image, error) {
-	query, err := repo.Query().Get(featSSG, resImage, "List")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resImage, "List")
 	if err != nil {
 		return nil, fmt.Errorf("cannot get list images query: %w", err)
 	}
@@ -731,7 +776,7 @@ func (repo *ClioRepo) UpdateImage(ctx context.Context, img *ssg.Image) (err erro
 		err = tx.Commit()
 	}()
 
-	imageQuery, err := repo.Query().Get(featSSG, resImage, "Update")
+	imageQuery, err := repo.BaseRepo.Query().Get(featSSG, resImage, "Update")
 	if err != nil {
 		return fmt.Errorf("cannot get update image query: %w", err)
 	}
@@ -743,7 +788,7 @@ func (repo *ClioRepo) UpdateImage(ctx context.Context, img *ssg.Image) (err erro
 }
 
 func (repo *ClioRepo) DeleteImage(ctx context.Context, id uuid.UUID) error {
-	query, err := repo.Query().Get(featSSG, resImage, "Delete")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resImage, "Delete")
 	if err != nil {
 		return fmt.Errorf("cannot get delete image query: %w", err)
 	}
@@ -771,7 +816,7 @@ func (repo *ClioRepo) CreateImageVariant(ctx context.Context, variant *ssg.Image
 		err = tx.Commit()
 	}()
 
-	variantQuery, err := repo.Query().Get(featSSG, resImageVariant, "CreateImageVariant")
+	variantQuery, err := repo.BaseRepo.Query().Get(featSSG, resImageVariant, "CreateImageVariant")
 	if err != nil {
 		return fmt.Errorf("cannot get create image variant query: %w", err)
 	}
@@ -783,7 +828,7 @@ func (repo *ClioRepo) CreateImageVariant(ctx context.Context, variant *ssg.Image
 }
 
 func (repo *ClioRepo) GetImageVariant(ctx context.Context, id uuid.UUID) (ssg.ImageVariant, error) {
-	query, err := repo.Query().Get(featSSG, resImageVariant, "GetImageVariantByID")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resImageVariant, "GetImageVariantByID")
 	if err != nil {
 		return ssg.ImageVariant{}, fmt.Errorf("cannot get image variant query: %w", err)
 	}
@@ -801,7 +846,7 @@ func (repo *ClioRepo) GetImageVariant(ctx context.Context, id uuid.UUID) (ssg.Im
 }
 
 func (repo *ClioRepo) ListImageVariantsByImageID(ctx context.Context, imageID uuid.UUID) ([]ssg.ImageVariant, error) {
-	query, err := repo.Query().Get(featSSG, resImageVariant, "GetImageVariantsByImageID")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resImageVariant, "GetImageVariantsByImageID")
 	if err != nil {
 		return nil, fmt.Errorf("cannot get image variants by image ID query: %w", err)
 	}
@@ -830,7 +875,7 @@ func (repo *ClioRepo) UpdateImageVariant(ctx context.Context, variant *ssg.Image
 		err = tx.Commit()
 	}()
 
-	variantQuery, err := repo.Query().Get(featSSG, resImageVariant, "UpdateImageVariant")
+	variantQuery, err := repo.BaseRepo.Query().Get(featSSG, resImageVariant, "UpdateImageVariant")
 	if err != nil {
 		return fmt.Errorf("cannot get update image variant query: %w", err)
 	}
@@ -842,7 +887,7 @@ func (repo *ClioRepo) UpdateImageVariant(ctx context.Context, variant *ssg.Image
 }
 
 func (repo *ClioRepo) DeleteImageVariant(ctx context.Context, id uuid.UUID) error {
-	query, err := repo.Query().Get(featSSG, resImageVariant, "DeleteImageVariant")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resImageVariant, "DeleteImageVariant")
 	if err != nil {
 		return fmt.Errorf("cannot get delete image variant query: %w", err)
 	}
@@ -856,7 +901,7 @@ func (repo *ClioRepo) DeleteImageVariant(ctx context.Context, id uuid.UUID) erro
 // ContentTag related
 
 func (repo *ClioRepo) AddTagToContent(ctx context.Context, contentID, tagID uuid.UUID) error {
-	query, err := repo.Query().Get(featSSG, resTag, "AddTagToContent")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resTag, "AddTagToContent")
 	if err != nil {
 		return err
 	}
@@ -866,7 +911,7 @@ func (repo *ClioRepo) AddTagToContent(ctx context.Context, contentID, tagID uuid
 }
 
 func (repo *ClioRepo) RemoveTagFromContent(ctx context.Context, contentID, tagID uuid.UUID) error {
-	query, err := repo.Query().Get(featSSG, resTag, "RemoveTagFromContent")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resTag, "RemoveTagFromContent")
 	if err != nil {
 		return err
 	}
@@ -876,7 +921,7 @@ func (repo *ClioRepo) RemoveTagFromContent(ctx context.Context, contentID, tagID
 }
 
 func (repo *ClioRepo) GetTagsForContent(ctx context.Context, contentID uuid.UUID) ([]ssg.Tag, error) {
-	query, err := repo.Query().Get(featSSG, resTag, "GetTagsForContent")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resTag, "GetTagsForContent")
 	if err != nil {
 		return nil, err
 	}
@@ -891,7 +936,7 @@ func (repo *ClioRepo) GetTagsForContent(ctx context.Context, contentID uuid.UUID
 }
 
 func (repo *ClioRepo) GetContentForTag(ctx context.Context, tagID uuid.UUID) ([]ssg.Content, error) {
-	query, err := repo.Query().Get(featSSG, resTag, "GetContentForTag")
+	query, err := repo.BaseRepo.Query().Get(featSSG, resTag, "GetContentForTag")
 	if err != nil {
 		return nil, err
 	}
