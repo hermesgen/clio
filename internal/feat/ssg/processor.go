@@ -16,14 +16,14 @@ type Processor struct {
 // NewMarkdownProcessor creates and configures a new Markdown processor.
 func NewMarkdownProcessor() *Processor {
 	md := goldmark.New(
-		goldmark.WithRendererOptions(
-			renderer.WithNodeRenderers(
-				util.Prioritized(NewTailwindRenderer(), 1000),
-			),
-		),
 		goldmark.WithExtensions(
 			extension.GFM,
 			// Add extensions here, e.g., syntax.New()
+		),
+		goldmark.WithRendererOptions(
+			renderer.WithNodeRenderers(
+				util.Prioritized(NewTailwindRenderer(), 2000),
+			),
 		),
 	)
 
