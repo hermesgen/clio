@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/hermesgen/hm"
@@ -121,12 +122,32 @@ func (h *WebHandler) UpdateContent(w http.ResponseWriter, r *http.Request) {
 func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("List content")
 
-	var response struct {
-		Contents []feat.Content `json:"contents"`
+	query := r.URL.Query()
+	searchQuery := query.Get("search")
+	pageStr := query.Get("page")
+	
+	page := 1
+	if pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
 	}
-	h.Log().Info("Calling apiClient.Get /contents")
-	h.Log().Infof("h.apiClient: %+v", h.apiClient)
-	err := h.apiClient.Get(r, "/ssg/contents", &response)
+
+	var response struct {
+		Contents   []feat.Content `json:"contents"`
+		Page       int            `json:"page"`
+		TotalPages int            `json:"total_pages"`
+		TotalCount int            `json:"total_count"`
+		Search     string         `json:"search"`
+	}
+	
+	url := fmt.Sprintf("/ssg/contents/search?page=%d", page)
+	if searchQuery != "" {
+		url += "&search=" + searchQuery
+	}
+	
+	h.Log().Info("Calling apiClient.Get", "url", url)
+	err := h.apiClient.Get(r, url, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get contents from API", http.StatusInternalServerError)
 		return
@@ -134,25 +155,53 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 	contents := response.Contents
 
 	h.Log().Infof("Contents received: %+v", contents)
-	page := hm.NewPage(r, contents)
-	h.Log().Info("Page created")
-	page.Form.SetAction(ssgPath)
-	h.Log().Info("Form action set")
-
-	menu := page.NewMenu(ssgPath)
-	h.Log().Info("Menu created")
+	
+	// Create page data with pagination info
+	// Calculate pagination values
+	prevPage := response.Page - 1
+	nextPage := response.Page + 1
+	showingFrom := (response.Page-1)*25 + 1
+	showingTo := response.Page * 25
+	if showingTo > response.TotalCount {
+		showingTo = response.TotalCount
+	}
+	
+	pageData := struct {
+		hm.Page
+		CurrentPage int    `json:"current_page"`
+		TotalPages  int    `json:"total_pages"`
+		TotalCount  int    `json:"total_count"`
+		SearchQuery string `json:"search_query"`
+		PageNumbers []int  `json:"page_numbers"`
+		PrevPage    int    `json:"prev_page"`
+		NextPage    int    `json:"next_page"`
+		ShowingFrom int    `json:"showing_from"`
+		ShowingTo   int    `json:"showing_to"`
+	}{
+		Page:        *hm.NewPage(r, contents),
+		CurrentPage: response.Page,
+		TotalPages:  response.TotalPages,
+		TotalCount:  response.TotalCount,
+		SearchQuery: searchQuery,
+		PageNumbers: generatePageNumbers(response.Page, response.TotalPages),
+		PrevPage:    prevPage,
+		NextPage:    nextPage,
+		ShowingFrom: showingFrom,
+		ShowingTo:   showingTo,
+	}
+	
+	pageData.Form.SetAction(ssgPath)
+	menu := pageData.NewMenu(ssgPath)
 	menu.AddNewItem(&Content{})
-	h.Log().Info("Menu item added")
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-content")
 	if err != nil {
 		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
-	h.Log().Info("Template retrieved")
 
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, page)
+	err = tmpl.Execute(&buf, pageData)
 	if err != nil {
 		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
@@ -226,6 +275,126 @@ func (h *WebHandler) DeleteContent(w http.ResponseWriter, r *http.Request) {
 
 	h.FlashInfo(w, r, "Content deleted successfully")
 	h.Redir(w, r, hm.ListPath(&Content{}), http.StatusSeeOther)
+}
+
+func (h *WebHandler) SearchContent(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Search content HTMX request")
+
+	query := r.URL.Query()
+	searchQuery := query.Get("search")
+	pageStr := query.Get("page")
+	
+	page := 1
+	if pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+
+	var response struct {
+		Contents   []feat.Content `json:"contents"`
+		Page       int            `json:"page"`
+		TotalPages int            `json:"total_pages"`
+		TotalCount int            `json:"total_count"`
+		Search     string         `json:"search"`
+	}
+	
+	url := fmt.Sprintf("/ssg/contents/search?page=%d", page)
+	if searchQuery != "" {
+		url += "&search=" + searchQuery
+	}
+	
+	err := h.apiClient.Get(r, url, &response)
+	if err != nil {
+		h.Err(w, err, "Cannot search contents from API", http.StatusInternalServerError)
+		return
+	}
+
+	contents := response.Contents
+	
+	// Calculate pagination values
+	prevPage := response.Page - 1
+	nextPage := response.Page + 1
+	showingFrom := (response.Page-1)*25 + 1
+	showingTo := response.Page * 25
+	if showingTo > response.TotalCount {
+		showingTo = response.TotalCount
+	}
+	
+	pageData := struct {
+		Data        []feat.Content `json:"data"`
+		CurrentPage int            `json:"current_page"`
+		TotalPages  int            `json:"total_pages"`
+		TotalCount  int            `json:"total_count"`
+		SearchQuery string         `json:"search_query"`
+		PageNumbers []int          `json:"page_numbers"`
+		PrevPage    int            `json:"prev_page"`
+		NextPage    int            `json:"next_page"`
+		ShowingFrom int            `json:"showing_from"`
+		ShowingTo   int            `json:"showing_to"`
+	}{
+		Data:        contents,
+		CurrentPage: response.Page,
+		TotalPages:  response.TotalPages,
+		TotalCount:  response.TotalCount,
+		SearchQuery: searchQuery,
+		PageNumbers: generatePageNumbers(response.Page, response.TotalPages),
+		PrevPage:    prevPage,
+		NextPage:    nextPage,
+		ShowingFrom: showingFrom,
+		ShowingTo:   showingTo,
+	}
+
+	tmpl, err := h.Tmpl().Get(ssgFeat, "list-content")
+	if err != nil {
+		h.Err(w, err, "Template not found", http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.ExecuteTemplate(&buf, "list-content-table", pageData)
+	if err != nil {
+		h.Err(w, err, "Cannot render template", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(buf.Bytes())
+}
+
+func generatePageNumbers(currentPage, totalPages int) []int {
+	if totalPages <= 7 {
+		pages := make([]int, totalPages)
+		for i := 0; i < totalPages; i++ {
+			pages[i] = i + 1
+		}
+		return pages
+	}
+
+	var pages []int
+	if currentPage <= 4 {
+		for i := 1; i <= 5; i++ {
+			pages = append(pages, i)
+		}
+		pages = append(pages, -1)
+		pages = append(pages, totalPages)
+	} else if currentPage >= totalPages-3 {
+		pages = append(pages, 1)
+		pages = append(pages, -1)
+		for i := totalPages - 4; i <= totalPages; i++ {
+			pages = append(pages, i)
+		}
+	} else {
+		pages = append(pages, 1)
+		pages = append(pages, -1)
+		for i := currentPage - 1; i <= currentPage+1; i++ {
+			pages = append(pages, i)
+		}
+		pages = append(pages, -1)
+		pages = append(pages, totalPages)
+	}
+	return pages
 }
 
 func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, form ContentForm, content Content, errorMessage string, statusCode int) {
