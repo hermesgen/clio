@@ -24,6 +24,7 @@ import (
 type Service interface {
 	CreateContent(ctx context.Context, content *Content) error
 	GetAllContentWithMeta(ctx context.Context) ([]Content, error)
+	GetContentWithPaginationAndSearch(ctx context.Context, offset, limit int, searchQuery string) ([]Content, int, error)
 	GetContent(ctx context.Context, id uuid.UUID) (Content, error)
 	UpdateContent(ctx context.Context, content *Content) error
 	DeleteContent(ctx context.Context, id uuid.UUID) error
@@ -486,6 +487,10 @@ func (svc *BaseService) DeleteContent(ctx context.Context, id uuid.UUID) error {
 
 func (svc *BaseService) GetAllContentWithMeta(ctx context.Context) ([]Content, error) {
 	return svc.repo.GetAllContentWithMeta(ctx)
+}
+
+func (svc *BaseService) GetContentWithPaginationAndSearch(ctx context.Context, offset, limit int, searchQuery string) ([]Content, int, error) {
+	return svc.repo.GetContentWithPaginationAndSearch(ctx, offset, limit, searchQuery)
 }
 
 // Section related

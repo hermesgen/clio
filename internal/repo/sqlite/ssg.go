@@ -252,6 +252,115 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 	return contents, nil
 }
 
+func (repo *ClioRepo) GetContentWithPaginationAndSearch(ctx context.Context, offset, limit int, searchQuery string) ([]ssg.Content, int, error) {
+	countQuery, err := repo.BaseRepo.Query().Get(featSSG, resContent, "GetContentCountWithSearch")
+	if err != nil {
+		return nil, 0, fmt.Errorf("cannot get count query: %w", err)
+	}
+
+	var totalCount int
+	row := repo.db.QueryRowxContext(ctx, countQuery, searchQuery, searchQuery)
+	err = row.Scan(&totalCount)
+	if err != nil {
+		return nil, 0, fmt.Errorf("cannot get total count: %w", err)
+	}
+
+	query, err := repo.BaseRepo.Query().Get(featSSG, resContent, "GetContentWithPaginationAndSearch")
+	if err != nil {
+		return nil, 0, fmt.Errorf("cannot get pagination query: %w", err)
+	}
+
+	rows, err := repo.db.QueryxContext(ctx, query, searchQuery, searchQuery, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("cannot execute pagination query: %w", err)
+	}
+	defer rows.Close()
+
+	contentMap := make(map[uuid.UUID]*ssg.Content)
+	var contentOrder []uuid.UUID
+
+	for rows.Next() {
+		var c ssg.Content
+		var m ssg.Meta
+		var t ssg.Tag
+		var sectionPath, sectionName sql.NullString
+		var publishedAt sql.NullTime
+
+		var metaID sql.NullString
+		var description, keywords, robots, canonicalURL, sitemap sql.NullString
+		var tableOfContents, share, comments sql.NullBool
+
+		var tagID, tagShortID, tagName, tagSlug sql.NullString
+		var contentImageID, imagePurpose, imageFilePath sql.NullString
+
+		err := rows.Scan(
+			&c.ID, &c.UserID, &c.SectionID, &c.Kind, &c.Heading, &c.Body, &c.Draft, &c.Featured, &publishedAt, &c.ShortID,
+			&c.CreatedBy, &c.UpdatedBy, &c.CreatedAt, &c.UpdatedAt,
+			&sectionPath, &sectionName,
+			&metaID, &description, &keywords, &robots, &canonicalURL, &sitemap, &tableOfContents, &share, &comments,
+			&tagID, &tagShortID, &tagName, &tagSlug,
+			&contentImageID, &imagePurpose, &imageFilePath,
+		)
+		if err != nil {
+			return nil, 0, fmt.Errorf("error scanning row: %w", err)
+		}
+
+		if _, ok := contentMap[c.ID]; !ok {
+			c.SectionPath = sectionPath.String
+			c.SectionName = sectionName.String
+			if publishedAt.Valid {
+				c.PublishedAt = &publishedAt.Time
+			}
+
+			if metaID.Valid {
+				m.ID, _ = uuid.Parse(metaID.String)
+				m.ContentID = c.ID
+				m.Description = description.String
+				m.Keywords = keywords.String
+				m.Robots = robots.String
+				m.CanonicalURL = canonicalURL.String
+				m.Sitemap = sitemap.String
+				m.TableOfContents = tableOfContents.Bool
+				m.Share = share.Bool
+				m.Comments = comments.Bool
+				c.Meta = m
+			}
+
+			contentMap[c.ID] = &c
+			contentOrder = append(contentOrder, c.ID)
+		}
+
+		if contentImageID.Valid && imageFilePath.Valid {
+			sanitizedPath := sanitizeURLPath(imageFilePath.String)
+			imageURL := "/static/images" + sanitizedPath
+			if imagePurpose.String == "thumbnail" {
+				contentMap[c.ID].ThumbnailURL = imageURL
+			} else if imagePurpose.String == "header" {
+				contentMap[c.ID].HeaderImageURL = imageURL
+			} else if imagePurpose.String == "content" {
+				if contentMap[c.ID].ThumbnailURL == "" {
+					contentMap[c.ID].ThumbnailURL = imageURL
+				}
+			}
+		}
+
+		if tagID.Valid {
+			t.ID, _ = uuid.Parse(tagID.String)
+			t.SetShortID(tagShortID.String)
+			t.Name = tagName.String
+			t.SlugField = tagSlug.String
+			contentMap[c.ID].Tags = append(contentMap[c.ID].Tags, t)
+		}
+	}
+
+	contents := make([]ssg.Content, len(contentOrder))
+	for i, id := range contentOrder {
+		contents[i] = *contentMap[id]
+	}
+
+	return contents, totalCount, nil
+}
+
 // Section related
 
 func (repo *ClioRepo) CreateSection(ctx context.Context, section ssg.Section) error {

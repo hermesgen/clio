@@ -31,6 +31,7 @@ func NewAPIRouter(handler *APIHandler, mw []hm.Middleware, params hm.XParams) *h
 
 	// Content API routes
 	core.Get("/contents", handler.GetAllContent)
+	core.Get("/contents/search", handler.SearchContent)
 	core.Get("/contents/{id}", handler.GetContent)
 	core.Post("/contents", handler.CreateContent)
 	core.Put("/contents/{id}", handler.UpdateContent)
