@@ -34,14 +34,14 @@ func sanitizeURLPath(path string) string {
 			// Replace problematic characters with hyphens
 			re := regexp.MustCompile(`[^a-zA-Z0-9\-_.]`)
 			sanitized := re.ReplaceAllString(part, "-")
-			
+
 			// Remove multiple consecutive hyphens
 			re2 := regexp.MustCompile(`-+`)
 			sanitized = re2.ReplaceAllString(sanitized, "-")
-			
+
 			// Remove leading/trailing hyphens
 			sanitized = strings.Trim(sanitized, "-")
-			
+
 			parts[i] = strings.ToLower(sanitized)
 		}
 	}
@@ -177,7 +177,7 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 		var tableOfContents, share, comments sql.NullBool
 
 		var tagID, tagShortID, tagName, tagSlug sql.NullString
-		var contentImageID, imagePurpose, imageFilePath sql.NullString
+		var contentImageID, imagePurpose, imageFilePath, imageAltText, imageLongDescription sql.NullString
 
 		err := rows.Scan(
 			&c.ID, &c.UserID, &c.SectionID, &c.Kind, &c.Heading, &c.Body, &c.Draft, &c.Featured, &publishedAt, &c.ShortID,
@@ -185,7 +185,7 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 			&sectionPath, &sectionName,
 			&metaID, &description, &keywords, &robots, &canonicalURL, &sitemap, &tableOfContents, &share, &comments,
 			&tagID, &tagShortID, &tagName, &tagSlug,
-			&contentImageID, &imagePurpose, &imageFilePath,
+			&contentImageID, &imagePurpose, &imageFilePath, &imageAltText, &imageLongDescription,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error scanning row: %w", err)
@@ -226,6 +226,8 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 				contentMap[c.ID].ThumbnailURL = imageURL
 			} else if imagePurpose.String == "header" {
 				contentMap[c.ID].HeaderImageURL = imageURL
+				contentMap[c.ID].HeaderImageAlt = imageAltText.String
+				contentMap[c.ID].HeaderImageCaption = imageLongDescription.String
 			} else if imagePurpose.String == "content" {
 				// Use content images as fallback for thumbnails if no thumbnail exists
 				if contentMap[c.ID].ThumbnailURL == "" {
@@ -247,7 +249,6 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 	for i, id := range contentOrder {
 		contents[i] = *contentMap[id]
 	}
-
 
 	return contents, nil
 }
@@ -291,7 +292,7 @@ func (repo *ClioRepo) GetContentWithPaginationAndSearch(ctx context.Context, off
 		var tableOfContents, share, comments sql.NullBool
 
 		var tagID, tagShortID, tagName, tagSlug sql.NullString
-		var contentImageID, imagePurpose, imageFilePath sql.NullString
+		var contentImageID, imagePurpose, imageFilePath, imageAltText, imageLongDescription sql.NullString
 
 		err := rows.Scan(
 			&c.ID, &c.UserID, &c.SectionID, &c.Kind, &c.Heading, &c.Body, &c.Draft, &c.Featured, &publishedAt, &c.ShortID,
@@ -299,7 +300,7 @@ func (repo *ClioRepo) GetContentWithPaginationAndSearch(ctx context.Context, off
 			&sectionPath, &sectionName,
 			&metaID, &description, &keywords, &robots, &canonicalURL, &sitemap, &tableOfContents, &share, &comments,
 			&tagID, &tagShortID, &tagName, &tagSlug,
-			&contentImageID, &imagePurpose, &imageFilePath,
+			&contentImageID, &imagePurpose, &imageFilePath, &imageAltText, &imageLongDescription,
 		)
 		if err != nil {
 			return nil, 0, fmt.Errorf("error scanning row: %w", err)
@@ -337,6 +338,8 @@ func (repo *ClioRepo) GetContentWithPaginationAndSearch(ctx context.Context, off
 				contentMap[c.ID].ThumbnailURL = imageURL
 			} else if imagePurpose.String == "header" {
 				contentMap[c.ID].HeaderImageURL = imageURL
+				contentMap[c.ID].HeaderImageAlt = imageAltText.String
+				contentMap[c.ID].HeaderImageCaption = imageLongDescription.String
 			} else if imagePurpose.String == "content" {
 				if contentMap[c.ID].ThumbnailURL == "" {
 					contentMap[c.ID].ThumbnailURL = imageURL

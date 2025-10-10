@@ -426,7 +426,7 @@ function displayImages(images) {
     const imageUrl = `/static/images/${image.file_path}`;
 
     div.innerHTML = `
-      <img src="${imageUrl}" alt="${image.alt_text || 'Content image'}" class="w-full h-20 object-cover cursor-pointer" onclick="insertImageIntoMarkdown('${image.file_path}')">
+      <img src="${imageUrl}" alt="${image.alt_text || 'Content image'}" class="w-full h-20 object-cover cursor-pointer" onclick="insertImageIntoMarkdown('${image.file_path}', '${image.alt_text || ''}', '${image.long_description || ''}')">
       <div class="absolute top-2 right-2 z-10">
         <button
           type="button"
@@ -441,7 +441,7 @@ function displayImages(images) {
         <span class="text-white text-xs opacity-0 group-hover:opacity-100">Insert</span>
       </div>
       ${image.alt_text ? `<div class="p-2 bg-gray-50"><p class="text-xs text-gray-700 font-medium text-center">${image.alt_text}</p></div>` : ''}
-      ${image.caption ? `<div class="px-2 pb-2 bg-gray-50"><p class="text-xs text-gray-500 text-center">[${image.caption}]</p></div>` : ''}
+      ${image.long_description ? `<div class="px-2 pb-2 bg-gray-50"><p class="text-xs text-gray-500 text-center">[${image.long_description}]</p></div>` : ''}
     `;
 
     // Add event listener for delete button
@@ -456,14 +456,27 @@ function displayImages(images) {
 }
 
 // Insert image into markdown at cursor position
-function insertImageIntoMarkdown(imagePath) {
+function insertImageIntoMarkdown(imagePath, altText, longDescription) {
   const textarea = document.getElementById('body');
   const cursorPos = textarea.selectionStart;
   const textBefore = textarea.value.substring(0, cursorPos);
   const textAfter = textarea.value.substring(cursorPos);
 
+  // Use provided alt text or fallback to filename
   const filename = imagePath.split('/').pop().replace(/\.[^/.]+$/, ""); // Remove extension for alt text
-  const imageMarkdown = `![${filename}](/static/images/${imagePath})`;
+  const displayAltText = altText || filename;
+  
+  // Create enhanced markdown with long description in alt text
+  let imageMarkdown;
+  if (longDescription && altText) {
+    // Include long description in alt text separated by ||| for renderer to parse
+    imageMarkdown = `![${altText}|||${longDescription}](/static/images/${imagePath})`;
+  } else if (altText) {
+    imageMarkdown = `![${altText}](/static/images/${imagePath})`;
+  } else {
+    // Fallback to standard markdown for images without metadata
+    imageMarkdown = `![${displayAltText}](/static/images/${imagePath})`;
+  }
 
   textarea.value = textBefore + imageMarkdown + textAfter;
 

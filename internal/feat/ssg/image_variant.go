@@ -7,13 +7,12 @@ import (
 	"github.com/hermesgen/hm"
 )
 
-
 // ImageVariant represents a specific rendition of an image.
 type ImageVariant struct {
 	// Common
 	ID      uuid.UUID `json:"id" db:"id"`
 	ShortID string    `json:"-" db:"short_id"`
-	ref     string `json:"-"`
+	ref     string    `json:"-"`
 
 	ImageID      uuid.UUID `json:"image_id" db:"image_id"`
 	Kind         string    `json:"kind" db:"kind"` // e.g., 'original', 'web', 'thumb'
@@ -41,7 +40,6 @@ func NewImageVariant() ImageVariant {
 func (iv *ImageVariant) Type() string {
 	return "image-variant"
 }
-
 
 // GetID returns the unique identifier of the entity.
 func (iv ImageVariant) GetID() uuid.UUID {

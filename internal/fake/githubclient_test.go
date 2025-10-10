@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/fake"
+	"github.com/hermesgen/hm"
 )
 
 func TestGithubClientClone(t *testing.T) {

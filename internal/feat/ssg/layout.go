@@ -44,7 +44,6 @@ func (l *Layout) Type() string {
 	return "layout"
 }
 
-
 // GetID returns the unique identifier of the entity.
 func (l *Layout) GetID() uuid.UUID {
 	return l.ID

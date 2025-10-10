@@ -2,6 +2,7 @@ package ssg
 
 import (
 	"fmt"
+	"strings"
 
 	gmast "github.com/yuin/goldmark/ast"
 	extast "github.com/yuin/goldmark/extension/ast"
@@ -10,15 +11,40 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
+// ImageContext contains metadata about images for enhanced rendering
+type ImageContext struct {
+	Images map[string]ImageMetadata // key is the image path relative to /static/images/
+}
+
+// ImageMetadata holds accessibility and semantic information for an image
+type ImageMetadata struct {
+	AltText         string
+	Caption         string
+	LongDescription string
+	Title           string
+	Decorative      bool
+}
+
 // TailwindRenderer is a custom renderer for goldmark that adds Tailwind CSS classes.
 type TailwindRenderer struct {
 	html.Config
+	ImageContext *ImageContext
 }
 
-// NewTailwindRenderer creates a new TailwindRenderer.
-func NewTailwindRenderer(opts ...html.Option) renderer.NodeRenderer {
+// ImageRenderer is a simple renderer that only handles image nodes
+type ImageRenderer struct {
+	ImageContext *ImageContext
+}
+
+// NewTailwindRenderer creates a new TailwindRenderer with optional image context.
+func NewTailwindRenderer(imageContext *ImageContext, opts ...html.Option) renderer.NodeRenderer {
+	imageCount := 0
+	if imageContext != nil && imageContext.Images != nil {
+		imageCount = len(imageContext.Images)
+	}
 	r := &TailwindRenderer{
-		Config: html.NewConfig(),
+		Config:       html.NewConfig(),
+		ImageContext: imageContext,
 	}
 	for _, opt := range opts {
 		opt.SetHTMLOption(&r.Config)
@@ -45,6 +71,7 @@ func (r *TailwindRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer
 	reg.Register(extast.KindTableCell, r.renderTableCell)
 	reg.Register(gmast.KindLink, r.renderLink)
 	reg.Register(gmast.KindImage, r.renderImage)
+	reg.Register(gmast.KindText, r.renderText)
 }
 
 func (r *TailwindRenderer) renderHeading(w util.BufWriter, source []byte, node gmast.Node, entering bool) (gmast.WalkStatus, error) {
@@ -234,11 +261,164 @@ func (r *TailwindRenderer) renderLink(w util.BufWriter, source []byte, node gmas
 
 func (r *TailwindRenderer) renderImage(w util.BufWriter, source []byte, node gmast.Node, entering bool) (gmast.WalkStatus, error) {
 	n := node.(*gmast.Image)
-	if entering {
-		_, _ = w.Write([]byte(fmt.Sprintf("<img src=\"%s\" alt=\"", n.Destination)))
-		// The alt text is a child of the image node.
+	imgSrc := string(n.Destination)
+
+	var altText, figCaption, figCaptionHTML string
+
+	textAlt := ""
+	if n.FirstChild() != nil {
+		if text, ok := n.FirstChild().(*gmast.Text); ok {
+			textAlt = string(text.Segment.Value(source))
+		}
+	}
+
+	var markdownAltText, markdownLongDescription string
+	if strings.Contains(textAlt, "|||") {
+		parts := strings.SplitN(textAlt, "|||", 2)
+		markdownAltText = strings.TrimSpace(parts[0])
+		markdownLongDescription = strings.TrimSpace(parts[1])
 	} else {
-		_, _ = w.Write([]byte("\" class=\"prose-img\">"))
+		markdownAltText = textAlt
+	}
+
+	hasMetadata := false
+	if r.ImageContext != nil && r.ImageContext.Images != nil {
+		imgPath := imgSrc
+		imgPath = strings.TrimPrefix(imgPath, "/static/images/")
+		imgPath = strings.TrimPrefix(imgPath, "/static/images")
+		imgPath = strings.ReplaceAll(imgPath, "//", "/")
+		imgPath = strings.TrimPrefix(imgPath, "/")
+
+		if metadata, found := r.ImageContext.Images[imgPath]; found {
+			hasMetadata = true
+			altText = metadata.AltText
+			figCaption = metadata.LongDescription
+
+			if altText == "" {
+				altText = textAlt
+			}
+
+			if figCaption != "" {
+				figCaptionHTML = fmt.Sprintf("<figcaption class=\"prose-figcaption\">%s</figcaption>", figCaption)
+			}
+		}
+	}
+
+	if !hasMetadata {
+		altText = markdownAltText
+		figCaption = markdownLongDescription
+
+		if figCaption != "" {
+			figCaptionHTML = fmt.Sprintf("<figcaption class=\"prose-figcaption\">%s</figcaption>", figCaption)
+		}
+	} else {
+		if markdownLongDescription != "" {
+			figCaption = markdownLongDescription
+			figCaptionHTML = fmt.Sprintf("<figcaption class=\"prose-figcaption\">%s</figcaption>", figCaption)
+		}
+	}
+
+	if entering {
+		if figCaption != "" {
+			_, _ = w.WriteString("<figure class=\"prose-figure\">")
+		}
+
+		_, _ = w.WriteString(fmt.Sprintf("<img src=\"%s\" alt=\"%s\" class=\"prose-img\">",
+			imgSrc, altText))
+
+		if figCaption != "" {
+			_, _ = w.WriteString(figCaptionHTML + "</figure>")
+		}
+	}
+
+	return gmast.WalkSkipChildren, nil
+}
+
+func (r *TailwindRenderer) renderText(w util.BufWriter, source []byte, node gmast.Node, entering bool) (gmast.WalkStatus, error) {
+	if entering {
+		n := node.(*gmast.Text)
+		_, _ = w.Write(n.Segment.Value(source))
 	}
 	return gmast.WalkContinue, nil
+}
+
+// RegisterFuncs for ImageRenderer
+func (r *ImageRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
+	reg.Register(gmast.KindImage, r.renderImage)
+}
+
+func (r *ImageRenderer) renderImage(w util.BufWriter, source []byte, node gmast.Node, entering bool) (gmast.WalkStatus, error) {
+	n := node.(*gmast.Image)
+	imgSrc := string(n.Destination)
+
+	var altText, figCaption, figCaptionHTML string
+
+	textAlt := ""
+	if n.FirstChild() != nil {
+		if text, ok := n.FirstChild().(*gmast.Text); ok {
+			textAlt = string(text.Segment.Value(source))
+		}
+	}
+
+	var markdownAltText, markdownLongDescription string
+	if strings.Contains(textAlt, "|||") {
+		parts := strings.SplitN(textAlt, "|||", 2)
+		markdownAltText = strings.TrimSpace(parts[0])
+		markdownLongDescription = strings.TrimSpace(parts[1])
+		fmt.Printf("[DEBUG] Found long description in alt text: alt='%s', longDesc='%s'\n", markdownAltText, markdownLongDescription)
+	} else {
+		markdownAltText = textAlt
+	}
+
+	hasMetadata := false
+	if r.ImageContext != nil && r.ImageContext.Images != nil {
+		imgPath := imgSrc
+		imgPath = strings.TrimPrefix(imgPath, "/static/images/")
+		imgPath = strings.TrimPrefix(imgPath, "/static/images")
+		imgPath = strings.ReplaceAll(imgPath, "//", "/")
+		imgPath = strings.TrimPrefix(imgPath, "/")
+
+		if metadata, found := r.ImageContext.Images[imgPath]; found {
+			hasMetadata = true
+			altText = metadata.AltText
+			figCaption = metadata.LongDescription
+
+			if altText == "" {
+				altText = textAlt
+			}
+
+			if figCaption != "" {
+				figCaptionHTML = fmt.Sprintf("<figcaption class=\"prose-figcaption\">%s</figcaption>", figCaption)
+			}
+		}
+	}
+
+	if !hasMetadata {
+		altText = markdownAltText
+		figCaption = markdownLongDescription
+
+		if figCaption != "" {
+			figCaptionHTML = fmt.Sprintf("<figcaption class=\"prose-figcaption\">%s</figcaption>", figCaption)
+		}
+	} else {
+		if markdownLongDescription != "" {
+			figCaption = markdownLongDescription
+			figCaptionHTML = fmt.Sprintf("<figcaption class=\"prose-figcaption\">%s</figcaption>", figCaption)
+		}
+	}
+
+	if entering {
+		if figCaption != "" {
+			_, _ = w.WriteString("<figure class=\"prose-figure\">")
+		}
+
+		_, _ = w.WriteString(fmt.Sprintf("<img src=\"%s\" alt=\"%s\" class=\"prose-img\">",
+			imgSrc, altText))
+
+		if figCaption != "" {
+			_, _ = w.WriteString(figCaptionHTML + "</figure>")
+		}
+	}
+
+	return gmast.WalkSkipChildren, nil
 }

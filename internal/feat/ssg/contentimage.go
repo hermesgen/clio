@@ -9,14 +9,14 @@ import (
 // ContentImage represents the relationship between content and images
 type ContentImage struct {
 	// Common
-	ID         uuid.UUID `json:"id" db:"id"`
-	ContentID  uuid.UUID `json:"content_id" db:"content_id"`
-	ImageID    uuid.UUID `json:"image_id" db:"image_id"`
-	Purpose    string    `json:"purpose" db:"purpose"` // 'header', 'content', 'thumbnail'
-	Position   int       `json:"position" db:"position"`
-	IsActive   bool      `json:"is_active" db:"is_active"`
-	CreatedAt  time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
+	ID        uuid.UUID `json:"id" db:"id"`
+	ContentID uuid.UUID `json:"content_id" db:"content_id"`
+	ImageID   uuid.UUID `json:"image_id" db:"image_id"`
+	Purpose   string    `json:"purpose" db:"purpose"` // 'header', 'content', 'thumbnail'
+	Position  int       `json:"position" db:"position"`
+	IsActive  bool      `json:"is_active" db:"is_active"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 
 	// Related objects (populated by joins)
 	Image   *Image   `json:"image,omitempty" db:"-"`
@@ -69,10 +69,10 @@ func NewSectionImage(sectionID uuid.UUID, imageID uuid.UUID, purpose string) *Se
 
 // ImagePurpose constants
 const (
-	ImagePurposeHeader      = "header"
-	ImagePurposeContent     = "content"
-	ImagePurposeThumbnail   = "thumbnail"
-	ImagePurposeBlogHeader  = "blog_header"
+	ImagePurposeHeader     = "header"
+	ImagePurposeContent    = "content"
+	ImagePurposeThumbnail  = "thumbnail"
+	ImagePurposeBlogHeader = "blog_header"
 )
 
 // LayoutType constants

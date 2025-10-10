@@ -7,13 +7,12 @@ import (
 	"github.com/hermesgen/hm"
 )
 
-
 // Image represents an image asset with its metadata.
 type Image struct {
 	// Common
 	ID      uuid.UUID `json:"id" db:"id"`
 	ShortID string    `json:"-" db:"short_id"`
-	ref     string `json:"-"`
+	ref     string    `json:"-"`
 
 	ContentHash  string `json:"content_hash" db:"content_hash"`
 	Mime         string `json:"mime" db:"mime"`
@@ -53,7 +52,6 @@ func NewImage() Image {
 func (i *Image) Type() string {
 	return "image"
 }
-
 
 // GetID returns the unique identifier of the entity.
 func (i Image) GetID() uuid.UUID {

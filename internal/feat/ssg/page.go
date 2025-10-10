@@ -30,10 +30,12 @@ type SearchData struct {
 
 // PageContent holds the specific content to be rendered in the template for a single page.
 type PageContent struct {
-	Heading     string
-	HeaderImage string
-	Body        template.HTML
-	Kind        string
+	Heading            string
+	HeaderImage        string
+	HeaderImageAlt     string
+	HeaderImageCaption string
+	Body               template.HTML
+	Kind               string
 }
 
 // PaginationData holds data for rendering pagination controls.

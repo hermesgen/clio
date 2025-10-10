@@ -46,7 +46,6 @@ func (s *Section) Type() string {
 	return "section"
 }
 
-
 // GetID returns the unique identifier of the entity.
 func (s *Section) GetID() uuid.UUID {
 	return s.ID

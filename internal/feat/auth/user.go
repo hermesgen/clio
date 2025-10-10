@@ -7,12 +7,11 @@ import (
 	"github.com/hermesgen/hm"
 )
 
-
 type User struct {
 	// Common
-	ID      uuid.UUID `json:"id" db:"id"`
-	ShortID string    `json:"-" db:"short_id"`
-	RefValue string `json:"ref"`
+	ID       uuid.UUID `json:"id" db:"id"`
+	ShortID  string    `json:"-" db:"short_id"`
+	RefValue string    `json:"ref"`
 
 	Username string `json:"username" db:"username"`
 	Email    string `json:"email" db:"email"`
@@ -39,7 +38,6 @@ func NewUser(username, name, email string) User {
 func (u *User) Type() string {
 	return "user"
 }
-
 
 // GetID returns the unique identifier of the entity.
 func (u User) GetID() uuid.UUID {

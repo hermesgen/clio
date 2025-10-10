@@ -40,7 +40,6 @@ func (t *Tag) Type() string {
 	return "tag"
 }
 
-
 // GetID returns the unique identifier of the entity.
 func (t *Tag) GetID() uuid.UUID {
 	return t.ID

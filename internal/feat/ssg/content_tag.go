@@ -40,7 +40,6 @@ func (ct *ContentTag) Type() string {
 	return "content-tag"
 }
 
-
 // GetID returns the unique identifier of the entity.
 func (ct *ContentTag) GetID() uuid.UUID {
 	return ct.ID

@@ -98,14 +98,14 @@ func (im *ImageManager) sanitizeForURL(str string) string {
 	// Replace problematic characters with hyphens
 	re := regexp.MustCompile(`[^a-zA-Z0-9\-_.]`)
 	sanitized := re.ReplaceAllString(str, "-")
-	
+
 	// Remove multiple consecutive hyphens
 	re2 := regexp.MustCompile(`-+`)
 	sanitized = re2.ReplaceAllString(sanitized, "-")
-	
+
 	// Remove leading/trailing hyphens
 	sanitized = strings.Trim(sanitized, "-")
-	
+
 	return strings.ToLower(sanitized)
 }
 
@@ -121,7 +121,7 @@ func (im *ImageManager) generateDirectoryPath(content *Content, section *Section
 			return im.sanitizeForURL(content.Slug()), nil
 		}
 
-	return filepath.Join(section.Path, im.sanitizeForURL(content.Slug())), nil
+		return filepath.Join(section.Path, im.sanitizeForURL(content.Slug())), nil
 
 	case ImageTypeSectionHeader:
 		if section == nil {
@@ -156,13 +156,13 @@ func (im *ImageManager) generateFilename(content *Content, section *Section, ima
 		if content == nil {
 			return "", fmt.Errorf("content is required for content images")
 		}
-	return fmt.Sprintf("%s_%d%s", im.sanitizeForURL(content.Slug()), timestamp, extension), nil
+		return fmt.Sprintf("%s_%d%s", im.sanitizeForURL(content.Slug()), timestamp, extension), nil
 
 	case ImageTypeHeader:
 		if content == nil {
 			return "", fmt.Errorf("content is required for header images")
 		}
-	return fmt.Sprintf("%s_header_%d%s", im.sanitizeForURL(content.Slug()), timestamp, extension), nil
+		return fmt.Sprintf("%s_header_%d%s", im.sanitizeForURL(content.Slug()), timestamp, extension), nil
 
 	case ImageTypeSectionHeader:
 		if section == nil {

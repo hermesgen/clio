@@ -77,7 +77,7 @@
             </div>
         {{else if eq .HeaderStyle "overlay"}}
             <div class="hero-wrapper overlay">
-                <img class="hero-image" src="{{.Content.HeaderImage}}" alt="Header Image">
+                <img class="hero-image" src="{{.Content.HeaderImage}}" alt="{{.Content.HeaderImageAlt}}">
                 <h1 class="hero-title">{{.Content.Heading}}</h1>
             </div>
             <div class="site-container">
@@ -88,7 +88,7 @@
             </div>
         {{else if eq .HeaderStyle "boxed"}}
             <div class="hero-wrapper boxed">
-                <img class="hero-image" src="{{.Content.HeaderImage}}" alt="Header Image">
+                <img class="hero-image" src="{{.Content.HeaderImage}}" alt="{{.Content.HeaderImageAlt}}">
                 <div class="hero-title-box">
                     <h1 class="hero-title">{{.Content.Heading}}</h1>
                 </div>
@@ -99,7 +99,7 @@
                 </main>
             </div>
         {{else}} {{/* Default to stacked */}}
-            <img class="hero-image hero-stacked-image" src="{{.Content.HeaderImage}}" alt="Header Image">
+            <img class="hero-image hero-stacked-image" src="{{.Content.HeaderImage}}" alt="{{.Content.HeaderImageAlt}}">
             <div class="site-container">
                 <main>
                     {{.Content.Body}}

@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/feat/ssg"
+	"github.com/hermesgen/hm"
 )
 
 var key = hm.Key

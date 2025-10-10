@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/feat/auth"
 	feat "github.com/hermesgen/clio/internal/feat/ssg"
+	"github.com/hermesgen/hm"
 )
 
 func (h *WebHandler) NewContent(w http.ResponseWriter, r *http.Request) {
@@ -125,7 +125,7 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	searchQuery := query.Get("search")
 	pageStr := query.Get("page")
-	
+
 	page := 1
 	if pageStr != "" {
 		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
@@ -140,12 +140,12 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 		TotalCount int            `json:"total_count"`
 		Search     string         `json:"search"`
 	}
-	
+
 	url := fmt.Sprintf("/ssg/contents/search?page=%d", page)
 	if searchQuery != "" {
 		url += "&search=" + searchQuery
 	}
-	
+
 	h.Log().Info("Calling apiClient.Get", "url", url)
 	err := h.apiClient.Get(r, url, &response)
 	if err != nil {
@@ -155,7 +155,7 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 	contents := response.Contents
 
 	h.Log().Infof("Contents received: %+v", contents)
-	
+
 	// Create page data with pagination info
 	// Calculate pagination values
 	prevPage := response.Page - 1
@@ -165,7 +165,7 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 	if showingTo > response.TotalCount {
 		showingTo = response.TotalCount
 	}
-	
+
 	pageData := struct {
 		hm.Page
 		CurrentPage int    `json:"current_page"`
@@ -189,7 +189,7 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 		ShowingFrom: showingFrom,
 		ShowingTo:   showingTo,
 	}
-	
+
 	pageData.Form.SetAction(ssgPath)
 	menu := pageData.NewMenu(ssgPath)
 	menu.AddNewItem(&Content{})
@@ -283,7 +283,7 @@ func (h *WebHandler) SearchContent(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	searchQuery := query.Get("search")
 	pageStr := query.Get("page")
-	
+
 	page := 1
 	if pageStr != "" {
 		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
@@ -298,12 +298,12 @@ func (h *WebHandler) SearchContent(w http.ResponseWriter, r *http.Request) {
 		TotalCount int            `json:"total_count"`
 		Search     string         `json:"search"`
 	}
-	
+
 	url := fmt.Sprintf("/ssg/contents/search?page=%d", page)
 	if searchQuery != "" {
 		url += "&search=" + searchQuery
 	}
-	
+
 	err := h.apiClient.Get(r, url, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot search contents from API", http.StatusInternalServerError)
@@ -311,7 +311,7 @@ func (h *WebHandler) SearchContent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	contents := response.Contents
-	
+
 	// Calculate pagination values
 	prevPage := response.Page - 1
 	nextPage := response.Page + 1
@@ -320,7 +320,7 @@ func (h *WebHandler) SearchContent(w http.ResponseWriter, r *http.Request) {
 	if showingTo > response.TotalCount {
 		showingTo = response.TotalCount
 	}
-	
+
 	pageData := struct {
 		Data        []feat.Content `json:"data"`
 		CurrentPage int            `json:"current_page"`

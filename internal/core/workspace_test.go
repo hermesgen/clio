@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/core"
 	"github.com/hermesgen/clio/internal/feat/ssg"
+	"github.com/hermesgen/hm"
 )
 
 func TestWorkspaceSetup(t *testing.T) {
@@ -41,7 +41,7 @@ func TestWorkspaceSetup(t *testing.T) {
 			name: "dev mode",
 			env:  "dev",
 			expectedPaths: map[string]string{
-				hm.Key.DBSQLiteDSN:         "file:" + filepath.Join(tempDir, "_workspace", "db", "clio.db") + "?cache=shared&mode=rwc",
+				hm.Key.DBSQLiteDSN:       "file:" + filepath.Join(tempDir, "_workspace", "db", "clio.db") + "?cache=shared&mode=rwc",
 				ssg.SSGKey.WorkspacePath: filepath.Join(tempDir, "_workspace"),
 				ssg.SSGKey.DocsPath:      filepath.Join(tempDir, "_workspace", "documents"),
 				ssg.SSGKey.MarkdownPath:  filepath.Join(tempDir, "_workspace", "documents", "markdown"),

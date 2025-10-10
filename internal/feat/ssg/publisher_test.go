@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/fake"
 	"github.com/hermesgen/clio/internal/feat/ssg"
+	"github.com/hermesgen/hm"
 )
 
 func TestPublisherPublishFakeClient(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/feat/auth"
+	"github.com/hermesgen/hm"
 )
 
 const (

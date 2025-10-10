@@ -38,7 +38,7 @@ SELECT
     m.id AS meta_id, m.description, m.keywords, m.robots, m.canonical_url, m.sitemap, m.table_of_contents, m.share, m.comments,
     t.id AS tag_id, t.short_id AS tag_short_id, t.name AS tag_name, t.slug AS tag_slug,
     ci.image_id AS content_image_id, ci.purpose AS image_purpose, 
-    i.file_path AS image_file_path
+    i.file_path AS image_file_path, i.alt_text AS image_alt_text, i.long_description AS image_long_description
 FROM
     content c
 LEFT JOIN
@@ -66,7 +66,7 @@ SELECT
     COALESCE(m.table_of_contents, 0) AS table_of_contents, COALESCE(m.share, 0) AS share, COALESCE(m.comments, 0) AS comments,
     COALESCE(t.id, '') AS tag_id, COALESCE(t.short_id, '') AS tag_short_id, COALESCE(t.name, '') AS tag_name, COALESCE(t.slug, '') AS tag_slug,
     COALESCE(ci.image_id, '') AS content_image_id, COALESCE(ci.purpose, '') AS image_purpose, 
-    COALESCE(i.file_path, '') AS image_file_path
+    COALESCE(i.file_path, '') AS image_file_path, COALESCE(i.alt_text, '') AS image_alt_text, COALESCE(i.long_description, '') AS image_long_description
 FROM
     content c
 LEFT JOIN

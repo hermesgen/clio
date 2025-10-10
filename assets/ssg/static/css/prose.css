@@ -200,6 +200,25 @@ p img {
   display: block;
 }
 
+/* Figure and figcaption styles for semantic image markup */
+.prose-figure {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.prose-figure .prose-img {
+  margin: 0 0 0.5rem 0; /* Remove top/bottom margin when inside figure */
+}
+
+.prose-figcaption {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 0.5rem;
+  padding: 0 1rem;
+  line-height: 1.4;
+}
+
 /* New styles from list.tmpl */
 .list-grid {
   display: grid;

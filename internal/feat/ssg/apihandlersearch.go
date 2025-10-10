@@ -14,14 +14,14 @@ func (h *APIHandler) SearchContent(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	searchQuery := query.Get("search")
 	pageStr := query.Get("page")
-	
+
 	page := 1
 	if pageStr != "" {
 		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
 			page = p
 		}
 	}
-	
+
 	const itemsPerPage = 25
 	offset := (page - 1) * itemsPerPage
 
@@ -52,6 +52,6 @@ func (h *APIHandler) SearchContent(w http.ResponseWriter, r *http.Request) {
 	if searchQuery == "" {
 		msg = fmt.Sprintf(hm.MsgGetAllItems, hm.Cap(resContentName))
 	}
-	
+
 	h.OK(w, msg, response)
 }

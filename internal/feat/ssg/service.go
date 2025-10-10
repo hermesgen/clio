@@ -245,7 +245,6 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		return fmt.Errorf("cannot parse template from embedded fs: %w", err)
 	}
 
-	processor := NewMarkdownProcessor()
 	htmlPath := svc.Cfg().StrValOrDef(SSGKey.HTMLPath, "_workspace/documents/html")
 
 	if err := CopyStaticAssets(svc.assetsFS, htmlPath); err != nil {
@@ -281,13 +280,13 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		}
 
 		headerImagePath := ""
-		
+
 		if content.HeaderImageURL != "" {
 			headerImagePath = content.HeaderImageURL
 		} else {
 			contentDir := filepath.Join(htmlPath, content.SectionPath, content.Slug())
 			contentImgDir := filepath.Join(contentDir, "img")
-			
+
 			foundSpecificHeader := false
 			for _, ext := range imageExtensions {
 				checkPath := filepath.Join("assets", "content", content.SectionPath, content.Slug(), "img", "header"+ext)
@@ -305,7 +304,7 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 					break
 				}
 			}
-			
+
 			if !foundSpecificHeader {
 				headerImagePath = "/static/img/header.png"
 			}
@@ -313,7 +312,33 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 
 		assetPath := "/"
 
-		htmlBody, err := processor.ToHTML([]byte(content.Body))
+		contentImages, err := svc.GetContentImages(ctx, content.ID)
+		if err != nil {
+			svc.Log().Debug("Failed to load content images", "contentID", content.ID, "error", err)
+			contentImages = []Image{}
+		} else {
+			svc.Log().Info("Loaded content images", "contentID", content.ID, "count", len(contentImages), "slug", content.Slug())
+		}
+
+		imageContext := &ImageContext{
+			Images: make(map[string]ImageMetadata),
+		}
+
+		for _, img := range contentImages {
+			svc.Log().Debug("Adding image to context", "filePath", img.FilePath, "caption", img.Caption, "altText", img.AltText)
+			imageContext.Images[img.FilePath] = ImageMetadata{
+				AltText:         img.AltText,
+				Caption:         img.Caption,
+				LongDescription: img.LongDescription,
+				Title:           img.Title,
+				Decorative:      img.Decorative,
+			}
+		}
+		svc.Log().Info("Image context created", "imageCount", len(imageContext.Images))
+
+		processor := NewMarkdownProcessor()
+
+		htmlBody, err := processor.ToHTMLWithImageContext([]byte(content.Body), imageContext)
 		if err != nil {
 			svc.Log().Error("Error converting markdown to HTML", "slug", content.Slug(), "error", err)
 			continue
@@ -324,10 +349,12 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		}
 
 		pageContent := PageContent{
-			Heading:     content.Heading,
-			HeaderImage: headerImagePath,
-			Body:        template.HTML(htmlBody),
-			Kind:        content.Kind,
+			Heading:            content.Heading,
+			HeaderImage:        headerImagePath,
+			HeaderImageAlt:     content.HeaderImageAlt,
+			HeaderImageCaption: content.HeaderImageCaption,
+			Body:               template.HTML(htmlBody),
+			Kind:               content.Kind,
 		}
 
 		blocks := BuildBlocks(content, contents, int(svc.Cfg().IntVal(SSGKey.BlocksMaxItems, 5)))
@@ -374,24 +401,24 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 
 	postsPerPage := int(svc.Cfg().IntVal(SSGKey.IndexMaxItems, 9))
 
-		for _, index := range indexes {
-			// Check if a manual index page exists for this path
-			if manualIndexPages[index.Path] {
-				svc.Log().Info(fmt.Sprintf("Skipping index generation for '%s': manual index page found.", index.Path))
-				continue
-			}
+	for _, index := range indexes {
+		// Check if a manual index page exists for this path
+		if manualIndexPages[index.Path] {
+			svc.Log().Info(fmt.Sprintf("Skipping index generation for '%s': manual index page found.", index.Path))
+			continue
+		}
 
-			// Get section header image for this index
-			var sectionHeaderImage string
-			for _, section := range sections {
-				if section.Path == index.Path {
-					headerPath, err := svc.GetSectionHeaderImage(ctx, section.ID)
-					if err == nil && headerPath != "" {
-						sectionHeaderImage = "/static/images/" + headerPath
-					}
-					break
+		// Get section header image for this index
+		var sectionHeaderImage string
+		for _, section := range sections {
+			if section.Path == index.Path {
+				headerPath, err := svc.GetSectionHeaderImage(ctx, section.ID)
+				if err == nil && headerPath != "" {
+					sectionHeaderImage = "/static/images/" + headerPath
 				}
+				break
 			}
+		}
 
 		// Paginate the content
 		totalContent := len(index.Content)

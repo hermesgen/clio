@@ -14,8 +14,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/hermesgen/hm"
 	feat "github.com/hermesgen/clio/internal/feat/ssg"
+	"github.com/hermesgen/hm"
 )
 
 func (h *WebHandler) NewImage(w http.ResponseWriter, r *http.Request) {

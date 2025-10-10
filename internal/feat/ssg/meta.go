@@ -9,8 +9,8 @@ import (
 )
 
 type Meta struct {
-	ID      uuid.UUID `json:"id" db:"id"`
-	ShortID string    `json:"-" db:"short_id"`
+	ID              uuid.UUID `json:"id" db:"id"`
+	ShortID         string    `json:"-" db:"short_id"`
 	ref             string    `json:"-"`
 	ContentID       uuid.UUID `json:"content_id" db:"content_id"`
 	Summary         string    `json:"summary" db:"summary"`

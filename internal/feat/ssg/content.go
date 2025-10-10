@@ -27,8 +27,10 @@ type Content struct {
 	Tags        []Tag      `json:"tags"`
 	Meta        Meta       `json:"meta"`
 
-	ThumbnailURL   string `json:"thumbnail_url,omitempty" db:"-"`
-	HeaderImageURL string `json:"header_image_url,omitempty" db:"-"`
+	ThumbnailURL       string `json:"thumbnail_url,omitempty" db:"-"`
+	HeaderImageURL     string `json:"header_image_url,omitempty" db:"-"`
+	HeaderImageAlt     string `json:"header_image_alt,omitempty" db:"-"`
+	HeaderImageCaption string `json:"header_image_caption,omitempty" db:"-"`
 
 	SectionPath string `json:"section_path,omitempty" db:"section_path"`
 	SectionName string `json:"section_name,omitempty" db:"section_name"`
