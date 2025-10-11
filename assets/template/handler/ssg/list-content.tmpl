@@ -108,7 +108,7 @@ Content List
           
           {{ range $i := .PageNumbers }}
             {{ if eq $i $.CurrentPage }}
-              <span class="relative z-10 inline-flex items-center bg-blue-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">{{ $i }}</span>
+              <span class="relative z-10 inline-flex items-center btn btn-primary px-4 py-2 text-sm font-semibold focus:z-20">{{ $i }}</span>
             {{ else if eq $i -1 }}
               <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700">...</span>
             {{ else }}
