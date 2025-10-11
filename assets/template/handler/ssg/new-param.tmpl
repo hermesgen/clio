@@ -10,7 +10,7 @@
 <h1>{{ .Name }}</h1>
 
 <form action="{{ .Form.Action }}" method="POST" class="space-y-4">
-    <input type="hidden" name="aquamarine.csrf.token" value="{{ .Form.CSRF }}" />
+    <input type="hidden" name="hm.csrf.token" value="{{ .Form.CSRF }}" />
     {{ if not .IsNew }}
     <input type="hidden" name="id" value="{{ .Param.ID }}" />
     {{ end }}

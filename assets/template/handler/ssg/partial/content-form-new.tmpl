@@ -5,7 +5,7 @@
 <form hx-post="{{ $form.Action }}" hx-trigger="keyup changed delay:500ms, every 30s, submit" hx-target="#save-status" hx-swap="outerHTML" method="post" class="space-y-4" hx-include="#meta-fields" novalidate>
   <div id="save-status" class="text-sm text-gray-500"></div>
   <input type="hidden" name="_method" value="{{ $form.Method }}" />
-  <input type="hidden" name="aquamarine.csrf.token" value="{{ $form.CSRF }}" />
+  <input type="hidden" name="hm.csrf.token" value="{{ $form.CSRF }}" />
   <input type="hidden" name="id" value="{{ .Data.ID }}" />
   <!-- Hidden field for header image path -->
   <input type="hidden" id="image" name="image" value="{{ .Data.Image }}" />

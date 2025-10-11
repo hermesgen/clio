@@ -2,7 +2,7 @@
 {{ $form := .Form }}
 <form id="content-form" action="{{ .Form.Action }}" method="post" class="space-y-4">
   <input type="hidden" name="_method" value="{{ .Form.Method }}" />
-  <input type="hidden" name="aquamarine.csrf.token" value="{{ .Form.CSRF }}" />
+  <input type="hidden" name="hm.csrf.token" value="{{ .Form.CSRF }}" />
   <input type="hidden" name="id" value="{{ .Data.ID }}" />
   <div>
     <label for="heading" class="block text-sm font-medium text-gray-700">

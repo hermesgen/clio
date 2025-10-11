@@ -37,7 +37,7 @@ Image Variants List
           <a href="show-image-variant?imageID={{ .ImageID }}&id={{ .ID }}" class="inline-block bg-green-500 text-white px-6 py-2 rounded w-24">Show</a>
           <a href="edit-image-variant?imageID={{ .ImageID }}&id={{ .ID }}" class="inline-block bg-yellow-500 text-white px-6 py-2 rounded w-24">Edit</a>
           <form action="delete-image-variant?imageID={{ .ImageID }}&id={{ .ID }}" method="POST" class="inline">
-            <input type="hidden" name="aquamarine.csrf.token" value="{{ $csrf }}" />
+            <input type="hidden" name="hm.csrf.token" value="{{ $csrf }}" />
             <button type="submit" class="inline-block bg-red-500 text-white px-6 py-2 rounded w-24">
               Delete
             </button>

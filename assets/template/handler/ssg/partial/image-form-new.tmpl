@@ -2,7 +2,7 @@
 {{ $form := .Form }}
 <form action="{{ $form.Action }}" method="post" enctype="multipart/form-data" class="space-y-4">
   <input type="hidden" name="_method" value="{{ $form.Method }}" />
-  <input type="hidden" name="aquamarine.csrf.token" value="{{ $form.CSRF }}" />
+  <input type="hidden" name="hm.csrf.token" value="{{ $form.CSRF }}" />
   <input type="hidden" name="id" value="{{ .Data.ID }}" />
   <div>
     <label for="name" class="block text-sm font-medium text-gray-700">Name:</label>

@@ -4,7 +4,7 @@
 {{ $descriptionField := "description" }}
 <form id="section-form" action="{{ $form.Action }}" method="post" class="space-y-4">
   <input type="hidden" name="_method" value="{{ $form.Method }}" />
-  <input type="hidden" name="aquamarine.csrf.token" value="{{ $form.CSRF }}" />
+  <input type="hidden" name="hm.csrf.token" value="{{ $form.CSRF }}" />
   <input type="hidden" name="id" value="{{ .Data.ID }}" />
   <!-- Hidden fields for image paths -->
   <input type="hidden" id="header" name="header" value="{{ .Data.Header }}" />

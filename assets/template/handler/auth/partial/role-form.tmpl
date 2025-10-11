@@ -1,6 +1,6 @@
 {{ define "role-form" }}
 <form action="{{ .Form.Action }}" method="POST">
-  <input type="hidden" name="aquamarine.csrf.token" value="{{ .Form.CSRF }}" />
+  <input type="hidden" name="hm.csrf.token" value="{{ .Form.CSRF }}" />
   <input type="hidden" name="id" value="{{ .Data.ID }}" />
 
   <div class="mb-4">
