@@ -154,7 +154,7 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 	}
 	contents := response.Contents
 
-	h.Log().Infof("Contents received: %+v", contents)
+	h.Log().Debugf("Contents received: %+v", contents)
 
 	// Create page data with pagination info
 	// Calculate pagination values
@@ -191,8 +191,6 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pageData.Form.SetAction(ssgPath)
-	menu := pageData.NewMenu(ssgPath)
-	menu.AddNewItem(&Content{})
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-content")
 	if err != nil {
@@ -234,9 +232,6 @@ func (h *WebHandler) ShowContent(w http.ResponseWriter, r *http.Request) {
 
 	page := hm.NewPage(r, content)
 	page.Name = "Show Content"
-
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&content, "Back")
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-content")
 	if err != nil {
@@ -464,9 +459,6 @@ func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, f
 		page.Form.SetAction(hm.UpdatePath(&Content{}))
 		page.Form.SetSubmitButtonText("Update")
 	}
-
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&content, "Back")
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-content")
 	if err != nil {

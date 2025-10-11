@@ -220,8 +220,6 @@ func (h *WebHandler) ListImages(w http.ResponseWriter, r *http.Request) {
 
 	page := hm.NewPage(r, images)
 	page.Form.SetAction(ssgPath)
-	menu := page.NewMenu(ssgPath)
-	menu.AddNewItem(&Image{})
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-images")
 	if err != nil {
@@ -262,9 +260,6 @@ func (h *WebHandler) ShowImage(w http.ResponseWriter, r *http.Request) {
 
 	page := hm.NewPage(r, image)
 	page.Name = "Show Image"
-
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&image, "Back")
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-image")
 	if err != nil {
@@ -321,8 +316,6 @@ func (h *WebHandler) renderImageForm(w http.ResponseWriter, r *http.Request, for
 		page.Form.SetSubmitButtonText("Update")
 	}
 
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&image)
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-image")
 	if err != nil {

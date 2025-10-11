@@ -117,8 +117,6 @@ func (h *WebHandler) ListLayouts(w http.ResponseWriter, r *http.Request) {
 
 	page := hm.NewPage(r, layouts)
 	page.Form.SetAction(ssgPath)
-	menu := page.NewMenu(ssgPath)
-	menu.AddNewItem(&Layout{})
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-layouts")
 	if err != nil {
@@ -159,9 +157,6 @@ func (h *WebHandler) ShowLayout(w http.ResponseWriter, r *http.Request) {
 
 	page := hm.NewPage(r, layout)
 	page.Name = "Show Layout"
-
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&layout, "Back")
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-layout")
 	if err != nil {
@@ -217,9 +212,6 @@ func (h *WebHandler) renderLayoutForm(w http.ResponseWriter, r *http.Request, fo
 		page.Form.SetAction(hm.UpdatePath(&Layout{}))
 		page.Form.SetSubmitButtonText("Update")
 	}
-
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&layout)
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-layout")
 	if err != nil {

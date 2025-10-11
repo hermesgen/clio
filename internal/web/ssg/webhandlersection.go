@@ -118,8 +118,6 @@ func (h *WebHandler) ListSections(w http.ResponseWriter, r *http.Request) {
 
 	page := hm.NewPage(r, sections)
 	page.Form.SetAction(ssgPath)
-	menu := page.NewMenu(ssgPath)
-	menu.AddNewItem(&Section{})
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-sections")
 	if err != nil {
@@ -158,9 +156,6 @@ func (h *WebHandler) ShowSection(w http.ResponseWriter, r *http.Request) {
 
 	page := hm.NewPage(r, section)
 	page.Name = "Show Section"
-
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&section, "Back")
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-section")
 	if err != nil {
@@ -228,8 +223,6 @@ func (h *WebHandler) renderSectionForm(w http.ResponseWriter, r *http.Request, f
 		page.Form.SetSubmitButtonText("Update")
 	}
 
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&section)
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-section")
 	if err != nil {

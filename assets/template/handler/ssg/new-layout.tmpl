@@ -12,5 +12,9 @@ New Layout
 {{ end }}
 
 {{ define "submenu" }}
-{{ template "menu" . }}
+<div class="mx-auto p-4">
+  <div class="flex space-x-4 justify-center">
+    <a href="{{ listPath "layout" }}" class="btn btn-secondary">Back</a>
+  </div>
+</div>
 {{ end }}

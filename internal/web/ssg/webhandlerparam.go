@@ -26,9 +26,6 @@ func (h *WebHandler) ListParams(w http.ResponseWriter, r *http.Request) {
 	page := hm.NewPage(r, ToWebParams(params))
 	page.Form.SetAction(ssgPath)
 
-	menu := page.NewMenu(ssgPath)
-	menu.AddNewItem(&Param{})
-
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-params")
 	if err != nil {
 		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
@@ -201,9 +198,6 @@ func (h *WebHandler) ShowParam(w http.ResponseWriter, r *http.Request) {
 	page := hm.NewPage(r, param)
 	page.Name = "Show Param"
 
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&param, "Back")
-
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-param")
 	if err != nil {
 		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
@@ -234,9 +228,6 @@ func (h *WebHandler) renderParamForm(w http.ResponseWriter, r *http.Request, for
 		paramPage.Form.SetAction(hm.UpdatePath(&Param{}))
 		paramPage.Form.SetSubmitButtonText("Update")
 	}
-
-	menu := paramPage.NewMenu(ssgPath)
-	menu.AddListItem(&param, "Back")
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-param")
 	if err != nil {

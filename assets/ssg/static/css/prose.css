@@ -206,6 +206,46 @@ li a:hover,
 blockquote a:hover {
   color: #1d4ed8; /* blue-700 */
 }
+
+/* Semantic button system for menus */
+a.btn, button.btn {
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.375rem !important;
+  font-weight: 500 !important;
+  transition: colors 0.2s ease !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  display: inline-block !important;
+  border: none !important;
+}
+a.btn-primary, button.btn-primary {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+a.btn-primary:hover, button.btn-primary:hover {
+  background-color: #1d4ed8 !important;
+}
+a.btn-secondary, button.btn-secondary {
+  background-color: #4b5563 !important;
+  color: white !important;
+}
+a.btn-secondary:hover, button.btn-secondary:hover {
+  background-color: #374151 !important;
+}
+a.btn-success, button.btn-success {
+  background-color: #059669 !important;
+  color: white !important;
+}
+a.btn-success:hover, button.btn-success:hover {
+  background-color: #047857 !important;
+}
+a.btn-danger, button.btn-danger {
+  background-color: #dc2626 !important;
+  color: white !important;
+}
+a.btn-danger:hover, button.btn-danger:hover {
+  background-color: #b91c1c !important;
+}
 .prose-img,
 p img {
   max-width: 100%;

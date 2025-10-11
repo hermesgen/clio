@@ -37,7 +37,14 @@ Image List
           {{ .Description }}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-          <img src="{{ .URL }}" alt="{{ .AltText }}" class="h-16 w-16 object-cover mx-auto" />
+          <div class="flex justify-center">
+            <div class="relative h-16 w-16 rounded-lg overflow-hidden bg-gray-100">
+              <img src="{{ .URL }}" alt="{{ .AltText }}" 
+                   class="h-full w-full object-cover transition-transform duration-200 hover:scale-110" 
+                   loading="lazy"
+                   onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMiAyNkMyNCAyNiAyNiAyNCAyNiAyMkMyNiAyMCAyNCAyMCAyMiAyMEMyMCAyMCAyMCAyMCAyMCAyMkMyMCAyNCAyMCAyNiAyMiAyNloiIGZpbGw9IiM5Q0EzQUYiLz4KPHA+dGggZD0iTTE4IDM4VjM2QzE4IDM0IDIwIDM0IDIyIDM0SDQyQzQ0IDM0IDQ2IDM0IDQ2IDM2VjQ2QzQ2IDQ4IDQ0IDQ4IDQyIDQ4SDE4QzE2IDQ4IDE2IDQ2IDE2IDQ0VjQwTDE4IDM4WiIgc3Ryb2tlPSIjOUNBM0FGIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiLz4KPHBhdGggZD0iTTM2IDQwTDQyIDM0TDQ2IDM4VjQ2QzQ2IDQ4IDQ0IDQ4IDQyIDQ4SDE4QzE2IDQ4IDE2IDQ2IDE2IDQ0VjQwTDE4IDM4TDI0IDMyTDMwIDM4TDM2IDQwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K'; this.alt='Image not found';" />
+            </div>
+          </div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center space-x-2">
           <a href="show-image?id={{ .ID }}" class="inline-block bg-green-500 text-white px-6 py-2 rounded w-24">Show</a>
@@ -63,5 +70,9 @@ Image List
 {{ end }}
 
 {{ define "submenu" }}
-{{ template "menu" . }}
+<div class="mx-auto p-4">
+  <div class="flex space-x-4 justify-center">
+    <a href="{{ newPath "image" }}" class="btn btn-primary">New</a>
+  </div>
+</div>
 {{ end }}

@@ -30,7 +30,7 @@ var assetsFS embed.FS
 
 func main() {
 	ctx := context.Background()
-	log := hm.NewLogger("debug")
+	log := hm.NewLogger("info")
 	cfg := hm.LoadCfg(namespace, hm.Flags)
 
 	// XParams for components that only need log + config

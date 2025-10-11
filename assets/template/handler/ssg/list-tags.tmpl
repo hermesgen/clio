@@ -39,5 +39,9 @@ Tags
 {{ end }}
 
 {{ define "submenu" }}
-{{ template "menu" . }}
+<div class="mx-auto p-4">
+  <div class="flex space-x-4 justify-center">
+    <a href="{{ newPath "tag" }}" class="btn btn-primary">New</a>
+  </div>
+</div>
 {{ end }}

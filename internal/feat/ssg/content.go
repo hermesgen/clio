@@ -1,6 +1,7 @@
 package ssg
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -167,4 +168,15 @@ func (c *Content) Ref() string {
 
 func (c *Content) SetRef(ref string) {
 	c.ref = ref
+}
+
+// String implements the fmt.Stringer interface to provide a clean log representation
+// that truncates the Body field to prevent cluttering logs with long markdown content
+func (c Content) String() string {
+	bodyPreview := c.Body
+	if len(bodyPreview) > 50 {
+		bodyPreview = bodyPreview[:47] + "..."
+	}
+	return fmt.Sprintf("Content{ID: %s, Heading: %q, Body: %q, Draft: %t}", 
+		c.ID.String()[:8]+"...", c.Heading, bodyPreview, c.Draft)
 }

@@ -133,9 +133,6 @@ func (h *WebHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 	page := hm.NewPage(r, webTags)
 	page.Form.SetAction(ssgPath)
 
-	menu := page.NewMenu(ssgPath)
-	menu.AddNewItem(&Tag{})
-
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-tags")
 	if err != nil {
 		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
@@ -175,9 +172,6 @@ func (h *WebHandler) ShowTag(w http.ResponseWriter, r *http.Request) {
 
 	page := hm.NewPage(r, tag)
 	page.Name = "Show Tag"
-
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&tag, "Back")
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-tag")
 	if err != nil {
@@ -233,9 +227,6 @@ func (h *WebHandler) renderTagForm(w http.ResponseWriter, r *http.Request, form 
 		page.Form.SetAction(hm.UpdatePath(&Tag{}))
 		page.Form.SetSubmitButtonText("Update")
 	}
-
-	menu := page.NewMenu(ssgPath)
-	menu.AddListItem(&tag, "Back")
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-tag")
 	if err != nil {
