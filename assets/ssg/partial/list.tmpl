@@ -2,10 +2,10 @@
     {{ range . }}
         <div class="list-card">
             <a href="{{ .SectionPath }}/{{ .Slug }}/" class="list-card-link">
-                {{if .ThumbnailURL}}
-                <img src="{{ .ThumbnailURL }}" alt="{{ .Heading }}" class="list-card-image">
-                {{else if .HeaderImageURL}}
+                {{if .HeaderImageURL}}
                 <img src="{{ .HeaderImageURL }}" alt="{{ .Heading }}" class="list-card-image">
+                {{else if .ThumbnailURL}}
+                <img src="{{ .ThumbnailURL }}" alt="{{ .Heading }}" class="list-card-image">
                 {{else}}
                 <div class="list-card-image-placeholder"></div>
                 {{end}}
