@@ -38,10 +38,10 @@ type ImageRenderer struct {
 
 // NewTailwindRenderer creates a new TailwindRenderer with optional image context.
 func NewTailwindRenderer(imageContext *ImageContext, opts ...html.Option) renderer.NodeRenderer {
-	imageCount := 0
-	if imageContext != nil && imageContext.Images != nil {
-		imageCount = len(imageContext.Images)
-	}
+	// imageCount := 0
+	// if imageContext != nil && imageContext.Images != nil {
+	//	imageCount = len(imageContext.Images)
+	// }
 	r := &TailwindRenderer{
 		Config:       html.NewConfig(),
 		ImageContext: imageContext,
