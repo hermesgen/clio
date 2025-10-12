@@ -26,7 +26,8 @@ Clio takes inspiration from [Hermes](https://github.com/adrianpk/hermes), a full
 - Contextual blocks: each content type will allow attaching context-aware blocks to reference related content, filtered by type, section, or multi-section configuration.  
 - Preview of the generated site before publishing.  
 - Publication of generated content (with GitHub Pages as the first supported target).  
-- More to come.
+
+For a complete roadmap of current and planned features, see the [roadmap](docs/roadmap.md).
 
 ---
 
