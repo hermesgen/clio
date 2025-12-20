@@ -199,9 +199,6 @@ func (f *ContentForm) Validate() {
 	if f.Heading == "" {
 		validation.AddFieldError("heading", f.Heading, "Heading cannot be empty")
 	}
-	if f.Body == "" {
-		validation.AddFieldError("body", f.Body, "Body cannot be empty")
-	}
 	f.SetValidation(validation)
 }
 

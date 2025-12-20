@@ -45,6 +45,14 @@ func main() {
 	migrator := hm.NewMigrator(assetsFS, engine, xparams)
 	fileServer := hm.NewFileServer(assetsFS, xparams)
 
+	// Redirect root to SSG list content
+	app.Router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, "/ssg/list-content", http.StatusFound)
+			return
+		}
+	})
+
 	app.MountFileServer("/", fileServer)
 
 	// Serve uploaded images from the filesystem

@@ -314,23 +314,24 @@ function displayImages(images) {
     div.className = 'relative group border border-gray-300 rounded-lg overflow-hidden hover:border-blue-500';
 
     const imageUrl = `/static/images/${image.file_path}`;
+    console.log('Displaying image:', imageUrl, 'Alt:', image.alt_text);
 
     div.innerHTML = `
-      <img src="${imageUrl}" alt="${image.alt_text || 'Content image'}" class="w-full h-20 object-cover cursor-pointer" onclick="insertImageIntoMarkdown('${image.file_path}', '${image.alt_text || ''}', '${image.long_description || ''}')">
-        <button
-          type="button"
-          class="delete-image-btn bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-          title="Remove image"
-          data-image-path="${image.file_path}"
-        >
-          ×
-        </button>
-      </div>
-      <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all pointer-events-none">
-        <span class="text-white text-xs opacity-0 group-hover:opacity-100">Insert</span>
-      </div>
-      ${image.alt_text ? `<div class="p-2 bg-gray-50"><p class="text-xs text-gray-700 font-medium text-center">${image.alt_text}</p></div>` : ''}
-      ${image.long_description ? `<div class="px-2 pb-2 bg-gray-50"><p class="text-xs text-gray-500 text-center">[${image.long_description}]</p></div>` : ''}
+      <img src="${imageUrl}" alt="${image.alt_text || 'Content image'}" class="w-full h-32 object-cover cursor-pointer brightness-90 group-hover:brightness-100" style="transition: filter 300ms ease-out;" onclick="insertImageIntoMarkdown('${image.file_path}', '${image.alt_text || ''}', '${image.long_description || ''}')">
+      <button
+        type="button"
+        class="delete-image-btn absolute top-2 right-2 z-50 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+        title="Remove image"
+        data-image-path="${image.file_path}"
+      >
+        ×
+      </button>
+      ${image.alt_text || image.long_description ? `
+        <div class="image-overlay absolute bottom-0 left-0 right-0 p-4 text-white text-left" style="background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transform: translateY(100%); transition: transform 250ms ease-out;">
+          ${image.alt_text ? `<div class="font-semibold text-sm mb-1.5 leading-tight">${image.alt_text}</div>` : ''}
+          ${image.long_description ? `<div class="text-xs italic opacity-90 leading-tight">[${image.long_description}]</div>` : ''}
+        </div>
+      ` : ''}
     `;
 
     // Add event listener for delete button
@@ -339,6 +340,17 @@ function displayImages(images) {
       e.stopPropagation();
       removeContentImage(image.file_path);
     });
+
+    // Add hover effect for overlay slide-in
+    const overlay = div.querySelector('.image-overlay');
+    if (overlay) {
+      div.addEventListener('mouseenter', function() {
+        overlay.style.transform = 'translateY(0)';
+      });
+      div.addEventListener('mouseleave', function() {
+        overlay.style.transform = 'translateY(100%)';
+      });
+    }
 
     gallery.appendChild(div);
   });

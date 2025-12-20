@@ -23,12 +23,16 @@ func (h *WebHandler) CreateContent(w http.ResponseWriter, r *http.Request) {
 
 	form, err := ContentFormFromRequest(r)
 	if err != nil {
+		h.Log().Infof("Error parsing form: %v", err)
 		h.renderContentForm(w, r, form, NewContent("", ""), "Invalid form data", http.StatusBadRequest)
 		return
 	}
 
+	h.Log().Infof("Form parsed - Heading: %s, Body: %s, SectionID: %s, UserID: %s", form.Heading, form.Body, form.SectionID, form.UserID)
+
 	form.Validate()
 	if form.HasErrors() {
+		h.Log().Infof("Form validation failed - Body empty: %v", form.Body == "")
 		content := ToFeatContent(form)
 		webContent := ToWebContent(content)
 		h.renderContentForm(w, r, form, webContent, "Validation failed", http.StatusBadRequest)
@@ -36,10 +40,12 @@ func (h *WebHandler) CreateContent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	content := ToFeatContent(form)
+	h.Log().Infof("Converted to content - Heading: %s, SectionID: %s, UserID: %s", content.Heading, content.SectionID, content.UserID)
 
 	var response struct {
 		Content feat.Content `json:"content"`
 	}
+	h.Log().Info("Calling API to create content...")
 	err = h.apiClient.Post(r, "/ssg/contents", content, &response)
 	if err != nil {
 		h.Err(w, err, "Failed to create content via API", http.StatusInternalServerError)
