@@ -10,6 +10,7 @@ __debug_bin*
 _workspace/
 node_modules/
 assets/ssg/static/css/prose.compiled.css
+assets/static/css/prose.compiled.css
 scripts/priv/
 .snapshots/
 # Go workspace files (local development only)

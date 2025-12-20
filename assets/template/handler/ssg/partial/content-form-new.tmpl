@@ -10,14 +10,6 @@
   <!-- Hidden field for header image path -->
   <input type="hidden" id="image" name="image" value="{{ .Data.Image }}" />
 
-  <!-- Header Image Selector -->
-  <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
-    <h4 class="text-sm font-medium text-gray-700 mb-3">Header Image</h4>
-    <div id="content-header-gallery" class="w-full">
-      <!-- Header image will be populated here -->
-    </div>
-  </div>
-
   <div>
     <label for="section_id" class="block text-sm font-medium text-gray-700">Section:</label>
     <select
@@ -59,6 +51,15 @@
     />
     {{ FieldMsg $form $headingField }}
   </div>
+
+  <!-- Header Image Selector -->
+  <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+    <h4 class="text-sm font-medium text-gray-700 mb-3">Header Image</h4>
+    <div id="content-header-gallery" class="w-full">
+      <!-- Header image will be populated here -->
+    </div>
+  </div>
+
   {{ template "css.tmpl" . }}
   <div class="editor-container flex w-full" style="min-height: 300px;">
     <div id="markdown-pane" class="w-1/2 pr-2 flex flex-col">
