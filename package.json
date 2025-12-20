@@ -9,7 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "tailwind-test": "tailwindcss --version",
-    "build-tailwind-css": "NODE_ENV=production tailwindcss -i ./assets/ssg/static/css/prose.css -o ./assets/ssg/static/css/prose.compiled.css --postcss --minify"
+    "build-tailwind-css": "NODE_ENV=production npx tailwindcss -i ./assets/ssg/static/css/prose.css -o ./assets/ssg/static/css/prose.compiled.css --postcss --minify"
   },
   "repository": {
     "type": "git",
@@ -25,8 +25,8 @@
   "homepage": "https://github.com/adrianpk/clio#readme",
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.18",
-    "autoprefixer": "^10.4.21",
+    "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.13"
+    "tailwindcss": "^3.4.17"
   }
 }
