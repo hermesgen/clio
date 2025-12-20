@@ -48,30 +48,42 @@ format:
 	@echo "Formatting code..."
 	@gofmt -w .
 
+# Kill processes on application ports
+kill-ports:
+	@echo "Killing processes on ports 8080, 8081, 8082..."
+	@for port in 8080 8081 8082; do \
+		pid=$$(lsof -ti :$$port 2>/dev/null); \
+		if [ -n "$$pid" ]; then \
+			echo "Killing process $$pid on port $$port"; \
+			kill -9 $$pid 2>/dev/null || true; \
+		fi; \
+	done
+	@echo "Ports cleared."
+
 # Run the application with environment variables
-run: setenv build
+run: kill-ports setenv build
 	@echo "Running $(APP_NAME) with environment variables..."
 	@$(BINARY)
 
 # Run the application with command-line flags
-runflags: build
+runflags: kill-ports build
 	@echo "Running $(APP_NAME) with command-line flags..."
 	@$(BINARY) -server.web.host=localhost -server.web.port=9080 -server.api.host=localhost -server.api.port=9081
 
 # Run with specific header styles
-run-stacked:
+run-stacked: kill-ports build
 	@echo "Running with style: stacked"
 	@$(BINARY) -ssg.header.style=stacked
 
-run-overlay:
+run-overlay: kill-ports build
 	@echo "Running with style: overlay"
 	@$(BINARY) -ssg.header.style=overlay
 
-run-boxed:
+run-boxed: kill-ports build
 	@echo "Running with style: boxed"
 	@CLIO_SSG_HEADER_STYLE=boxed $(BINARY)
 
-run-text-only:
+run-text-only: kill-ports build
 	@echo "Running with style: text-only"
 	@CLIO_SSG_HEADER_STYLE=text-only $(BINARY)
 
@@ -224,4 +236,4 @@ list-snapshots:
 	ls -1 .snapshots/ 2>/dev/null || echo "No snapshots found"
 
 # Phony targets
-.PHONY: all build run runflags setenv clean backup-db reset-db generate-markdown generate-html publish test run-stacked run-overlay run-boxed run-text-only build-css snapshot-images restore-images list-snapshots
+.PHONY: all build run runflags setenv clean backup-db reset-db generate-markdown generate-html publish test run-stacked run-overlay run-boxed run-text-only build-css snapshot-images restore-images list-snapshots kill-ports

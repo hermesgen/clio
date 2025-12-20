@@ -27,3 +27,13 @@
 
 - [ ] **Auth templates consistency**
   - Apply declarative menu pattern to Auth interfaces if needed
+
+- [ ] **Migrate to Tailwind CSS v4**
+  - Currently using v3.4.x
+  - Migration tasks:
+    - Remove `tailwind.config.js` (v4 uses CSS-based config)
+    - Update build scripts (import CSS instead of CLI)
+    - Check `@tailwindcss/typography` compatibility with v4
+  - References:
+    - v4 docs: https://tailwindcss.com/docs/v4-beta
+    - Breaking changes: https://tailwindcss.com/docs/upgrade-guide
