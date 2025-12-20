@@ -64,17 +64,21 @@ func (h *APIHandler) GetContent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *APIHandler) CreateContent(w http.ResponseWriter, r *http.Request) {
-	h.Log().Debugf("%s: Handling CreateContent", h.Name())
+	h.Log().Info("API: Handling CreateContent")
 
 	var content Content
 	var err error
 	err = json.NewDecoder(r.Body).Decode(&content)
 	if err != nil {
+		h.Log().Infof("API: Failed to decode content body: %v", err)
 		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
+	h.Log().Infof("API: Content decoded - Heading: %s, Body length: %d, SectionID: %s", content.Heading, len(content.Body), content.SectionID)
+
 	content.GenCreateValues()
+	h.Log().Infof("API: Generated create values - ID: %s", content.ID)
 
 	err = h.svc.CreateContent(r.Context(), &content)
 	if err != nil {
