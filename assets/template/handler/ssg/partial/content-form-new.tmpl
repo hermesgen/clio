@@ -459,27 +459,36 @@ function displayHeaderImage(headerImagePath) {
 
 function createHeaderImageCard(imagePath) {
   const div = document.createElement('div');
-  div.className = 'relative border border-gray-300 rounded-lg overflow-hidden bg-white w-full';
+  div.className = 'relative group border border-gray-300 rounded-lg overflow-hidden bg-white w-full';
 
   const imageUrl = `/static/images/${imagePath}`;
 
   div.innerHTML = `
-    <img src="${imageUrl}" alt="Header Image" class="w-full h-48 object-cover">
-    <div class="absolute top-2 right-2">
-      <button
-        type="button"
-        onclick="removeHeaderImage()"
-        class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-        title="Remove header image"
-      >
-        ×
-      </button>
-    </div>
-    <div id="header-image-metadata" class="bg-gray-50">
-      <div class="p-2"><p class="text-xs text-gray-700 font-medium text-center" id="header-alt-text">Loading...</p></div>
-      <div class="px-2 pb-2"><p class="text-xs text-gray-500 text-center" id="header-caption">[Loading...]</p></div>
+    <img src="${imageUrl}" alt="Header Image" class="w-full h-48 object-cover brightness-90 group-hover:brightness-100" style="transition: filter 300ms ease-out;">
+    <button
+      type="button"
+      onclick="removeHeaderImage()"
+      class="absolute top-2 right-2 z-50 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+      title="Remove header image"
+    >
+      ×
+    </button>
+    <div class="image-overlay absolute bottom-0 left-0 right-0 p-4 text-white text-left" style="background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transform: translateY(100%); transition: transform 250ms ease-out;">
+      <div class="font-semibold text-sm mb-1.5 leading-tight" id="header-alt-text">Loading...</div>
+      <div class="text-xs italic opacity-90 leading-tight" id="header-caption">[Loading...]</div>
     </div>
   `;
+
+  // Add hover effect for overlay slide-in
+  const overlay = div.querySelector('.image-overlay');
+  if (overlay) {
+    div.addEventListener('mouseenter', function() {
+      overlay.style.transform = 'translateY(0)';
+    });
+    div.addEventListener('mouseleave', function() {
+      overlay.style.transform = 'translateY(100%)';
+    });
+  }
 
   // Load metadata for header image
   loadHeaderImageMetadata(imagePath);
