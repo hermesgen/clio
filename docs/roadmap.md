@@ -85,10 +85,11 @@ Once the core milestones are complete, the project will move into maintenance mo
   - Periodic check (configurable interval) for items with `publish_at ≤ now`.
   - Timezone-aware; integrates with optimized builds.
 
-- [ ] Blog mode **(Status: Backlog)**
+- [x] Blog mode **(Status: Completed)**
   Enable a simplified `blog mode` where all content is treated as blog posts under the root path (`/`).
-  - Disables section management and multi-type configurations.
-  - Adjusts content creation interfaces and publishing flow for a linear, chronological structure.
+  - Blog mode filters index to show only blog-type content associated with the root section.
+  - Content lives at `/{slug}/` instead of `/{section-path}/{slug}/`.
+  - Site can switch between normal mode (multi-section) and blog mode (single chronological feed).
   - Intended for users who only need a single, continuous blog without sections or mixed content types.
 
 - [ ] Tag-based navigation and indexes **(Status: Backlog)**
