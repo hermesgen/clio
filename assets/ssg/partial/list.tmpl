@@ -1,7 +1,7 @@
 <div class="list-grid">
     {{ range . }}
         <div class="list-card">
-            <a href="{{ .SectionPath }}/{{ .Slug }}/" class="list-card-link">
+            <a href="{{ if eq .SectionPath "/" }}/{{ .Slug }}/{{ else }}{{ .SectionPath }}/{{ .Slug }}/{{ end }}" class="list-card-link">
                 {{if .HeaderImageURL}}
                 <img src="{{ .HeaderImageURL }}" alt="{{ .Heading }}" class="list-card-image">
                 {{else if .ThumbnailURL}}

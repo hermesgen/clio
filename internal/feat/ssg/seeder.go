@@ -139,6 +139,7 @@ func (s *Seeder) seedData(ctx context.Context, data *SeedFile) error {
 	contentRefToID := make(map[string]uuid.UUID)
 	for _, cMap := range data.Contents {
 		con := Content{
+			Kind:     cMap["kind"].(string),
 			Heading:  cMap["heading"].(string),
 			Body:     cMap["body"].(string),
 			Draft:    cMap["draft"].(bool),

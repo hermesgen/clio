@@ -61,7 +61,7 @@ func TestBuildIndexes(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			indexes := ssg.BuildIndexes(tc.content, tc.sections)
+			indexes := ssg.BuildIndexes(tc.content, tc.sections, "normal")
 
 			if len(indexes) != len(tc.expectedIndexes) {
 				t.Fatalf("Expected %d indexes, but got %d", len(tc.expectedIndexes), len(indexes))

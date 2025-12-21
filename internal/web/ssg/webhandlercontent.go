@@ -401,6 +401,10 @@ func generatePageNumbers(currentPage, totalPages int) []int {
 func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, form ContentForm, content Content, errorMessage string, statusCode int) {
 	h.Log().Debugf("h.apiClient: %+v", h.apiClient)
 
+	// Get site mode to determine UI behavior
+	siteMode := h.paramManager.GetSiteMode(r.Context())
+	h.Log().Infof("Site mode: %s", siteMode)
+
 	var sectionsResponse struct {
 		Sections []Section `json:"sections"`
 	}
@@ -413,6 +417,17 @@ func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, f
 	}
 	sections := sectionsResponse.Sections
 	h.Log().Debugf("Sections received: %+v", sections)
+
+	// In blog mode, only show root section
+	if siteMode == "blog" {
+		var rootSections []Section
+		for _, s := range sections {
+			if s.Name == "root" {
+				rootSections = append(rootSections, s)
+			}
+		}
+		sections = rootSections
+	}
 
 	var usersResponse struct {
 		Users []auth.User `json:"users"`
@@ -440,11 +455,19 @@ func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, f
 	tags := tagsResponse.Tags
 	h.Log().Debugf("Tags received: %+v", tags)
 
-	kinds := []hm.SelectOpt{
-		{Value: "article", Label: "Article"},
-		{Value: "page", Label: "Page"},
-		{Value: "blog", Label: "Blog"},
-		{Value: "series", Label: "Series"},
+	// In blog mode, only "blog" content type is allowed
+	var kinds []hm.SelectOpt
+	if siteMode == "blog" {
+		kinds = []hm.SelectOpt{
+			{Value: "blog", Label: "Blog"},
+		}
+	} else {
+		kinds = []hm.SelectOpt{
+			{Value: "article", Label: "Article"},
+			{Value: "page", Label: "Page"},
+			{Value: "blog", Label: "Blog"},
+			{Value: "series", Label: "Series"},
+		}
 	}
 
 	page := hm.NewPage(r, content)

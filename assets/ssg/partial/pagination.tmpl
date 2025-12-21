@@ -1,5 +1,5 @@
 {{ define "pagination.tmpl" }}
-{{ if gt .Pagination.TotalPages 1 }}
+{{ if and .Pagination (gt .Pagination.TotalPages 1) }}
 <nav class="pagination-nav">
     <ul class="pagination-list">
         {{ if .Pagination.PrevPageURL }}

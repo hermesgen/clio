@@ -3,9 +3,9 @@
 
 -- Create
 INSERT INTO content (
-    id, short_id, user_id, section_id, heading, body, draft, featured, published_at, created_by, updated_by, created_at, updated_at
+    id, short_id, user_id, section_id, kind, heading, body, draft, featured, published_at, created_by, updated_by, created_at, updated_at
 ) VALUES (
-    :id, :short_id, :user_id, :section_id, :heading, :body, :draft, :featured, :published_at, :created_by, :updated_by, :created_at, :updated_at
+    :id, :short_id, :user_id, :section_id, :kind, :heading, :body, :draft, :featured, :published_at, :created_by, :updated_by, :created_at, :updated_at
 );
 
 -- GetAll

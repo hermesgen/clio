@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"strings"
-	
+
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 	"github.com/hermesgen/hm"
 )
 
@@ -20,10 +21,11 @@ const (
 
 type WebHandler struct {
 	*hm.WebHandler
-	apiClient *hm.APIClient
+	apiClient    *hm.APIClient
+	paramManager *feat.ParamManager
 }
 
-func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, params hm.XParams) *WebHandler {
+func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, paramManager *feat.ParamManager, params hm.XParams) *WebHandler {
 	// Register SSG-specific template functions
 	ssgFunctions := template.FuncMap{
 		"newPath": func(entityType string) string {
@@ -42,7 +44,8 @@ func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, params hm.XPa
 	handler := hm.NewWebHandler(tm, flash, params)
 	apiClient := hm.NewAPIClient("web-api-client", func() string { return "" }, defaultAPIBaseURL, params)
 	return &WebHandler{
-		WebHandler: handler,
-		apiClient:  apiClient,
+		WebHandler:   handler,
+		apiClient:    apiClient,
+		paramManager: paramManager,
 	}
 }

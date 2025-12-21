@@ -223,10 +223,17 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		return fmt.Errorf("cannot get sections: %w", err)
 	}
 
+	// Get site mode to determine UI behavior
+	siteMode := svc.pm.GetSiteMode(ctx)
+	svc.Log().Infof("Site mode: %s", siteMode)
+
+	// In blog mode, hide section menu (only root exists, no need to show sections)
 	var menuSections []Section
-	for _, s := range sections {
-		if s.Name != "root" {
-			menuSections = append(menuSections, s)
+	if siteMode == "normal" {
+		for _, s := range sections {
+			if s.Name != "root" {
+				menuSections = append(menuSections, s)
+			}
 		}
 	}
 
@@ -270,7 +277,7 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		Enabled:  svc.Cfg().BoolVal(SSGKey.SearchGoogleEnabled, false),
 		ID:       svc.Cfg().StrValOrDef(SSGKey.SearchGoogleID, ""),
 	}
-	svc.Log().Info("SearchData values", "enabled", searchData.Enabled, "id", searchData.ID) // Línea de log modificada
+	svc.Log().Infof("SearchData: enabled=%v, id=%s", searchData.Enabled, searchData.ID)
 
 	for _, content := range contents {
 		svc.Log().Debug("Processing content for HTML generation", "slug", content.Slug(), "section_path", content.SectionPath)
@@ -284,7 +291,8 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		if content.HeaderImageURL != "" {
 			headerImagePath = content.HeaderImageURL
 		} else {
-			contentDir := filepath.Join(htmlPath, content.SectionPath, content.Slug())
+			// Use path helper to get correct content directory based on mode
+			contentDir := filepath.Dir(GetContentFilePath(htmlPath, content, siteMode))
 			contentImgDir := filepath.Join(contentDir, "img")
 
 			foundSpecificHeader := false
@@ -316,8 +324,6 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		if err != nil {
 			svc.Log().Debug("Failed to load content images", "contentID", content.ID, "error", err)
 			contentImages = []Image{}
-		} else {
-			svc.Log().Info("Loaded content images", "contentID", content.ID, "count", len(contentImages), "slug", content.Slug())
 		}
 
 		imageContext := &ImageContext{
@@ -334,7 +340,6 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 				Decorative:      img.Decorative,
 			}
 		}
-		svc.Log().Info("Image context created", "imageCount", len(imageContext.Images))
 
 		processor := NewMarkdownProcessor()
 
@@ -374,7 +379,8 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 			continue
 		}
 
-		outputPath := filepath.Join(htmlPath, content.SectionPath, content.Slug(), "index.html")
+		// Use path helper to get correct output path based on mode
+		outputPath := GetContentFilePath(htmlPath, content, siteMode)
 
 		if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
 			svc.Log().Error("Error creating directory for HTML file", "path", outputPath, "error", err)
@@ -388,8 +394,11 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 	}
 
 	// Generate index pages
-	svc.Log().Info("Building site indexes...")
-	indexes := BuildIndexes(contents, sections)
+	indexes := BuildIndexes(contents, sections, siteMode)
+	svc.Log().Infof("Built %d indexes (mode: %s)", len(indexes), siteMode)
+	for _, idx := range indexes {
+		svc.Log().Infof("  Index: path=%s, type=%s, content_count=%d", idx.Path, idx.Type, len(idx.Content))
+	}
 
 	// Create a lookup map for manual index pages
 	manualIndexPages := make(map[string]bool)
@@ -402,6 +411,8 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 	postsPerPage := int(svc.Cfg().IntVal(SSGKey.IndexMaxItems, 9))
 
 	for _, index := range indexes {
+		svc.Log().Infof("Processing index: path=%s, content_count=%d", index.Path, len(index.Content))
+
 		// Check if a manual index page exists for this path
 		if manualIndexPages[index.Path] {
 			svc.Log().Info(fmt.Sprintf("Skipping index generation for '%s': manual index page found.", index.Path))
@@ -422,10 +433,16 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 
 		// Paginate the content
 		totalContent := len(index.Content)
-		if totalContent == 0 {
+		// In blog mode, always generate root index even if empty (it's the homepage)
+		// In normal mode, skip empty indexes
+		if totalContent == 0 && !(siteMode == "blog" && index.Path == "/") {
+			svc.Log().Info("Skipping empty index", "path", index.Path)
 			continue
 		}
 		totalPages := (totalContent + postsPerPage - 1) / postsPerPage
+		if totalPages == 0 {
+			totalPages = 1 // At least one page for empty blog mode index
+		}
 
 		for page := 1; page <= totalPages; page++ {
 			start := (page - 1) * postsPerPage
@@ -435,30 +452,22 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 			}
 			pageContent := index.Content[start:end]
 
-			// Determine output path for the index page
-			var outputPath string
-			if page == 1 {
-				outputPath = filepath.Join(htmlPath, index.Path, "index.html")
-			} else {
-				outputPath = filepath.Join(htmlPath, index.Path, "page", fmt.Sprintf("%d", page), "index.html")
-			}
+			// Determine output path for the index page using path helper
+			outputPath := GetPaginationFilePath(htmlPath, index.Path, page)
+			svc.Log().Infof("Generating index page: path=%s, page=%d, output=%s", index.Path, page, outputPath)
 
 			assetPath := "/"
 
-			// Prepare pagination data
+			// Prepare pagination data using path helpers
 			pagination := &PaginationData{
 				CurrentPage: page,
 				TotalPages:  totalPages,
 			}
 			if page > 1 {
-				if page == 2 {
-					pagination.PrevPageURL = assetPath + strings.TrimSuffix(index.Path, "/")
-				} else {
-					pagination.PrevPageURL = fmt.Sprintf("%spage/%d", assetPath, page-1)
-				}
+				pagination.PrevPageURL = GetPaginationPath(index.Path, page-1, siteMode)
 			}
 			if page < totalPages {
-				pagination.NextPageURL = fmt.Sprintf("%spage/%d", assetPath, page+1)
+				pagination.NextPageURL = GetPaginationPath(index.Path, page+1, siteMode)
 			}
 
 			data := PageData{

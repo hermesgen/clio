@@ -87,9 +87,21 @@ func buildArticleBlocks(blocks *GeneratedBlocks, current Content, allContent []C
 
 	// Sort recent blocks by date
 	sort.Slice(blocks.ArticleRecentSameSection, func(i, j int) bool {
+		if blocks.ArticleRecentSameSection[i].PublishedAt == nil {
+			return false
+		}
+		if blocks.ArticleRecentSameSection[j].PublishedAt == nil {
+			return true
+		}
 		return blocks.ArticleRecentSameSection[i].PublishedAt.After(*blocks.ArticleRecentSameSection[j].PublishedAt)
 	})
 	sort.Slice(blocks.ArticleRecentAllSections, func(i, j int) bool {
+		if blocks.ArticleRecentAllSections[i].PublishedAt == nil {
+			return false
+		}
+		if blocks.ArticleRecentAllSections[j].PublishedAt == nil {
+			return true
+		}
 		return blocks.ArticleRecentAllSections[i].PublishedAt.After(*blocks.ArticleRecentAllSections[j].PublishedAt)
 	})
 
@@ -131,6 +143,12 @@ func buildBlogBlocks(blocks *GeneratedBlocks, current Content, allContent []Cont
 
 	// Sort recent block by date
 	sort.Slice(blocks.BlogRecent, func(i, j int) bool {
+		if blocks.BlogRecent[i].PublishedAt == nil {
+			return false
+		}
+		if blocks.BlogRecent[j].PublishedAt == nil {
+			return true
+		}
 		return blocks.BlogRecent[i].PublishedAt.After(*blocks.BlogRecent[j].PublishedAt)
 	})
 

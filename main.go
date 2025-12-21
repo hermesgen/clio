@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"embed"
+	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -29,6 +31,10 @@ const (
 var assetsFS embed.FS
 
 func main() {
+	var initBlogMode bool
+	flag.BoolVar(&initBlogMode, "init-blog-mode", false, "Initialize site in blog mode (sets site.mode=blog in database)")
+	flag.Parse()
+
 	ctx := context.Background()
 	log := hm.NewLogger("info")
 	cfg := hm.LoadCfg(namespace, hm.Flags)
@@ -84,7 +90,7 @@ func main() {
 	app.MountAPI("/api/v1", apiRouter)
 
 	// Web app
-	ssgWebHandler := webssg.NewWebHandler(templateManager, fm, xparams)
+	ssgWebHandler := webssg.NewWebHandler(templateManager, fm, ssgParamManager, xparams)
 	ssgWebRouter := webssg.NewWebRouter(ssgWebHandler, append(fm.Middlewares(), hm.LogHeadersMw), xparams)
 
 	app.MountWeb("/ssg", ssgWebRouter)
@@ -114,6 +120,19 @@ func main() {
 	err := app.Setup(ctx)
 	if err != nil {
 		log.Errorf("Cannot setup %s(%s): %v", name, version, err)
+		return
+	}
+
+	// Handle --init-blog-mode flag
+	if initBlogMode {
+		err = ssgParamManager.SetSiteMode(ctx, "blog")
+		if err != nil {
+			log.Errorf("Failed to set blog mode: %v", err)
+			fmt.Fprintf(os.Stderr, "Error: Failed to set blog mode: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("Successfully initialized site in blog mode")
+		fmt.Println("Site mode has been set to 'blog' in the database")
 		return
 	}
 

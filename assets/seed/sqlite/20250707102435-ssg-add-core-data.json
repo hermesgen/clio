@@ -12,7 +12,8 @@
       "name": "root",
       "description": "Root section",
       "path": "/",
-      "layout_id": "b1018279-be2c-440c-a52e-322239b63b93"
+      "layout_id": "b1018279-be2c-440c-a52e-322239b63b93",
+      "ref": "root"
     },
     {
       "ref": "tech",
@@ -279,7 +280,7 @@
       "user_ref": "user-admin",
       "kind": "article",
       "heading": "Stoicism for Modern Life: Ancient Wisdom, Contemporary Challenges",
-      "body": "# Stoicism for Modern Life: Ancient Wisdom, Contemporary Challenges\n\nStoicism, a school of Hellenistic philosophy, offers practical guidance for navigating the complexities of modern life. Its core tenets—focusing on what's within our control, cultivating virtue, and accepting fate—provide a powerful framework for building resilience, managing emotions, and finding tranquility amidst chaos. This article explores how Stoic principles can be applied today.\n\n## Core Stoic Practices\n\n- **Dichotomy of Control**: Distinguish between what you can influence and what you cannot.\n- **Premeditatio Malorum**: Meditate on potential misfortunes to prepare for them.\n- **Journaling**: Reflect on your actions and thoughts, often through a daily practice.\n- **Negative Visualization**: Appreciate what you have by imagining losing it.\n\nStoicism is not about suppressing emotions, but about understanding their nature and responding rationally, leading to a more serene and purposeful existence.\n\n## Key Figures\n\n- **Seneca**: Roman statesman and philosopher, known for his letters.\n- **Epictetus**: Former slave, whose teachings emphasize inner freedom.\n- **Marcus Aurelius**: Roman Emperor, author of \"Meditations\".\n",
+      "body": "# Stoicism for Modern Life: Ancient Wisdom, Contemporary Challenges\n\nStoicism, a school of Hellenistic philosophy, offers practical guidance for navigating the complexities of modern life. Its core tenets\u2014focusing on what's within our control, cultivating virtue, and accepting fate\u2014provide a powerful framework for building resilience, managing emotions, and finding tranquility amidst chaos. This article explores how Stoic principles can be applied today.\n\n## Core Stoic Practices\n\n- **Dichotomy of Control**: Distinguish between what you can influence and what you cannot.\n- **Premeditatio Malorum**: Meditate on potential misfortunes to prepare for them.\n- **Journaling**: Reflect on your actions and thoughts, often through a daily practice.\n- **Negative Visualization**: Appreciate what you have by imagining losing it.\n\nStoicism is not about suppressing emotions, but about understanding their nature and responding rationally, leading to a more serene and purposeful existence.\n\n## Key Figures\n\n- **Seneca**: Roman statesman and philosopher, known for his letters.\n- **Epictetus**: Former slave, whose teachings emphasize inner freedom.\n- **Marcus Aurelius**: Roman Emperor, author of \"Meditations\".\n",
       "section_ref": "philosophy",
       "draft": false,
       "featured": false,
@@ -301,7 +302,7 @@
       "user_ref": "user-johndoe",
       "kind": "article",
       "heading": "Existentialism: Freedom, Responsibility, and Meaning",
-      "body": "# Existentialism: Freedom, Responsibility, and Meaning\n\nExistentialism is a philosophical movement that emphasizes individual existence, freedom, and responsibility. It posits that humans define their own meaning in life, and try to make rational decisions in an irrational universe. Key thinkers like Sartre, Camus, and Kierkegaard explored themes of anguish, alienation, and the search for authenticity in a world without inherent purpose.\n\n## Core Tenets\n\n- **Existence Precedes Essence**: We are born without inherent purpose and define ourselves through our choices.\n- **Freedom and Responsibility**: We are condemned to be free, and thus fully responsible for our actions.\n- **Anguish**: The feeling of dread and responsibility that comes with absolute freedom.\n- **Absurdity**: The conflict between the human tendency to seek inherent value and meaning in life and the human inability to find any in a purposeless, meaningless or irrational universe.\n\nExistentialism challenges us to confront the realities of our freedom and to create meaning in a world that offers none by default.\n\n## Key Figures\n\n- **Jean-Paul Sartre**: French philosopher, playwright, novelist, political activist.\n- **Albert Camus**: French philosopher, author, and journalist, known for his concept of the absurd.\n- **Søren Kierkegaard**: Danish philosopher, theologian, poet, social critic, and religious author.\n",
+      "body": "# Existentialism: Freedom, Responsibility, and Meaning\n\nExistentialism is a philosophical movement that emphasizes individual existence, freedom, and responsibility. It posits that humans define their own meaning in life, and try to make rational decisions in an irrational universe. Key thinkers like Sartre, Camus, and Kierkegaard explored themes of anguish, alienation, and the search for authenticity in a world without inherent purpose.\n\n## Core Tenets\n\n- **Existence Precedes Essence**: We are born without inherent purpose and define ourselves through our choices.\n- **Freedom and Responsibility**: We are condemned to be free, and thus fully responsible for our actions.\n- **Anguish**: The feeling of dread and responsibility that comes with absolute freedom.\n- **Absurdity**: The conflict between the human tendency to seek inherent value and meaning in life and the human inability to find any in a purposeless, meaningless or irrational universe.\n\nExistentialism challenges us to confront the realities of our freedom and to create meaning in a world that offers none by default.\n\n## Key Figures\n\n- **Jean-Paul Sartre**: French philosopher, playwright, novelist, political activist.\n- **Albert Camus**: French philosopher, author, and journalist, known for his concept of the absurd.\n- **S\u00f8ren Kierkegaard**: Danish philosopher, theologian, poet, social critic, and religious author.\n",
       "section_ref": "philosophy",
       "draft": false,
       "featured": false,
@@ -400,7 +401,7 @@
       "user_ref": "user-admin",
       "kind": "blog",
       "heading": "The Secret to Perfect Italian Pasta: A Simple Guide",
-      "body": "# The Secret to Perfect Italian Pasta: A Simple Guide\n\nAchieving perfectly cooked Italian pasta is an art form, but it's also surprisingly simple once you know a few key secrets. Forget mushy noodles or bland flavors; this guide will help you master the techniques for al dente pasta that truly shines, whether you're making a simple aglio e olio or a complex ragù.\n\n## Key Principles for Perfect Pasta\n\n- **Plenty of Water**: Use a large pot with ample water to allow the pasta to move freely.\n- **Generous Salt**: Salt the water until it tastes like the sea. This seasons the pasta from within.\n- **Boiling Water**: Add pasta only when the water is at a rolling boil.\n- **Al Dente**: Cook until it's firm to the bite, not soft or mushy.\n- **Reserve Pasta Water**: The starchy water is liquid gold for emulsifying sauces.\n\nThese simple steps elevate your pasta dishes from good to extraordinary, bringing authentic Italian flavors to your table.\n\n## Common Mistakes to Avoid\n\n- **Adding Oil to Water**: It prevents sauce from clinging to the pasta.\n- **Rinsing Cooked Pasta**: Removes starch needed for sauce adhesion.\n- **Overcooking**: Leads to mushy texture and loss of flavor.\n- **Using Too Little Sauce**: Pasta should be coated, not swimming.\n\n## Popular Italian Pasta Dishes\n\n- **Cacio e Pepe**: Simple, cheesy, peppery perfection.\n- **Carbonara**: Creamy, rich, and utterly delicious (no cream needed!).\n- **Amatriciana**: Spicy tomato sauce with guanciale.\n- **Pesto**: Fresh basil, pine nuts, garlic, Parmesan, and olive oil.\n",
+      "body": "# The Secret to Perfect Italian Pasta: A Simple Guide\n\nAchieving perfectly cooked Italian pasta is an art form, but it's also surprisingly simple once you know a few key secrets. Forget mushy noodles or bland flavors; this guide will help you master the techniques for al dente pasta that truly shines, whether you're making a simple aglio e olio or a complex rag\u00f9.\n\n## Key Principles for Perfect Pasta\n\n- **Plenty of Water**: Use a large pot with ample water to allow the pasta to move freely.\n- **Generous Salt**: Salt the water until it tastes like the sea. This seasons the pasta from within.\n- **Boiling Water**: Add pasta only when the water is at a rolling boil.\n- **Al Dente**: Cook until it's firm to the bite, not soft or mushy.\n- **Reserve Pasta Water**: The starchy water is liquid gold for emulsifying sauces.\n\nThese simple steps elevate your pasta dishes from good to extraordinary, bringing authentic Italian flavors to your table.\n\n## Common Mistakes to Avoid\n\n- **Adding Oil to Water**: It prevents sauce from clinging to the pasta.\n- **Rinsing Cooked Pasta**: Removes starch needed for sauce adhesion.\n- **Overcooking**: Leads to mushy texture and loss of flavor.\n- **Using Too Little Sauce**: Pasta should be coated, not swimming.\n\n## Popular Italian Pasta Dishes\n\n- **Cacio e Pepe**: Simple, cheesy, peppery perfection.\n- **Carbonara**: Creamy, rich, and utterly delicious (no cream needed!).\n- **Amatriciana**: Spicy tomato sauce with guanciale.\n- **Pesto**: Fresh basil, pine nuts, garlic, Parmesan, and olive oil.\n",
       "section_ref": "food",
       "draft": false,
       "featured": false,
@@ -416,6 +417,105 @@
       "draft": false,
       "featured": false,
       "published_at": "2025-09-21T21:40:00Z"
+    },
+    {
+      "ref": "blog-test-1",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "My First Blog Post",
+      "body": "# Welcome to my blog\n\nThis is my first blog post. I'm excited to share my thoughts and experiences with you.\n\n## What to Expect\n\nIn this blog, I'll be writing about:\n- Technology and programming\n- Philosophy and life lessons\n- Food and travel experiences\n\nStay tuned for more!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-11T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-2",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Learning Go: Week One",
+      "body": "# Learning Go: Week One\n\nI started learning Go this week and it's been an interesting journey.\n\n## First Impressions\n\nGo is surprisingly simple yet powerful. The syntax is clean and the standard library is comprehensive.\n\n## What I Learned\n\n- Basic syntax and data types\n- Goroutines and channels\n- Error handling patterns\n\nLooking forward to week two!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-12T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-3",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Weekend Thoughts on Minimalism",
+      "body": "# Weekend Thoughts on Minimalism\n\nThis weekend I spent some time decluttering my workspace.\n\n## The Process\n\nI removed everything that didn't serve a purpose. The result? A cleaner mind and better focus.\n\n## Key Takeaways\n\n- Less is often more\n- Physical clutter affects mental clarity\n- Keep only what you truly need\n\nHighly recommend trying this!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-13T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-4",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Building My First SSG",
+      "body": "# Building My First SSG\n\nI decided to build a static site generator to better understand how they work.\n\n## The Architecture\n\nThe basic flow is simple:\n1. Read markdown files\n2. Convert to HTML\n3. Apply templates\n4. Generate static pages\n\n## Challenges\n\n- Template rendering\n- Asset management\n- Performance optimization\n\nIt's been a great learning experience!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-14T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-5",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Coffee and Code",
+      "body": "# Coffee and Code\n\nThere's something special about coding in a good cafe.\n\n## My Favorite Spots\n\n- The Corner Cafe: Great wifi, excellent espresso\n- Code & Brew: Developer-friendly atmosphere\n- The Quiet Corner: Perfect for deep work\n\n## Tips for Cafe Coding\n\n1. Bring headphones\n2. Order early to secure a good spot\n3. Be respectful of space during busy hours\n\nHappy coding!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-15T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-6",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Debugging Like a Pro",
+      "body": "# Debugging Like a Pro\n\nDebugging is an art. Here are my top strategies.\n\n## Essential Techniques\n\n- **Read the error message**: Sounds obvious, but many skip this\n- **Divide and conquer**: Binary search through your code\n- **Rubber duck debugging**: Explain the problem out loud\n\n## Tools I Use\n\n- Print statements (yes, really)\n- Debugger when needed\n- Git bisect for regression bugs\n\nMaster these and you'll save hours!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-16T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-7",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "The Joy of Simple Solutions",
+      "body": "# The Joy of Simple Solutions\n\nToday I refactored 200 lines into 50. It felt amazing.\n\n## What Changed\n\nI realized I was over-engineering. The complex solution wasn't adding value.\n\n## Lessons Learned\n\n- YAGNI: You Aren't Gonna Need It\n- Start simple, add complexity only when needed\n- Simple code is easier to maintain\n\n## The Result\n\nCleaner, faster, and easier to understand. Win-win-win!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-17T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-8",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Working Remotely: One Year In",
+      "body": "# Working Remotely: One Year In\n\nIt's been a year since I went fully remote. Here are my thoughts.\n\n## The Good\n\n- No commute\n- Flexible schedule\n- Better work-life balance\n\n## The Challenges\n\n- Isolation can be real\n- Home distractions\n- Harder to separate work and life\n\n## My Setup\n\n- Dedicated workspace\n- Regular video calls with the team\n- Daily walks to break up the day\n\nOverall: 10/10 would recommend!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-18T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-9",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "What I'm Learning Next",
+      "body": "# What I'm Learning Next\n\nAlways learning, always growing. Here's what's on my list.\n\n## Technical Skills\n\n1. **Rust**: For systems programming\n2. **WebAssembly**: The future of web performance\n3. **Distributed systems**: Understanding scalability\n\n## Non-Technical\n\n- Writing: Improving my communication\n- Public speaking: Conquering my fear\n- Design: Better UI/UX sense\n\n## The Plan\n\nOne topic at a time, deep focus, deliberate practice.\n\nLet's see where this takes me!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-19T10:00:00Z"
     }
   ],
   "tags": [],
