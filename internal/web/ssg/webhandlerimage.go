@@ -105,7 +105,7 @@ func (h *WebHandler) CreateImage(w http.ResponseWriter, r *http.Request) {
 	var response struct {
 		Image feat.Image `json:"image"`
 	}
-	err = h.apiClient.Post(r, "/ssg/images", featImage, &response)
+	err = h.apiClient.Post(h.addSiteSlugHeader(r), "/ssg/images", featImage, &response)
 	if err != nil {
 		h.Err(w, err, "Failed to create image via API", http.StatusInternalServerError)
 		return
@@ -125,7 +125,7 @@ func (h *WebHandler) CreateImage(w http.ResponseWriter, r *http.Request) {
 	var variantResponse struct {
 		ImageVariant feat.ImageVariant `json:"imageVariant"`
 	}
-	err = h.apiClient.Post(r, fmt.Sprintf("/ssg/images/%s/variants", createdImage.ID), featImageVariant, &variantResponse)
+	err = h.apiClient.Post(h.addSiteSlugHeader(r), fmt.Sprintf("/ssg/images/%s/variants", createdImage.ID), featImageVariant, &variantResponse)
 	if err != nil {
 		h.Err(w, err, "Failed to create original image variant via API", http.StatusInternalServerError)
 		return
@@ -148,7 +148,7 @@ func (h *WebHandler) EditImage(w http.ResponseWriter, r *http.Request) {
 		Image feat.Image `json:"image"`
 	}
 	path := fmt.Sprintf("/ssg/images/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get image from API", http.StatusInternalServerError)
 		return
@@ -182,7 +182,7 @@ func (h *WebHandler) UpdateImage(w http.ResponseWriter, r *http.Request) {
 		var currentImageResponse struct {
 			Image feat.Image `json:"image"`
 		}
-		err = h.apiClient.Get(r, fmt.Sprintf("/ssg/images/%s", id), &currentImageResponse) // Declare err
+		err = h.apiClient.Get(h.addSiteSlugHeader(r), fmt.Sprintf("/ssg/images/%s", id), &currentImageResponse) // Declare err
 		if err != nil {
 			h.Err(w, err, "Cannot get image from API for validation", http.StatusInternalServerError)
 			return
@@ -195,7 +195,7 @@ func (h *WebHandler) UpdateImage(w http.ResponseWriter, r *http.Request) {
 	// Mime, FilesizeByte, Width, Height are not updated here, as file upload is not handled
 
 	path := fmt.Sprintf("/ssg/images/%s", featImage.GetID())
-	err = h.apiClient.Put(r, path, featImage, nil)
+	err = h.apiClient.Put(h.addSiteSlugHeader(r), path, featImage, nil)
 	if err != nil {
 		h.Err(w, err, "Failed to update image via API", http.StatusInternalServerError)
 		return
@@ -211,7 +211,7 @@ func (h *WebHandler) ListImages(w http.ResponseWriter, r *http.Request) {
 	var response struct {
 		Images []feat.Image `json:"images"`
 	}
-	err := h.apiClient.Get(r, "/ssg/images", &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), "/ssg/images", &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get images from API", http.StatusInternalServerError)
 		return
@@ -250,7 +250,7 @@ func (h *WebHandler) ShowImage(w http.ResponseWriter, r *http.Request) {
 		Image feat.Image `json:"image"`
 	}
 	path := fmt.Sprintf("/ssg/images/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get image from API", http.StatusInternalServerError)
 		return
@@ -290,7 +290,7 @@ func (h *WebHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := fmt.Sprintf("/ssg/images/%s", idStr)
-	err := h.apiClient.Delete(r, path)
+	err := h.apiClient.Delete(h.addSiteSlugHeader(r), path)
 	if err != nil {
 		h.Err(w, err, "Failed to delete image via API", http.StatusInternalServerError)
 		return
@@ -372,7 +372,7 @@ func (h *WebHandler) CreateImageVariant(w http.ResponseWriter, r *http.Request) 
 		var currentVariantResponse struct {
 			ImageVariant feat.ImageVariant `json:"imageVariant"`
 		}
-		apiGetErr := h.apiClient.Get(r, fmt.Sprintf("/ssg/images/%s/variants/%s", imageID, id), &currentVariantResponse)
+		apiGetErr := h.apiClient.Get(h.addSiteSlugHeader(r), fmt.Sprintf("/ssg/images/%s/variants/%s", imageID, id), &currentVariantResponse)
 		if apiGetErr != nil {
 			h.Err(w, apiGetErr, "Cannot get image variant from API for validation", http.StatusInternalServerError)
 			return
@@ -392,7 +392,7 @@ func (h *WebHandler) CreateImageVariant(w http.ResponseWriter, r *http.Request) 
 		Image feat.Image `json:"image"`
 	}
 	imagePath := fmt.Sprintf("/ssg/images/%s", imageID)
-	apiGetErr := h.apiClient.Get(r, imagePath, &imageResponse)
+	apiGetErr := h.apiClient.Get(h.addSiteSlugHeader(r), imagePath, &imageResponse)
 	if apiGetErr != nil {
 		h.Err(w, apiGetErr, "Cannot get parent image from API", http.StatusInternalServerError)
 		return
@@ -412,7 +412,7 @@ func (h *WebHandler) CreateImageVariant(w http.ResponseWriter, r *http.Request) 
 		ImageVariant feat.ImageVariant `json:"imageVariant"`
 	}
 	apiPath := fmt.Sprintf("/ssg/images/%s/variants", imageID)
-	apiPostErr := h.apiClient.Post(r, apiPath, featImageVariant, &response)
+	apiPostErr := h.apiClient.Post(h.addSiteSlugHeader(r), apiPath, featImageVariant, &response)
 	if apiPostErr != nil {
 		h.Err(w, apiPostErr, "Failed to create image variant via API", http.StatusInternalServerError)
 		return
@@ -438,7 +438,7 @@ func (h *WebHandler) EditImageVariant(w http.ResponseWriter, r *http.Request) {
 		ImageVariant feat.ImageVariant `json:"imageVariant"`
 	}
 	path := fmt.Sprintf("/ssg/images/%s/variants/%s", imageIDStr, idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get image variant from API", http.StatusInternalServerError)
 		return
@@ -472,7 +472,7 @@ func (h *WebHandler) UpdateImageVariant(w http.ResponseWriter, r *http.Request) 
 		var currentVariantResponse struct {
 			ImageVariant feat.ImageVariant `json:"imageVariant"`
 		}
-		apiGetErr := h.apiClient.Get(r, fmt.Sprintf("/ssg/images/%s/variants/%s", imageID, id), &currentVariantResponse)
+		apiGetErr := h.apiClient.Get(h.addSiteSlugHeader(r), fmt.Sprintf("/ssg/images/%s/variants/%s", imageID, id), &currentVariantResponse)
 		if apiGetErr != nil {
 			h.Err(w, apiGetErr, "Cannot get image variant from API for validation", http.StatusInternalServerError)
 			return
@@ -492,7 +492,7 @@ func (h *WebHandler) UpdateImageVariant(w http.ResponseWriter, r *http.Request) 
 		Image feat.Image `json:"image"`
 	}
 	imagePath := fmt.Sprintf("/ssg/images/%s", imageID)
-	apiGetErr := h.apiClient.Get(r, imagePath, &imageResponse)
+	apiGetErr := h.apiClient.Get(h.addSiteSlugHeader(r), imagePath, &imageResponse)
 	if apiGetErr != nil {
 		h.Err(w, apiGetErr, "Cannot get parent image from API", http.StatusInternalServerError)
 		return
@@ -510,7 +510,7 @@ func (h *WebHandler) UpdateImageVariant(w http.ResponseWriter, r *http.Request) 
 	featImageVariant.Height = parentImage.Height
 
 	path := fmt.Sprintf("/ssg/images/%s/variants/%s", featImageVariant.ImageID, featImageVariant.GetID()) // Use featImageVariant.ImageID
-	apiPutErr := h.apiClient.Put(r, path, featImageVariant, nil)
+	apiPutErr := h.apiClient.Put(h.addSiteSlugHeader(r), path, featImageVariant, nil)
 	if apiPutErr != nil {
 		h.Err(w, apiPutErr, "Failed to update image variant via API", http.StatusInternalServerError)
 		return
@@ -534,7 +534,7 @@ func (h *WebHandler) ListImageVariants(w http.ResponseWriter, r *http.Request) {
 		ImageVariants []feat.ImageVariant `json:"imageVariants"`
 	}
 	path := fmt.Sprintf("/ssg/images/%s/variants", imageIDStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get image variants from API", http.StatusInternalServerError)
 		return
@@ -577,7 +577,7 @@ func (h *WebHandler) ShowImageVariant(w http.ResponseWriter, r *http.Request) {
 		ImageVariant feat.ImageVariant `json:"imageVariant"`
 	}
 	path := fmt.Sprintf("/ssg/images/%s/variants/%s", imageIDStr, idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get image variant from API", http.StatusInternalServerError)
 		return
@@ -622,7 +622,7 @@ func (h *WebHandler) DeleteImageVariant(w http.ResponseWriter, r *http.Request) 
 	}
 
 	path := fmt.Sprintf("/ssg/images/%s/variants/%s", imageIDStr, idStr)
-	err := h.apiClient.Delete(r, path)
+	err := h.apiClient.Delete(h.addSiteSlugHeader(r), path)
 	if err != nil {
 		h.Err(w, err, "Failed to delete image variant via API", http.StatusInternalServerError)
 		return

@@ -3,14 +3,15 @@ package ssg
 import (
 	"fmt"
 	"html/template"
+	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	feat "github.com/hermesgen/clio/internal/feat/ssg"
 	"github.com/hermesgen/hm"
 )
 
 const (
-	// WIP: This will be obtained from configuration.
 	defaultAPIBaseURL = "http://localhost:8081/api/v1"
 )
 
@@ -21,12 +22,27 @@ const (
 
 type WebHandler struct {
 	*hm.WebHandler
-	apiClient    *hm.APIClient
-	paramManager *feat.ParamManager
+	apiClient      *hm.APIClient
+	paramManager   *feat.ParamManager
+	siteManager    *feat.SiteManager
+	sessionManager interface {
+		SetUserSession(w http.ResponseWriter, userID uuid.UUID, siteSlug string) error
+		GetUserSession(r *http.Request) (userID uuid.UUID, siteSlug string, err error)
+	}
 }
 
-func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, paramManager *feat.ParamManager, params hm.XParams) *WebHandler {
-	// Register SSG-specific template functions
+func (wh *WebHandler) addSiteSlugHeader(r *http.Request) *http.Request {
+	ctx := r.Context()
+	if siteSlug, ok := feat.GetSiteSlugFromContext(ctx); ok && siteSlug != "" {
+		r.Header.Set("X-Site-Slug", siteSlug)
+	}
+	return r
+}
+
+func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, paramManager *feat.ParamManager, siteManager *feat.SiteManager, sessionManager interface {
+	SetUserSession(w http.ResponseWriter, userID uuid.UUID, siteSlug string) error
+	GetUserSession(r *http.Request) (userID uuid.UUID, siteSlug string, err error)
+}, params hm.XParams) *WebHandler {
 	ssgFunctions := template.FuncMap{
 		"newPath": func(entityType string) string {
 			return fmt.Sprintf("/ssg/new-%s", strings.ToLower(entityType))
@@ -44,8 +60,10 @@ func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, paramManager 
 	handler := hm.NewWebHandler(tm, flash, params)
 	apiClient := hm.NewAPIClient("web-api-client", func() string { return "" }, defaultAPIBaseURL, params)
 	return &WebHandler{
-		WebHandler:   handler,
-		apiClient:    apiClient,
-		paramManager: paramManager,
+		WebHandler:     handler,
+		apiClient:      apiClient,
+		paramManager:   paramManager,
+		siteManager:    siteManager,
+		sessionManager: sessionManager,
 	}
 }

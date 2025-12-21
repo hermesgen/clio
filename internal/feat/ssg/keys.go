@@ -2,6 +2,8 @@ package ssg
 
 type SSGKeys struct {
 	WorkspacePath  string
+	SitesBasePath  string
+	SitesDSN       string
 	DocsPath       string
 	MarkdownPath   string
 	HTMLPath       string
@@ -27,6 +29,8 @@ type SSGKeys struct {
 
 var SSGKey = SSGKeys{
 	WorkspacePath:  "ssg.workspace.path",
+	SitesBasePath:  "ssg.sites.base.path",
+	SitesDSN:       "ssg.sites.dsn",
 	DocsPath:       "ssg.docs.path",
 	MarkdownPath:   "ssg.markdown.path",
 	HTMLPath:       "ssg.html.path",

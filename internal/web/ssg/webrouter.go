@@ -8,7 +8,11 @@ func NewWebRouter(handler *WebHandler, mw []hm.Middleware, params hm.XParams) *h
 	core := hm.NewWebRouter("app-ssg-web-router", params)
 	core.SetMiddlewares(mw)
 
-	// Content routes
+	core.Get("/sites", handler.ListSites)
+	core.Get("/sites/new", handler.NewSite)
+	core.Post("/sites/create", handler.CreateSite)
+	core.Get("/sites/switch", handler.SwitchSite)
+
 	core.Get("/new-content", handler.NewContent)
 	core.Post("/create-content", handler.CreateContent)
 	core.Get("/edit-content", handler.EditContent)

@@ -102,3 +102,50 @@ func GetPaginationFilePath(htmlPath string, indexPath string, page int) string {
 	}
 	return filepath.Join(htmlPath, indexPath, "page", fmt.Sprintf("%d", page), "index.html")
 }
+
+// Multi-Site Path Helpers
+// These functions return filesystem paths for a specific site.
+
+// GetSiteBasePath returns the base path for a specific site.
+// e.g., _workspace/sites/my-blog or ~/Documents/Clio/sites/my-blog
+func GetSiteBasePath(sitesBasePath, siteSlug string) string {
+	return filepath.Join(sitesBasePath, siteSlug)
+}
+
+// GetSiteDBPath returns the database file path for a specific site.
+// e.g., _workspace/sites/my-blog/db/clio.db
+func GetSiteDBPath(sitesBasePath, siteSlug string) string {
+	return filepath.Join(sitesBasePath, siteSlug, "db", "clio.db")
+}
+
+// GetSiteDBDSN returns the DSN for a specific site's database.
+func GetSiteDBDSN(sitesBasePath, siteSlug string) string {
+	dbPath := GetSiteDBPath(sitesBasePath, siteSlug)
+	return fmt.Sprintf("file:%s?cache=shared&mode=rwc", dbPath)
+}
+
+// GetSiteDocsPath returns the documents path for a specific site.
+// e.g., _workspace/sites/my-blog/documents
+func GetSiteDocsPath(sitesBasePath, siteSlug string) string {
+	return filepath.Join(sitesBasePath, siteSlug, "documents")
+}
+
+// GetSiteMarkdownPath returns the markdown path for a specific site.
+func GetSiteMarkdownPath(sitesBasePath, siteSlug string) string {
+	return filepath.Join(GetSiteDocsPath(sitesBasePath, siteSlug), "markdown")
+}
+
+// GetSiteHTMLPath returns the HTML output path for a specific site.
+func GetSiteHTMLPath(sitesBasePath, siteSlug string) string {
+	return filepath.Join(GetSiteDocsPath(sitesBasePath, siteSlug), "html")
+}
+
+// GetSiteAssetsPath returns the assets path for a specific site.
+func GetSiteAssetsPath(sitesBasePath, siteSlug string) string {
+	return filepath.Join(GetSiteDocsPath(sitesBasePath, siteSlug), "assets")
+}
+
+// GetSiteImagesPath returns the images path for a specific site.
+func GetSiteImagesPath(sitesBasePath, siteSlug string) string {
+	return filepath.Join(GetSiteAssetsPath(sitesBasePath, siteSlug), "images")
+}

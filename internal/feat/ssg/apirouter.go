@@ -8,6 +8,10 @@ func NewAPIRouter(handler *APIHandler, mw []hm.Middleware, params hm.XParams) *h
 	core := hm.NewAPIRouter("api-router", params)
 	core.SetMiddlewares(mw)
 
+	// Site API routes
+	core.Get("/sites", handler.ListSites)
+	core.Post("/sites", handler.CreateSite)
+
 	// SSG API routes
 	core.Post("/generate-markdown", handler.GenerateMarkdown)
 	core.Post("/generate-html", handler.GenerateHTML)

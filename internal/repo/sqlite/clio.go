@@ -23,8 +23,15 @@ func NewClioRepo(qm *hm.QueryManager, params hm.XParams) *ClioRepo {
 	}
 }
 
-// Setup the database connection.
+func (repo *ClioRepo) SetDB(db *sqlx.DB) {
+	repo.db = db
+}
+
 func (repo *ClioRepo) Setup(ctx context.Context) error {
+	if repo.db != nil {
+		return nil
+	}
+
 	dsn, ok := repo.Cfg().StrVal(key.DBSQLiteDSN)
 	if !ok {
 		return errors.New("database DSN not found in configuration")

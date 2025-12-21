@@ -16,7 +16,7 @@ func (h *WebHandler) ListParams(w http.ResponseWriter, r *http.Request) {
 	var response struct {
 		Params []feat.Param `json:"params"`
 	}
-	err := h.apiClient.Get(r, "/ssg/params", &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), "/ssg/params", &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get params from API", http.StatusInternalServerError)
 		return
@@ -71,7 +71,7 @@ func (h *WebHandler) CreateParam(w http.ResponseWriter, r *http.Request) {
 	var response struct {
 		Param feat.Param `json:"param"`
 	}
-	err = h.apiClient.Post(r, "/ssg/params", param, &response)
+	err = h.apiClient.Post(h.addSiteSlugHeader(r), "/ssg/params", param, &response)
 	if err != nil {
 		h.Err(w, err, "Failed to create param via API", http.StatusInternalServerError)
 		return
@@ -102,7 +102,7 @@ func (h *WebHandler) EditParam(w http.ResponseWriter, r *http.Request) {
 		Param feat.Param `json:"param"`
 	}
 	path := fmt.Sprintf("/ssg/params/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get param from API", http.StatusInternalServerError)
 		return
@@ -134,7 +134,7 @@ func (h *WebHandler) UpdateParam(w http.ResponseWriter, r *http.Request) {
 	param := ToFeatParam(form)
 
 	path := fmt.Sprintf("/ssg/params/%s", param.GetID())
-	err = h.apiClient.Put(r, path, param, nil)
+	err = h.apiClient.Put(h.addSiteSlugHeader(r), path, param, nil)
 	if err != nil {
 		h.Err(w, err, "Failed to update param via API", http.StatusInternalServerError)
 		return
@@ -164,7 +164,7 @@ func (h *WebHandler) DeleteParam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := fmt.Sprintf("/ssg/params/%s", idStr)
-	err := h.apiClient.Delete(r, path)
+	err := h.apiClient.Delete(h.addSiteSlugHeader(r), path)
 	if err != nil {
 		h.Err(w, err, "Failed to delete param via API", http.StatusInternalServerError)
 		return
@@ -187,7 +187,7 @@ func (h *WebHandler) ShowParam(w http.ResponseWriter, r *http.Request) {
 		Param feat.Param `json:"param"`
 	}
 	path := fmt.Sprintf("/ssg/params/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get param from API", http.StatusInternalServerError)
 		return

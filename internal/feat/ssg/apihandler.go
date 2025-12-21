@@ -21,13 +21,15 @@ const (
 
 type APIHandler struct {
 	*hm.APIHandler
-	svc Service
+	svc         Service
+	siteManager *SiteManager
 }
 
-func NewAPIHandler(name string, service Service, params hm.XParams) *APIHandler {
+func NewAPIHandler(name string, service Service, siteManager *SiteManager, params hm.XParams) *APIHandler {
 	return &APIHandler{
-		APIHandler: hm.NewAPIHandler(name, params),
-		svc:        service,
+		APIHandler:  hm.NewAPIHandler(name, params),
+		svc:         service,
+		siteManager: siteManager,
 	}
 }
 
@@ -44,6 +46,8 @@ func (h *APIHandler) Created(w http.ResponseWriter, message string, data interfa
 func (h *APIHandler) wrapData(data interface{}) interface{} {
 	switch v := data.(type) {
 	// Single entities
+	case Site:
+		return map[string]interface{}{"site": v}
 	case Layout:
 		return map[string]interface{}{"layout": v}
 	case Section:
@@ -60,6 +64,8 @@ func (h *APIHandler) wrapData(data interface{}) interface{} {
 		return map[string]interface{}{"image_variant": v}
 
 	// Slices of entities
+	case []Site:
+		return map[string]interface{}{"sites": v}
 	case []Layout:
 		return map[string]interface{}{"layouts": v}
 	case []Section:
