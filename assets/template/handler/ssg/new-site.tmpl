@@ -1,0 +1,54 @@
+{{ define "page" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "title" }}
+New Site
+{{ end }}
+
+{{ define "content" }}
+<h1 class="text-2xl font-bold mb-4">Create New Site</h1>
+
+<form action="/ssg/sites/create" method="POST" class="max-w-lg">
+  <div class="mb-4">
+    <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Name</label>
+    <input type="text" id="name" name="name" required
+           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+  </div>
+
+  <div class="mb-4">
+    <label for="slug" class="block text-gray-700 text-sm font-bold mb-2">Slug</label>
+    <input type="text" id="slug" name="slug" required
+           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+  </div>
+
+  <div class="mb-4">
+    <label class="block text-gray-700 text-sm font-bold mb-2">Mode</label>
+    <div class="mt-2">
+      <label class="inline-flex items-center mr-4">
+        <input type="radio" name="mode" value="normal" checked class="form-radio">
+        <span class="ml-2">Normal</span>
+      </label>
+      <label class="inline-flex items-center">
+        <input type="radio" name="mode" value="blog" class="form-radio">
+        <span class="ml-2">Blog</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between">
+    <button type="submit" class="btn btn-primary">
+      Create Site
+    </button>
+    <a href="/ssg/sites" class="text-gray-600 hover:text-gray-900">Cancel</a>
+  </div>
+</form>
+{{ end }}
+
+{{ define "submenu" }}
+<div class="mx-auto p-4">
+  <div class="flex space-x-4 justify-center">
+    <a href="/ssg/sites" class="btn btn-secondary">Back to Sites</a>
+  </div>
+</div>
+{{ end }}

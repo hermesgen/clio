@@ -1,7 +1,9 @@
 {{ define "header" }}
 <header class="bg-blue-600 text-white p-2 flex items-center">
-    <img src="/static/img/logo.png" alt="Logo" class="w-12 h-12 mr-4">
-    <nav class="flex-1">
+    <a href="/ssg/sites">
+        <img src="/static/img/logo.png" alt="Logo" class="w-12 h-12 mr-4 cursor-pointer">
+    </a>
+    <nav class="flex-1 flex items-center justify-between">
         <ul class="flex space-x-4">
             <li class="border-r border-white/10 px-3"><a href="/auth/list-users" class="text-white">Home</a></li>
             <li><a href="/ssg/list-content" class="text-white">Content</a></li>

@@ -38,7 +38,7 @@ func (h *WebHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 	var response struct {
 		Tag feat.Tag `json:"tag"`
 	}
-	err = h.apiClient.Post(r, "/ssg/tags", featTag, &response)
+	err = h.apiClient.Post(h.addSiteSlugHeader(r), "/ssg/tags", featTag, &response)
 	if err != nil {
 		h.Err(w, err, "Failed to create tag via API", http.StatusInternalServerError)
 		return
@@ -69,7 +69,7 @@ func (h *WebHandler) EditTag(w http.ResponseWriter, r *http.Request) {
 		Tag feat.Tag `json:"tag"`
 	}
 	path := fmt.Sprintf("/ssg/tags/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get tag from API", http.StatusInternalServerError)
 		return
@@ -100,7 +100,7 @@ func (h *WebHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	featTag := ToFeatTag(form)
 
 	path := fmt.Sprintf("/ssg/tags/%s", featTag.GetID())
-	err = h.apiClient.Put(r, path, featTag, nil)
+	err = h.apiClient.Put(h.addSiteSlugHeader(r), path, featTag, nil)
 	if err != nil {
 		h.Err(w, err, "Failed to update tag via API", http.StatusInternalServerError)
 		return
@@ -123,7 +123,7 @@ func (h *WebHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 	var response struct {
 		Tags []feat.Tag `json:"tags"`
 	}
-	err := h.apiClient.Get(r, "/ssg/tags", &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), "/ssg/tags", &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get tags from API", http.StatusInternalServerError)
 		return
@@ -163,7 +163,7 @@ func (h *WebHandler) ShowTag(w http.ResponseWriter, r *http.Request) {
 		Tag feat.Tag `json:"tag"`
 	}
 	path := fmt.Sprintf("/ssg/tags/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get tag from API", http.StatusInternalServerError)
 		return
@@ -202,7 +202,7 @@ func (h *WebHandler) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := fmt.Sprintf("/ssg/tags/%s", idStr)
-	err := h.apiClient.Delete(r, path)
+	err := h.apiClient.Delete(h.addSiteSlugHeader(r), path)
 	if err != nil {
 		h.Err(w, err, "Failed to delete tag via API", http.StatusInternalServerError)
 		return

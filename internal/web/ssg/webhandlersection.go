@@ -38,7 +38,8 @@ func (h *WebHandler) CreateSection(w http.ResponseWriter, r *http.Request) {
 	var response struct {
 		Section feat.Section `json:"section"`
 	}
-	err = h.apiClient.Post(r, "/ssg/sections", featSection, &response)
+
+	err = h.apiClient.Post(h.addSiteSlugHeader(r), "/ssg/sections", featSection, &response)
 	if err != nil {
 		h.Err(w, err, "Failed to create section via API", http.StatusInternalServerError)
 		return
@@ -62,7 +63,7 @@ func (h *WebHandler) EditSection(w http.ResponseWriter, r *http.Request) {
 		Section feat.Section `json:"section"`
 	}
 	path := fmt.Sprintf("/ssg/sections/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get section from API", http.StatusInternalServerError)
 		return
@@ -93,7 +94,7 @@ func (h *WebHandler) UpdateSection(w http.ResponseWriter, r *http.Request) {
 	featSection := ToFeatSection(form)
 
 	path := fmt.Sprintf("/ssg/sections/%s", featSection.GetID())
-	err = h.apiClient.Put(r, path, featSection, nil)
+	err = h.apiClient.Put(h.addSiteSlugHeader(r), path, featSection, nil)
 	if err != nil {
 		h.Err(w, err, "Failed to update section via API", http.StatusInternalServerError)
 		return
@@ -109,7 +110,7 @@ func (h *WebHandler) ListSections(w http.ResponseWriter, r *http.Request) {
 	var response struct {
 		Sections []feat.Section `json:"sections"`
 	}
-	err := h.apiClient.Get(r, "/ssg/sections", &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), "/ssg/sections", &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get sections from API", http.StatusInternalServerError)
 		return
@@ -147,7 +148,7 @@ func (h *WebHandler) ShowSection(w http.ResponseWriter, r *http.Request) {
 		Section feat.Section `json:"section"`
 	}
 	path := fmt.Sprintf("/ssg/sections/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get section from API", http.StatusInternalServerError)
 		return
@@ -186,7 +187,7 @@ func (h *WebHandler) DeleteSection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := fmt.Sprintf("/ssg/sections/%s", idStr)
-	err := h.apiClient.Delete(r, path)
+	err := h.apiClient.Delete(h.addSiteSlugHeader(r), path)
 	if err != nil {
 		h.Err(w, err, "Failed to delete section via API", http.StatusInternalServerError)
 		return
@@ -200,7 +201,7 @@ func (h *WebHandler) renderSectionForm(w http.ResponseWriter, r *http.Request, f
 	var response struct {
 		Layouts []Layout `json:"layouts"`
 	}
-	err := h.apiClient.Get(r, "/ssg/layouts", &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), "/ssg/layouts", &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get layouts from API", http.StatusInternalServerError)
 		return
@@ -222,7 +223,6 @@ func (h *WebHandler) renderSectionForm(w http.ResponseWriter, r *http.Request, f
 		page.Form.SetAction(hm.UpdatePath(&Section{}))
 		page.Form.SetSubmitButtonText("Update")
 	}
-
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-section")
 	if err != nil {

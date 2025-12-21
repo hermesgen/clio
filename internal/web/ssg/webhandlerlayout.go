@@ -37,7 +37,7 @@ func (h *WebHandler) CreateLayout(w http.ResponseWriter, r *http.Request) {
 	var response struct {
 		Layout feat.Layout `json:"layout"`
 	}
-	err = h.apiClient.Post(r, "/ssg/layouts", featLayout, &response)
+	err = h.apiClient.Post(h.addSiteSlugHeader(r), "/ssg/layouts", featLayout, &response)
 	if err != nil {
 		h.Err(w, err, "Failed to create layout via API", http.StatusInternalServerError)
 		return
@@ -61,7 +61,7 @@ func (h *WebHandler) EditLayout(w http.ResponseWriter, r *http.Request) {
 		Layout feat.Layout `json:"layout"`
 	}
 	path := fmt.Sprintf("/ssg/layouts/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get layout from API", http.StatusInternalServerError)
 		return
@@ -92,7 +92,7 @@ func (h *WebHandler) UpdateLayout(w http.ResponseWriter, r *http.Request) {
 	featLayout := ToFeatLayout(form)
 
 	path := fmt.Sprintf("/ssg/layouts/%s", featLayout.GetID())
-	err = h.apiClient.Put(r, path, featLayout, nil)
+	err = h.apiClient.Put(h.addSiteSlugHeader(r), path, featLayout, nil)
 	if err != nil {
 		h.Err(w, err, "Failed to update layout via API", http.StatusInternalServerError)
 		return
@@ -108,7 +108,7 @@ func (h *WebHandler) ListLayouts(w http.ResponseWriter, r *http.Request) {
 	var response struct {
 		Layouts []feat.Layout `json:"layouts"`
 	}
-	err := h.apiClient.Get(r, "/ssg/layouts", &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), "/ssg/layouts", &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get layouts from API", http.StatusInternalServerError)
 		return
@@ -147,7 +147,7 @@ func (h *WebHandler) ShowLayout(w http.ResponseWriter, r *http.Request) {
 		Layout feat.Layout `json:"layout"`
 	}
 	path := fmt.Sprintf("/ssg/layouts/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get layout from API", http.StatusInternalServerError)
 		return
@@ -187,7 +187,7 @@ func (h *WebHandler) DeleteLayout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := fmt.Sprintf("/ssg/layouts/%s", idStr)
-	err := h.apiClient.Delete(r, path)
+	err := h.apiClient.Delete(h.addSiteSlugHeader(r), path)
 	if err != nil {
 		h.Err(w, err, "Failed to delete layout via API", http.StatusInternalServerError)
 		return

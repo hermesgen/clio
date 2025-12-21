@@ -46,7 +46,7 @@ func (h *WebHandler) CreateContent(w http.ResponseWriter, r *http.Request) {
 		Content feat.Content `json:"content"`
 	}
 	h.Log().Info("Calling API to create content...")
-	err = h.apiClient.Post(r, "/ssg/contents", content, &response)
+	err = h.apiClient.Post(h.addSiteSlugHeader(r), "/ssg/contents", content, &response)
 	if err != nil {
 		h.Err(w, err, "Failed to create content via API", http.StatusInternalServerError)
 		return
@@ -77,7 +77,7 @@ func (h *WebHandler) EditContent(w http.ResponseWriter, r *http.Request) {
 		Content feat.Content `json:"content"`
 	}
 	path := fmt.Sprintf("/ssg/contents/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get content from API", http.StatusInternalServerError)
 		return
@@ -109,7 +109,7 @@ func (h *WebHandler) UpdateContent(w http.ResponseWriter, r *http.Request) {
 	content := ToFeatContent(form)
 
 	path := fmt.Sprintf("/ssg/contents/%s", content.GetID())
-	err = h.apiClient.Put(r, path, content, nil)
+	err = h.apiClient.Put(h.addSiteSlugHeader(r), path, content, nil)
 	if err != nil {
 		h.Err(w, err, "Failed to update content via API", http.StatusInternalServerError)
 		return
@@ -153,7 +153,7 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Log().Info("Calling apiClient.Get", "url", url)
-	err := h.apiClient.Get(r, url, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), url, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get contents from API", http.StatusInternalServerError)
 		return
@@ -229,7 +229,7 @@ func (h *WebHandler) ShowContent(w http.ResponseWriter, r *http.Request) {
 		Content feat.Content `json:"content"`
 	}
 	path := fmt.Sprintf("/ssg/contents/%s", idStr)
-	err := h.apiClient.Get(r, path, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), path, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot get content from API", http.StatusInternalServerError)
 		return
@@ -268,7 +268,7 @@ func (h *WebHandler) DeleteContent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := fmt.Sprintf("/ssg/contents/%s", idStr)
-	err := h.apiClient.Delete(r, path)
+	err := h.apiClient.Delete(h.addSiteSlugHeader(r), path)
 	if err != nil {
 		h.Err(w, err, "Failed to delete content via API", http.StatusInternalServerError)
 		return
@@ -305,7 +305,7 @@ func (h *WebHandler) SearchContent(w http.ResponseWriter, r *http.Request) {
 		url += "&search=" + searchQuery
 	}
 
-	err := h.apiClient.Get(r, url, &response)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), url, &response)
 	if err != nil {
 		h.Err(w, err, "Cannot search contents from API", http.StatusInternalServerError)
 		return
@@ -409,7 +409,7 @@ func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, f
 		Sections []Section `json:"sections"`
 	}
 	h.Log().Debug("Calling API to get sections")
-	err := h.apiClient.Get(r, "/ssg/sections", &sectionsResponse)
+	err := h.apiClient.Get(h.addSiteSlugHeader(r), "/ssg/sections", &sectionsResponse)
 	if err != nil {
 		h.Log().Errorf("Cannot get sections from API: %v", err)
 		h.Err(w, err, "Cannot get sections from API", http.StatusInternalServerError)
@@ -433,7 +433,7 @@ func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, f
 		Users []auth.User `json:"users"`
 	}
 	h.Log().Debug("Calling API to get users")
-	err = h.apiClient.Get(r, "/auth/users", &usersResponse)
+	err = h.apiClient.Get(h.addSiteSlugHeader(r), "/auth/users", &usersResponse)
 	if err != nil {
 		h.Log().Errorf("Cannot get users from API: %v", err)
 		h.Err(w, err, "Cannot get users from API", http.StatusInternalServerError)
@@ -446,7 +446,7 @@ func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, f
 		Tags []Tag `json:"tags"`
 	}
 	h.Log().Debug("Calling API to get tags")
-	err = h.apiClient.Get(r, "/ssg/tags", &tagsResponse)
+	err = h.apiClient.Get(h.addSiteSlugHeader(r), "/ssg/tags", &tagsResponse)
 	if err != nil {
 		h.Log().Errorf("Cannot get tags from API: %v", err)
 		h.Err(w, err, "Cannot get tags from API", http.StatusInternalServerError)

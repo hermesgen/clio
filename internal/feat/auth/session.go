@@ -50,14 +50,15 @@ func (sm *SessionManager) Setup(ctx context.Context) error {
 	return nil
 }
 
-// SetUserSession sets a user ID in a session cookie.
-func (sm *SessionManager) SetUserSession(w http.ResponseWriter, userID uuid.UUID) error {
+// SetUserSession sets a user ID and site slug in a session cookie.
+func (sm *SessionManager) SetUserSession(w http.ResponseWriter, userID uuid.UUID, siteSlug string) error {
 	if sm.encoder == nil {
 		return errors.New("session manager not initialized")
 	}
 
 	value := map[string]string{
-		"user_id": userID.String(),
+		"user_id":   userID.String(),
+		"site_slug": siteSlug,
 	}
 
 	encoded, err := sm.encoder.Encode(sessionCookieName, value)
@@ -79,34 +80,49 @@ func (sm *SessionManager) SetUserSession(w http.ResponseWriter, userID uuid.UUID
 	return nil
 }
 
-// GetUserSession retrieves a user ID from a session cookie.
-func (sm *SessionManager) GetUserSession(r *http.Request) (uuid.UUID, error) {
+// GetUserSession retrieves a user ID and site slug from a session cookie.
+func (sm *SessionManager) GetUserSession(r *http.Request) (userID uuid.UUID, siteSlug string, err error) {
 	if sm.encoder == nil {
-		return uuid.Nil, errors.New("session manager not initialized")
+		return uuid.Nil, "", errors.New("session manager not initialized")
 	}
 
 	cookie, err := r.Cookie(sessionCookieName)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("session cookie not found: %w", err)
+		return uuid.Nil, "", fmt.Errorf("session cookie not found: %w", err)
 	}
 
 	value := make(map[string]string)
 	err = sm.encoder.Decode(sessionCookieName, cookie.Value, &value)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("failed to decode session cookie: %w", err)
+		return uuid.Nil, "", fmt.Errorf("failed to decode session cookie: %w", err)
 	}
 
 	userIDStr, ok := value["user_id"]
 	if !ok || userIDStr == "" {
-		return uuid.Nil, errors.New("user ID not found in session")
+		return uuid.Nil, "", errors.New("user ID not found in session")
 	}
 
-	userID, err := uuid.Parse(userIDStr)
+	userID, err = uuid.Parse(userIDStr)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid user ID in session: %w", err)
+		return uuid.Nil, "", fmt.Errorf("invalid user ID in session: %w", err)
 	}
 
-	return userID, nil
+	// Site slug is optional for backwards compatibility
+	siteSlug = value["site_slug"]
+
+	return userID, siteSlug, nil
+}
+
+// SetSiteSlug updates only the site slug in the session (keeps user_id unchanged).
+func (sm *SessionManager) SetSiteSlug(w http.ResponseWriter, r *http.Request, siteSlug string) error {
+	// Get current session
+	userID, _, err := sm.GetUserSession(r)
+	if err != nil {
+		return fmt.Errorf("failed to get current session: %w", err)
+	}
+
+	// Set new session with updated site slug
+	return sm.SetUserSession(w, userID, siteSlug)
 }
 
 // ClearUserSession clears the user session cookie.

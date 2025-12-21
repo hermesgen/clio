@@ -4,7 +4,6 @@ import (
 	"context"
 	"embed"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,6 +17,8 @@ import (
 	webssg "github.com/hermesgen/clio/internal/web/ssg"
 	"github.com/hermesgen/hm"
 	"github.com/hermesgen/hm/github"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -31,110 +32,119 @@ const (
 var assetsFS embed.FS
 
 func main() {
-	var initBlogMode bool
-	flag.BoolVar(&initBlogMode, "init-blog-mode", false, "Initialize site in blog mode (sets site.mode=blog in database)")
 	flag.Parse()
 
 	ctx := context.Background()
 	log := hm.NewLogger("info")
 	cfg := hm.LoadCfg(namespace, hm.Flags)
-
-	// XParams for components that only need log + config
 	xparams := hm.XParams{Cfg: cfg, Log: log}
 
 	fm := hm.NewFlashManager(xparams)
 	workspace := core.NewWorkspace(xparams)
 	app := core.NewApp(name, version, assetsFS, xparams)
-	queryManager := hm.NewQueryManager(assetsFS, engine, xparams)
 	templateManager := hm.NewTemplateManager(assetsFS, xparams)
-	repo := sqlite.NewClioRepo(queryManager, xparams)
-	migrator := hm.NewMigrator(assetsFS, engine, xparams)
 	fileServer := hm.NewFileServer(assetsFS, xparams)
 
-	// Redirect root to SSG list content
-	app.Router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			http.Redirect(w, r, "/ssg/list-content", http.StatusFound)
-			return
-		}
-	})
+	sitesMigrator := hm.NewMigrator(assetsFS, engine, xparams)
+	sitesMigrator.SetPath("assets/migration/sqlite-sites")
 
-	app.MountFileServer("/", fileServer)
+	var siteRepo ssg.SiteRepo
 
-	// Serve uploaded images from the filesystem
-	imagesPath := cfg.StrValOrDef(ssg.SSGKey.ImagesPath, "_workspace/documents/assets/images")
-	imageFileServer := http.FileServer(http.Dir(imagesPath))
-	app.Router.Handle("/static/images/*", http.StripPrefix("/static/images/", imageFileServer))
+	repoFactory := func(qm *hm.QueryManager, params hm.XParams) ssg.Repo {
+		return sqlite.NewClioRepo(qm, params)
+	}
+
+	repoManager := ssg.NewRepoManager(assetsFS, engine, repoFactory, xparams)
+	sessionManager := auth.NewSessionManager(xparams)
+	var siteManager *ssg.SiteManager
 
 	apiRouter := hm.NewAPIRouter("api-router", xparams)
-
-	// GitAuth feature
-	authSeeder := auth.NewSeeder(assetsFS, engine, repo, xparams)
-	authService := auth.NewService(repo, xparams)
-	authAPIHandler := auth.NewAPIHandler("auth-api-handler", authService, xparams)
-	authAPIRouter := auth.NewAPIRouter(authAPIHandler, nil, xparams) // No middleware for now
-	apiRouter.Mount("/auth", authAPIRouter)
-
-	// SSG feature
 	gitClient := github.NewClient(xparams)
 	ssgPublisher := ssg.NewPublisher(gitClient, xparams)
-	ssgSeeder := ssg.NewSeeder(assetsFS, engine, repo, xparams)
 	ssgGenerator := ssg.NewGenerator(xparams)
-	ssgParamManager := ssg.NewParamManager(repo, xparams)
-	ssgImageManager := ssg.NewImageManager(xparams)
-	ssgService := ssg.NewService(assetsFS, repo, ssgGenerator, ssgPublisher, ssgParamManager, ssgImageManager, xparams)
-	ssgAPIHandler := ssg.NewAPIHandler("ssg-api-handler", ssgService, xparams)
-	ssgAPIRouter := ssg.NewAPIRouter(ssgAPIHandler, []hm.Middleware{hm.CORSMw}, xparams)
-	apiRouter.Mount("/ssg", ssgAPIRouter)
 
-	app.MountAPI("/api/v1", apiRouter)
-
-	// Web app
-	ssgWebHandler := webssg.NewWebHandler(templateManager, fm, ssgParamManager, xparams)
-	ssgWebRouter := webssg.NewWebRouter(ssgWebHandler, append(fm.Middlewares(), hm.LogHeadersMw), xparams)
-
-	app.MountWeb("/ssg", ssgWebRouter)
-
-	// Add deps
 	app.Add(workspace)
-	app.Add(migrator)
+	app.Add(sitesMigrator)
 	app.Add(fm)
 	app.Add(fileServer)
-	app.Add(queryManager)
 	app.Add(templateManager)
-	app.Add(repo)
-	app.Add(ssgWebHandler)
-	app.Add(ssgWebRouter)
-	app.Add(authSeeder)
-	app.Add(ssgSeeder)
+	app.Add(sessionManager)
+	app.Add(repoManager)
 	app.Add(gitClient)
 	app.Add(ssgPublisher)
 	app.Add(ssgGenerator)
-	app.Add(ssgParamManager)
-	app.Add(ssgService)
+	app.Add(apiRouter)
+
+	err := workspace.Setup(ctx)
+	if err != nil {
+		log.Errorf("Cannot setup workspace: %v", err)
+		return
+	}
+
+	sitesDSN := cfg.StrValOrDef(ssg.SSGKey.SitesDSN, "file:_workspace/config/sites.db?cache=shared&mode=rwc")
+	sitesDB, err := sqlx.Connect("sqlite3", sitesDSN)
+	if err != nil {
+		log.Errorf("Cannot connect to sites database: %v", err)
+		return
+	}
+	defer sitesDB.Close()
+
+	log.Infof("Connected to sites database: %s", sitesDSN)
+
+	sitesMigrator.SetDB(sitesDB.DB)
+	if err := sitesMigrator.Setup(ctx); err != nil {
+		log.Errorf("Cannot run sites migrations: %v", err)
+		return
+	}
+
+	siteRepo = ssg.NewSiteRepo(sitesDB)
+	siteManager = ssg.NewSiteManager(siteRepo, assetsFS, engine, repoFactory, xparams)
+	app.Add(siteManager)
+
+	siteContextMw := ssg.NewSiteContextMw(sessionManager, siteRepo, repoManager, xparams)
+
+	// Auth API (uses global sites database)
+	authQueryManager := hm.NewQueryManager(assetsFS, engine, xparams)
+	if err := authQueryManager.Setup(ctx); err != nil {
+		log.Errorf("Cannot setup auth query manager: %v", err)
+		return
+	}
+	authRepo := sqlite.NewClioRepo(authQueryManager, xparams)
+	authRepo.SetDB(sitesDB)
+	authService := auth.NewService(authRepo, xparams)
+	authAPIHandler := auth.NewAPIHandler("auth-api-handler", authService, xparams)
+	authAPIRouter := auth.NewAPIRouter(authAPIHandler, []hm.Middleware{}, xparams)
+	app.Add(authAPIHandler)
+	app.Add(authAPIRouter)
+
+	paramManager := ssg.NewParamManager(nil, xparams)
+	imageManager := ssg.NewImageManager(xparams)
+	ssgAPIService := ssg.NewService(assetsFS, nil, ssgGenerator, ssgPublisher, paramManager, imageManager, xparams)
+	ssgAPIHandler := ssg.NewAPIHandler("ssg-api-handler", ssgAPIService, siteManager, xparams)
+	ssgAPIRouter := ssg.NewAPIRouter(ssgAPIHandler, []hm.Middleware{siteContextMw.APIHandler}, xparams)
 	app.Add(ssgAPIHandler)
 	app.Add(ssgAPIRouter)
-	app.Add(apiRouter)
-	app.Add(authSeeder)
 
-	err := app.Setup(ctx)
-	if err != nil {
-		log.Errorf("Cannot setup %s(%s): %v", name, version, err)
+	ssgWebHandler := webssg.NewWebHandler(templateManager, fm, paramManager, siteManager, sessionManager, xparams)
+	ssgWebRouter := webssg.NewWebRouter(ssgWebHandler, append(fm.Middlewares(), siteContextMw.WebHandler), xparams)
+
+	if err := app.Setup(ctx); err != nil {
+		log.Errorf("Cannot setup application: %v", err)
 		return
 	}
 
-	// Handle --init-blog-mode flag
-	if initBlogMode {
-		err = ssgParamManager.SetSiteMode(ctx, "blog")
-		if err != nil {
-			log.Errorf("Failed to set blog mode: %v", err)
-			fmt.Fprintf(os.Stderr, "Error: Failed to set blog mode: %v\n", err)
-			os.Exit(1)
+	app.MountAPI("/api/v1/auth", authAPIRouter)
+	app.MountAPI("/api/v1/ssg", ssgAPIRouter)
+	app.MountWeb("/ssg", ssgWebRouter)
+	app.MountFileServer("/", fileServer)
+
+	app.Router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			ssgWebHandler.RootRedirect(w, r)
 		}
-		fmt.Println("Successfully initialized site in blog mode")
-		fmt.Println("Site mode has been set to 'blog' in the database")
-		return
-	}
+	})
+
+	log.Infof("%s(%s) setup completed", name, version)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)

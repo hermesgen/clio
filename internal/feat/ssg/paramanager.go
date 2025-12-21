@@ -27,17 +27,40 @@ func (pm *ParamManager) FindParam(ctx context.Context, ref string) (Param, error
 }
 
 func (pm *ParamManager) findParamByName(ctx context.Context, name string) (Param, error) {
+	repo, ok := GetRepoFromContext(ctx)
+	if !ok {
+		if pm.repo == nil {
+			return Param{}, fmt.Errorf("no repository available")
+		}
+		repo = pm.repo
+	}
 	// TODO: This is a simple wrapper for now but a simple caching strategy can be added here.
-	return pm.repo.GetParamByName(ctx, name)
+	return repo.GetParamByName(ctx, name)
 }
 
 func (pm *ParamManager) FindParamByRef(ctx context.Context, refKey string) (Param, error) {
+	repo, ok := GetRepoFromContext(ctx)
+	if !ok {
+		if pm.repo == nil {
+			return Param{}, fmt.Errorf("no repository available")
+		}
+		repo = pm.repo
+	}
 	// TODO: This is a simple wrapper for now but a simple caching strategy can be added here.
-	return pm.repo.GetParamByRefKey(ctx, refKey)
+	return repo.GetParamByRefKey(ctx, refKey)
 }
 
 func (pm *ParamManager) Get(ctx context.Context, refKey string, defVal string) string {
-	param, err := pm.repo.GetParamByRefKey(ctx, refKey)
+	repo, ok := GetRepoFromContext(ctx)
+	if !ok && pm.repo == nil {
+		// No repo available, fallback to configuration
+		return pm.Cfg().StrValOrDef(refKey, defVal)
+	}
+	if !ok {
+		repo = pm.repo
+	}
+
+	param, err := repo.GetParamByRefKey(ctx, refKey)
 	if err == nil && !param.IsZero() {
 		return param.Value
 	}
@@ -59,11 +82,19 @@ func (pm *ParamManager) GetSiteMode(ctx context.Context) string {
 
 // SetSiteMode sets the site mode to either "normal" or "blog".
 func (pm *ParamManager) SetSiteMode(ctx context.Context, mode string) error {
+	repo, ok := GetRepoFromContext(ctx)
+	if !ok {
+		if pm.repo == nil {
+			return fmt.Errorf("no repository available")
+		}
+		repo = pm.repo
+	}
+
 	if mode != "normal" && mode != "blog" {
 		return fmt.Errorf("invalid site mode: must be 'normal' or 'blog'")
 	}
 
-	param, err := pm.repo.GetParamByRefKey(ctx, "site.mode")
+	param, err := repo.GetParamByRefKey(ctx, "site.mode")
 	if err != nil || param.IsZero() {
 		// Create new param
 		param = NewParam("Site Mode", mode)
@@ -71,11 +102,11 @@ func (pm *ParamManager) SetSiteMode(ctx context.Context, mode string) error {
 		param.RefKey = "site.mode"
 		param.System = 1
 		param.GenCreateValues()
-		return pm.repo.CreateParam(ctx, &param)
+		return repo.CreateParam(ctx, &param)
 	}
 
 	// Update existing
 	param.Value = mode
 	param.GenUpdateValues()
-	return pm.repo.UpdateParam(ctx, &param)
+	return repo.UpdateParam(ctx, &param)
 }

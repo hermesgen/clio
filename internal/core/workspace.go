@@ -40,27 +40,23 @@ func (w *Workspace) setupDirs() error {
 			return err
 		}
 		base := filepath.Join(wd, "_workspace")
-		dbDir := filepath.Join(base, "db")
+		configDir := filepath.Join(base, "config")
+		sitesBase := filepath.Join(base, "sites")
+
 		dirs = []string{
-			filepath.Join(base, "config"),
-			dbDir,
-			filepath.Join(base, "documents", "markdown"),
-			filepath.Join(base, "documents", "html"),
-			filepath.Join(base, "documents", "assets", "images"),
+			configDir,
+			sitesBase,
 		}
 
-		// Override config values for dev mode
-		devDSN := "file:" + filepath.Join(dbDir, "clio.db") + "?cache=shared&mode=rwc"
-		w.Cfg().Set(key.DBSQLiteDSN, devDSN)
+		// Set sites.db path (metadata DB)
+		sitesDSN := "file:" + filepath.Join(configDir, "sites.db") + "?cache=shared&mode=rwc"
+		w.Cfg().Set(ssg.SSGKey.SitesDSN, sitesDSN)
 
+		// Set base paths for multi-site structure
 		w.Cfg().Set(ssg.SSGKey.WorkspacePath, base)
-		w.Cfg().Set(ssg.SSGKey.DocsPath, filepath.Join(base, "documents"))
-		w.Cfg().Set(ssg.SSGKey.MarkdownPath, filepath.Join(base, "documents", "markdown"))
-		w.Cfg().Set(ssg.SSGKey.HTMLPath, filepath.Join(base, "documents", "html"))
-		w.Cfg().Set(ssg.SSGKey.AssetsPath, filepath.Join(base, "documents", "assets"))
-		w.Cfg().Set(ssg.SSGKey.ImagesPath, filepath.Join(base, "documents", "assets", "images"))
+		w.Cfg().Set(ssg.SSGKey.SitesBasePath, sitesBase)
 
-		w.Log().Info("Overriding config for DEV mode", "key", key.DBSQLiteDSN, "value", devDSN)
+		w.Log().Info("Overriding config for DEV mode", "sites_dsn", sitesDSN)
 
 	} else {
 		w.Log().Info("Running in PROD mode, using system paths.")
@@ -70,27 +66,20 @@ func (w *Workspace) setupDirs() error {
 			return err
 		}
 
-		basePath := filepath.Join(homeDir, ".clio")
-		docsPath := filepath.Join(homeDir, "Documents", "Clio")
-		markdownPath := filepath.Join(docsPath, "markdown")
-		htmlPath := filepath.Join(docsPath, "html")
-		assetsPath := filepath.Join(docsPath, "assets")
-		imagesPath := filepath.Join(assetsPath, "images")
+		configDir := filepath.Join(homeDir, ".config", "clio")
+		sitesBase := filepath.Join(homeDir, "Documents", "Clio", "sites")
 
 		dirs = []string{
-			filepath.Join(homeDir, ".config", "clio"),
-			basePath,
-			markdownPath,
-			htmlPath,
-			imagesPath,
+			configDir,
+			sitesBase,
 		}
 
-		w.Cfg().Set(ssg.SSGKey.WorkspacePath, basePath)
-		w.Cfg().Set(ssg.SSGKey.DocsPath, docsPath)
-		w.Cfg().Set(ssg.SSGKey.MarkdownPath, markdownPath)
-		w.Cfg().Set(ssg.SSGKey.HTMLPath, htmlPath)
-		w.Cfg().Set(ssg.SSGKey.AssetsPath, assetsPath)
-		w.Cfg().Set(ssg.SSGKey.ImagesPath, imagesPath)
+		// Set sites.db path (metadata DB)
+		sitesDSN := "file:" + filepath.Join(configDir, "sites.db") + "?cache=shared&mode=rwc"
+		w.Cfg().Set(ssg.SSGKey.SitesDSN, sitesDSN)
+
+		// Set base paths for multi-site structure
+		w.Cfg().Set(ssg.SSGKey.SitesBasePath, sitesBase)
 	}
 
 	w.Log().Info("Ensuring base directory structure exists...")
