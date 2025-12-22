@@ -7,7 +7,7 @@ import (
 )
 
 // GetContentPath returns the URL path for a content item based on site mode.
-// In normal mode: /{section-path}/{slug}/
+// In structured mode: /{section-path}/{slug}/
 // In blog mode: /{slug}/
 func GetContentPath(content Content, mode string) string {
 	slug := content.Slug()
@@ -17,12 +17,12 @@ func GetContentPath(content Content, mode string) string {
 		return filepath.Join("/", slug, "/")
 	}
 
-	// Normal mode: respect section paths
+	// Structured mode: respect section paths
 	return filepath.Join("/", content.SectionPath, slug, "/")
 }
 
 // GetIndexPath returns the URL path for an index based on content type and site mode.
-// In normal mode:
+// In structured mode:
 //   - blog posts: /{section-path}/blog/ or /blog/ for root
 //   - other types: /{section-path}/
 // In blog mode: all content goes to /
@@ -32,7 +32,7 @@ func GetIndexPath(sectionPath string, contentType string, mode string) string {
 		return "/"
 	}
 
-	// Normal mode
+	// Structured mode
 	basePath := strings.TrimSuffix(sectionPath, "/")
 
 	// Special handling for blog content type
@@ -53,7 +53,7 @@ func GetIndexPath(sectionPath string, contentType string, mode string) string {
 
 // GetPaginationPath returns the URL path for a paginated index page.
 // In blog mode: /page/{n}/
-// In normal mode: /{index-path}/page/{n}/
+// In structured mode: /{index-path}/page/{n}/
 func GetPaginationPath(indexPath string, page int, mode string) string {
 	// Clean the index path
 	indexPath = strings.TrimSuffix(indexPath, "/")
@@ -113,14 +113,14 @@ func GetSiteBasePath(sitesBasePath, siteSlug string) string {
 }
 
 // GetSiteDBPath returns the database file path for a specific site.
-// e.g., _workspace/sites/my-blog/db/clio.db
-func GetSiteDBPath(sitesBasePath, siteSlug string) string {
-	return filepath.Join(sitesBasePath, siteSlug, "db", "clio.db")
+// e.g., _workspace/db/my-blog/clio.db or ~/.local/share/clio/db/my-blog/clio.db
+func GetSiteDBPath(dbBasePath, siteSlug string) string {
+	return filepath.Join(dbBasePath, siteSlug, "clio.db")
 }
 
 // GetSiteDBDSN returns the DSN for a specific site's database.
-func GetSiteDBDSN(sitesBasePath, siteSlug string) string {
-	dbPath := GetSiteDBPath(sitesBasePath, siteSlug)
+func GetSiteDBDSN(dbBasePath, siteSlug string) string {
+	dbPath := GetSiteDBPath(dbBasePath, siteSlug)
 	return fmt.Sprintf("file:%s?cache=shared&mode=rwc", dbPath)
 }
 

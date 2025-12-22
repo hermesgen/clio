@@ -16,7 +16,7 @@ Clio is a lightweight static site generator written in Go. It enables you to cre
 
 Clio maintains a versioned record of both the Markdown source and the generated content, giving you a complete history of your site's evolution.
 
-The workflow is straightforward: write in Markdown, generate HTML, preview the result, and publish when ready.
+The workflow is straightforward: write in Markdown, preview, and publish when ready.
 
 ---
 

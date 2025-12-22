@@ -28,6 +28,7 @@ type WebHandler struct {
 	sessionManager interface {
 		SetUserSession(w http.ResponseWriter, userID uuid.UUID, siteSlug string) error
 		GetUserSession(r *http.Request) (userID uuid.UUID, siteSlug string, err error)
+		SetSiteSlug(w http.ResponseWriter, r *http.Request, siteSlug string) error
 	}
 }
 
@@ -42,6 +43,7 @@ func (wh *WebHandler) addSiteSlugHeader(r *http.Request) *http.Request {
 func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, paramManager *feat.ParamManager, siteManager *feat.SiteManager, sessionManager interface {
 	SetUserSession(w http.ResponseWriter, userID uuid.UUID, siteSlug string) error
 	GetUserSession(r *http.Request) (userID uuid.UUID, siteSlug string, err error)
+	SetSiteSlug(w http.ResponseWriter, r *http.Request, siteSlug string) error
 }, params hm.XParams) *WebHandler {
 	ssgFunctions := template.FuncMap{
 		"newPath": func(entityType string) string {
@@ -52,6 +54,9 @@ func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, paramManager 
 		},
 		"editPath": func(entityType, id string) string {
 			return fmt.Sprintf("/ssg/edit-%s?id=%s", strings.ToLower(entityType), id)
+		},
+		"safeHTML": func(s string) template.HTML {
+			return template.HTML(s)
 		},
 	}
 	

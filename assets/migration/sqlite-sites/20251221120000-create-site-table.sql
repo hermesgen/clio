@@ -4,7 +4,7 @@ CREATE TABLE site (
     short_id TEXT NOT NULL DEFAULT '',
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
-    mode TEXT NOT NULL DEFAULT 'normal',
+    mode TEXT NOT NULL DEFAULT 'structured',
     active INTEGER NOT NULL DEFAULT 1,
     created_by TEXT NOT NULL,
     updated_by TEXT NOT NULL,

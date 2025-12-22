@@ -216,7 +216,12 @@ func (svc *BaseService) GenerateMarkdown(ctx context.Context) error {
 func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 	svc.Log().Info("Service starting HTML generation")
 
-	contents, err := svc.repo.GetAllContentWithMeta(ctx)
+	repo, err := RequireRepo(ctx)
+	if err != nil {
+		return fmt.Errorf("repo not found in context: %w", err)
+	}
+
+	contents, err := repo.GetAllContentWithMeta(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot get all content with meta: %w", err)
 	}
@@ -229,7 +234,7 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		// }
 	}
 
-	sections, err := svc.repo.GetSections(ctx)
+	sections, err := repo.GetSections(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot get sections: %w", err)
 	}
@@ -240,7 +245,7 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 
 	// In blog mode, hide section menu (only root exists, no need to show sections)
 	var menuSections []Section
-	if siteMode == "normal" {
+	if siteMode == "structured" {
 		for _, s := range sections {
 			if s.Name != "root" {
 				menuSections = append(menuSections, s)
@@ -263,15 +268,20 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		return fmt.Errorf("cannot parse template from embedded fs: %w", err)
 	}
 
-	htmlPath := svc.Cfg().StrValOrDef(SSGKey.HTMLPath, "_workspace/documents/html")
+	siteSlug, ok := GetSiteSlugFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("site slug not found in context")
+	}
+
+	sitesBasePath := svc.Cfg().StrValOrDef(SSGKey.SitesBasePath, "_workspace/sites")
+	htmlPath := GetSiteHTMLPath(sitesBasePath, siteSlug)
 
 	if err := CopyStaticAssets(svc.assetsFS, htmlPath); err != nil {
 		return fmt.Errorf("cannot copy static assets: %w", err)
 	}
 
 	// Copy dynamic images from assets/images to html/static/images
-	workspaceDir := svc.Cfg().StrValOrDef(SSGKey.WorkspacePath, "_workspace")
-	docsDir := filepath.Join(workspaceDir, "documents") // This gives us _workspace/documents
+	docsDir := GetSiteDocsPath(sitesBasePath, siteSlug)
 	svc.Log().Info("Copying dynamic images", "from", filepath.Join(docsDir, "assets", "images"), "to", filepath.Join(htmlPath, "static", "images"))
 	if err := CopyDynamicImages(docsDir, htmlPath); err != nil {
 		svc.Log().Error("Failed to copy dynamic images", "error", err)
@@ -436,7 +446,7 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 			if section.Path == index.Path {
 				headerPath, err := svc.GetSectionHeaderImage(ctx, section.ID)
 				if err == nil && headerPath != "" {
-					sectionHeaderImage = "/static/images/" + headerPath
+					sectionHeaderImage = "/static/images/" + strings.TrimPrefix(headerPath, "/")
 				}
 				break
 			}
@@ -445,7 +455,7 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		// Paginate the content
 		totalContent := len(index.Content)
 		// In blog mode, always generate root index even if empty (it's the homepage)
-		// In normal mode, skip empty indexes
+		// In structured mode, skip empty indexes
 		if totalContent == 0 && !(siteMode == "blog" && index.Path == "/") {
 			svc.Log().Info("Skipping empty index", "path", index.Path)
 			continue
@@ -931,7 +941,12 @@ func (svc *BaseService) UploadContentImage(ctx context.Context, contentID uuid.U
 func (svc *BaseService) GetContentImages(ctx context.Context, contentID uuid.UUID) ([]Image, error) {
 	svc.Log().Debugf("Getting content images: contentID=%s", contentID)
 
-	contentImages, err := svc.repo.GetContentImagesByContentID(ctx, contentID)
+	repo, err := RequireRepo(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("repo not found in context: %w", err)
+	}
+
+	contentImages, err := repo.GetContentImagesByContentID(ctx, contentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get content images: %w", err)
 	}
@@ -942,7 +957,7 @@ func (svc *BaseService) GetContentImages(ctx context.Context, contentID uuid.UUI
 			continue
 		}
 
-		image, err := svc.repo.GetImage(ctx, ci.ImageID)
+		image, err := repo.GetImage(ctx, ci.ImageID)
 		if err != nil {
 			svc.Log().Info("Failed to get image %s: %v", ci.ImageID, err)
 			continue
@@ -979,14 +994,19 @@ func (svc *BaseService) GetContentHeaderImage(ctx context.Context, contentID uui
 
 // GetSectionHeaderImage returns the header image for a specific section
 func (svc *BaseService) GetSectionHeaderImage(ctx context.Context, sectionID uuid.UUID) (string, error) {
-	sectionImages, err := svc.repo.GetSectionImagesBySectionID(ctx, sectionID)
+	repo, err := RequireRepo(ctx)
+	if err != nil {
+		return "", fmt.Errorf("repo not found in context: %w", err)
+	}
+
+	sectionImages, err := repo.GetSectionImagesBySectionID(ctx, sectionID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get layout images: %w", err)
 	}
 
 	for _, si := range sectionImages {
 		if si.Purpose == "header" && si.IsActive {
-			image, err := svc.repo.GetImage(ctx, si.ImageID)
+			image, err := repo.GetImage(ctx, si.ImageID)
 			if err != nil {
 				svc.Log().Info("Failed to get section header image %s: %v", si.ImageID, err)
 				continue

@@ -7,7 +7,7 @@ BUILD_DIR = build
 SRC_DIR = .
 MAIN_SRC = $(SRC_DIR)/main.go
 BINARY = $(BUILD_DIR)/$(APP_NAME)
-DB_FILE = _workspace/db/clio.db
+DB_FILE = _workspace/db/default/clio.db
 DB_BACKUP_DIR = bak
 
 CSS_SOURCES = assets/static/css/prose.css assets/ssg/**/*.html assets/ssg/**/*.tmpl assets/static/css/main.css
@@ -58,12 +58,15 @@ format:
 kill-ports:
 	@echo "Killing processes on ports 8080, 8081, 8082..."
 	@for port in 8080 8081 8082; do \
-		pid=$$(lsof -ti :$$port 2>/dev/null); \
-		if [ -n "$$pid" ]; then \
-			echo "Killing process $$pid on port $$port"; \
-			kill -9 $$pid 2>/dev/null || true; \
+		pids=$$(lsof -ti :$$port 2>/dev/null); \
+		if [ -n "$$pids" ]; then \
+			for pid in $$pids; do \
+				echo "Killing process $$pid on port $$port"; \
+				kill -9 $$pid 2>/dev/null || true; \
+			done; \
 		fi; \
 	done
+	@pkill -9 clio 2>/dev/null || true
 	@echo "Ports cleared."
 
 # Run the application with environment variables
@@ -71,30 +74,22 @@ run: kill-ports setenv build
 	@echo "Running $(APP_NAME) with environment variables..."
 	@$(BINARY)
 
-# Generate markdown files
+SITE ?= default
+
 generate-markdown:
-	@echo "Triggering markdown generation..."
-	@./scripts/curl/ssg/generate-markdown.sh
+	@./scripts/curl/ssg/generate-markdown.sh $(SITE)
 
-# Clean HTML output directory
 clean-html:
-	@echo "Cleaning HTML output directory..."
-	@rm -rf _workspace/documents/html
-	@mkdir -p _workspace/documents/html
-	@echo "HTML directory cleaned"
+	@rm -rf _workspace/sites/$(SITE)/documents/html
+	@mkdir -p _workspace/sites/$(SITE)/documents/html
 
-# Generate html files
 generate-html:
-	@echo "Triggering HTML generation..."
-	@./scripts/curl/ssg/generate-html.sh
+	@./scripts/curl/ssg/generate-html.sh $(SITE)
 
-# Clean and generate HTML (useful when switching modes)
 regenerate-html: clean-html generate-html
 
-# Publish site
 publish:
-	@echo "Publishing site..."
-	@./scripts/curl/ssg/publish.sh
+	@./scripts/curl/ssg/publish.sh $(SITE)
 
 # Set environment variables
 # WIP: This is a workaround to be able to associate some styles to notifications and buttons but another approach will

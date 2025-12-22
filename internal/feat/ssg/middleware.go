@@ -20,26 +20,53 @@ const (
 	lastSiteMaxAge   = 3600 * 24 * 365 // 1 year
 )
 
+type SiteRepoProvider interface {
+	GetSiteBySlug(ctx context.Context, slug string) (Site, error)
+}
+
 // SiteContextMw is middleware that extracts site slug from session and injects appropriate repo.
 type SiteContextMw struct {
 	hm.Core
-	sessionMgr  *auth.SessionManager
-	siteRepo    SiteRepo
-	repoManager *RepoManager
+	sessionMgr       *auth.SessionManager
+	siteRepoProvider SiteRepoProvider
+	repoManager      *RepoManager
 }
 
 // NewSiteContextMw creates a new site context middleware.
-func NewSiteContextMw(sessionMgr *auth.SessionManager, siteRepo SiteRepo, repoManager *RepoManager, params hm.XParams) *SiteContextMw {
+func NewSiteContextMw(sessionMgr *auth.SessionManager, siteRepoProvider SiteRepoProvider, repoManager *RepoManager, params hm.XParams) *SiteContextMw {
 	return &SiteContextMw{
-		Core:        hm.NewCore("site-context-mw", params),
-		sessionMgr:  sessionMgr,
-		siteRepo:    siteRepo,
-		repoManager: repoManager,
+		Core:             hm.NewCore("site-context-mw", params),
+		sessionMgr:       sessionMgr,
+		siteRepoProvider: siteRepoProvider,
+		repoManager:      repoManager,
 	}
+}
+
+func (mw *SiteContextMw) isExemptPath(path string) bool {
+	exemptPaths := []string{
+		"/ssg/sites",
+		"/ssg/sites/new",
+		"/ssg/sites/create",
+		"/ssg/sites/switch",
+		"/ssg/sites/delete",
+	}
+
+	for _, exempt := range exemptPaths {
+		if path == exempt {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (mw *SiteContextMw) WebHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if mw.isExemptPath(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		ctx := r.Context()
 		var siteSlug string
 
@@ -56,17 +83,31 @@ func (mw *SiteContextMw) WebHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		_, err := mw.siteRepo.GetSiteBySlug(ctx, siteSlug)
+		_, err := mw.siteRepoProvider.GetSiteBySlug(ctx, siteSlug)
 		if err != nil {
-			mw.Log().Error("Site not found", "slug", siteSlug)
-			next.ServeHTTP(w, r)
+			mw.Log().Info("Site not found in database, clearing session", "slug", siteSlug)
+			http.SetCookie(w, &http.Cookie{
+				Name:     lastSiteCookie,
+				Value:    "",
+				Path:     "/",
+				MaxAge:   -1,
+				SameSite: http.SameSiteLaxMode,
+			})
+			http.Redirect(w, r, "/ssg/sites", http.StatusFound)
 			return
 		}
 
 		repo, err := mw.repoManager.GetRepoForSite(ctx, siteSlug)
 		if err != nil {
-			mw.Log().Error("Failed to get repo for site", "slug", siteSlug, "error", err)
-			http.Error(w, "Failed to access site database", http.StatusInternalServerError)
+			mw.Log().Info("Failed to access site database, clearing session", "slug", siteSlug, "error", err)
+			http.SetCookie(w, &http.Cookie{
+				Name:     lastSiteCookie,
+				Value:    "",
+				Path:     "/",
+				MaxAge:   -1,
+				SameSite: http.SameSiteLaxMode,
+			})
+			http.Redirect(w, r, "/ssg/sites", http.StatusFound)
 			return
 		}
 
@@ -97,7 +138,7 @@ func (mw *SiteContextMw) APIHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		_, err := mw.siteRepo.GetSiteBySlug(ctx, siteSlug)
+		_, err := mw.siteRepoProvider.GetSiteBySlug(ctx, siteSlug)
 		if err != nil {
 			mw.Log().Error("Site not found", "slug", siteSlug)
 			http.Error(w, "Site not found", http.StatusNotFound)

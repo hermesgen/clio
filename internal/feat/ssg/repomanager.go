@@ -33,8 +33,8 @@ func NewRepoManager(assetsFS embed.FS, engine string, repoFactory RepoFactory, p
 
 // GetRepoForSite creates a repository instance connected to a specific site's database.
 func (rm *RepoManager) GetRepoForSite(ctx context.Context, siteSlug string) (Repo, error) {
-	sitesBasePath := rm.Cfg().StrValOrDef(SSGKey.SitesBasePath, "_workspace/sites")
-	dsn := GetSiteDBDSN(sitesBasePath, siteSlug)
+	dbBasePath := rm.Cfg().StrValOrDef(SSGKey.DBBasePath, "_workspace/db")
+	dsn := GetSiteDBDSN(dbBasePath, siteSlug)
 
 	// Open database connection
 	db, err := sqlx.Connect("sqlite3", dsn)

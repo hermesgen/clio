@@ -12,6 +12,7 @@ func NewWebRouter(handler *WebHandler, mw []hm.Middleware, params hm.XParams) *h
 	core.Get("/sites/new", handler.NewSite)
 	core.Post("/sites/create", handler.CreateSite)
 	core.Get("/sites/switch", handler.SwitchSite)
+	core.Get("/sites/delete", handler.DeleteSite)
 
 	core.Get("/new-content", handler.NewContent)
 	core.Post("/create-content", handler.CreateContent)
@@ -21,6 +22,8 @@ func NewWebRouter(handler *WebHandler, mw []hm.Middleware, params hm.XParams) *h
 	core.Get("/search-content", handler.SearchContent)
 	core.Get("/show-content", handler.ShowContent)
 	core.Post("/delete-content", handler.DeleteContent)
+	core.Post("/generate-html", handler.GenerateHTML)
+
 	// Section routes
 	core.Get("/new-section", handler.NewSection)
 	core.Post("/create-section", handler.CreateSection)

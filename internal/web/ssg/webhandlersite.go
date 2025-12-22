@@ -2,9 +2,11 @@ package ssg
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 	"github.com/hermesgen/hm"
 )
 
@@ -81,6 +83,14 @@ func (wh *WebHandler) CreateSite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	slug = feat.NormalizeSlug(slug)
+
+	if slug == "" {
+		wh.FlashError(w, r, "Invalid slug")
+		http.Redirect(w, r, "/ssg/sites/new", http.StatusSeeOther)
+		return
+	}
+
 	userID := uuid.New()
 
 	_, err := wh.siteManager.CreateSite(ctx, name, slug, mode, userID)
@@ -103,8 +113,7 @@ func (wh *WebHandler) SwitchSite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := uuid.New()
-	if err := wh.sessionManager.SetUserSession(w, userID, slug); err != nil {
+	if err := wh.sessionManager.SetSiteSlug(w, r, slug); err != nil {
 		wh.Log().Error("Failed to set session", "error", err)
 		wh.FlashError(w, r, "Failed to switch site")
 		http.Redirect(w, r, "/ssg/sites", http.StatusSeeOther)
@@ -113,6 +122,41 @@ func (wh *WebHandler) SwitchSite(w http.ResponseWriter, r *http.Request) {
 
 	wh.FlashInfo(w, r, "Switched to site: "+slug)
 	http.Redirect(w, r, "/ssg/list-content?site="+slug, http.StatusSeeOther)
+}
+
+func (wh *WebHandler) DeleteSite(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		wh.FlashError(w, r, "Site ID is required")
+		http.Redirect(w, r, "/ssg/sites", http.StatusSeeOther)
+		return
+	}
+
+	siteID, err := uuid.Parse(idStr)
+	if err != nil {
+		wh.FlashError(w, r, "Invalid site ID")
+		http.Redirect(w, r, "/ssg/sites", http.StatusSeeOther)
+		return
+	}
+
+	siteSlug, err := wh.siteManager.DeleteSite(ctx, siteID)
+	if err != nil {
+		wh.Log().Error("Failed to delete site", "error", err)
+		wh.FlashError(w, r, "Failed to delete site: "+err.Error())
+		http.Redirect(w, r, "/ssg/sites", http.StatusSeeOther)
+		return
+	}
+
+	msg := fmt.Sprintf(
+		"Site '%s' deleted. Your content files have been preserved as backup. <a href='https://github.com/hermesgen/clio/tree/main/docs/guides/site-deletion.md' target='_blank' class='underline'>Learn more</a>",
+		siteSlug,
+	)
+	wh.FlashInfo(w, r, msg)
+	flash := wh.FlashManager().GetFlash(r)
+	wh.FlashManager().SetFlashInCookie(w, flash)
+	http.Redirect(w, r, "/ssg/sites", http.StatusSeeOther)
 }
 
 func (wh *WebHandler) RootRedirect(w http.ResponseWriter, r *http.Request) {

@@ -5,14 +5,20 @@
     </a>
     <nav class="flex-1 flex items-center justify-between">
         <ul class="flex space-x-4">
-            <li class="border-r border-white/10 px-3"><a href="/auth/list-users" class="text-white">Home</a></li>
             <li><a href="/ssg/list-content" class="text-white">Content</a></li>
             <li><a href="/ssg/list-sections" class="text-white">Sections</a></li>
             <li><a href="/ssg/list-layouts" class="text-white">Layout</a></li>
             <li><a href="/ssg/list-images" class="text-white">Assets</a></li>
-            <li class="border-r border-white/10 px-3"></li>
             <li><a href="/ssg/list-params" class="text-white">Params</a></li>
         </ul>
+        <div class="ml-4">
+            <a href="/ssg/sites" class="text-white/80 hover:text-white text-sm">
+                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12M8 12h12M8 17h12M3 7h.01M3 12h.01M3 17h.01"/>
+                </svg>
+                Sites
+            </a>
+        </div>
     </nav>
 </header>
 {{ end }}

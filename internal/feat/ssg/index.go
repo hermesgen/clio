@@ -15,7 +15,7 @@ type Index struct {
 
 // BuildIndexes analyzes all site content and sections to generate the data for all
 // required index pages (global, section, blog, and series).
-// The mode parameter determines URL structure: "normal" or "blog".
+// The mode parameter determines URL structure: "structured" or "blog".
 func BuildIndexes(allContent []Content, allSections []Section, mode string) []*Index {
 	// Use a map for efficient lookup and to avoid duplicate index paths.
 	indexes := make(map[string]*Index)
@@ -23,9 +23,9 @@ func BuildIndexes(allContent []Content, allSections []Section, mode string) []*I
 	// Ensure the root index always exists.
 	indexes["/"] = &Index{Path: "/", Type: "section", Content: []Content{}}
 
-	// In normal mode, ensure an index exists for every section.
+	// In structured mode, ensure an index exists for every section.
 	// In blog mode, only the root index is needed.
-	if mode == "normal" {
+	if mode == "structured" {
 		for _, section := range allSections {
 			if _, exists := indexes[section.Path]; !exists {
 				indexes[section.Path] = &Index{Path: section.Path, Type: "section", Content: []Content{}}
@@ -41,15 +41,15 @@ func BuildIndexes(allContent []Content, allSections []Section, mode string) []*I
 			continue
 		}
 
-		// Add to its local section index (only in normal mode).
-		if mode == "normal" {
+		// Add to its local section index (only in structured mode).
+		if mode == "structured" {
 			if sectionIndex, ok := indexes[content.SectionPath]; ok {
 				sectionIndex.Content = append(sectionIndex.Content, content)
 			}
 		}
 
 		// Add to the global root index.
-		// In blog mode: only include blog posts with section_ref=root. In normal mode: include all.
+		// In blog mode: only include blog posts with section_ref=root. In structured mode: include all.
 		if mode == "blog" {
 			if kind == "blog" && content.SectionPath == "/" {
 				indexes["/"].Content = append(indexes["/"].Content, content)
@@ -58,8 +58,8 @@ func BuildIndexes(allContent []Content, allSections []Section, mode string) []*I
 			indexes["/"].Content = append(indexes["/"].Content, content)
 		}
 
-		// Add to a dedicated blog index if it's a blog post (only in normal mode).
-		if mode == "normal" && kind == "blog" {
+		// Add to a dedicated blog index if it's a blog post (only in structured mode).
+		if mode == "structured" && kind == "blog" {
 			blogPath := GetIndexPath(content.SectionPath, "blog", mode)
 			if _, ok := indexes[blogPath]; !ok {
 				indexes[blogPath] = &Index{Path: blogPath, Type: "blog", Content: []Content{}}
@@ -67,8 +67,8 @@ func BuildIndexes(allContent []Content, allSections []Section, mode string) []*I
 			indexes[blogPath].Content = append(indexes[blogPath].Content, content)
 		}
 
-		// Add to a dedicated series index if it's a series post (only in normal mode).
-		if mode == "normal" && kind == "series" && content.Series != "" {
+		// Add to a dedicated series index if it's a series post (only in structured mode).
+		if mode == "structured" && kind == "series" && content.Series != "" {
 			basePath := strings.TrimSuffix(content.SectionPath, "/")
 			seriesPath := basePath + "/" + content.Series + "/"
 			if content.SectionPath == "/" {

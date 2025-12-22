@@ -7,6 +7,34 @@ Sites
 {{ end }}
 
 {{ define "content" }}
+{{ if .Flash.Notifications }}
+<div class="fixed top-4 right-4 z-50">
+    {{ range $i, $n := .Flash.Notifications }}
+    <div class="mb-4 p-4 rounded-lg shadow-lg relative
+    {{ if eq .Type "success" }}bg-green-100 text-green-800
+    {{ else if eq .Type "error" }}bg-red-100 text-red-800
+    {{ else if eq .Type "info" }}bg-blue-100 text-blue-800
+    {{ else if eq .Type "warning" }}bg-yellow-100 text-yellow-800
+    {{ else }}bg-gray-100 text-gray-800{{ end }}"
+    id="flash-{{ $i }}">
+        <button type="button" aria-label="Close"
+            class="absolute top-2 right-2 text-xl leading-none text-gray-500 hover:text-gray-800"
+            onclick="document.getElementById('flash-{{ $i }}').style.display='none'">
+            &times;
+        </button>
+        {{ .Msg | safeHTML }}
+    </div>
+    {{ end }}
+</div>
+<script>
+  document.querySelectorAll('[id^=flash-]').forEach(function(el) {
+    setTimeout(function() {
+      if (el) el.style.display = 'none';
+    }, 4000);
+  });
+</script>
+{{ end }}
+
 <div class="space-y-8">
   <h1 class="text-2xl font-bold mb-4">Sites</h1>
   <table class="min-w-full divide-y divide-gray-200">
@@ -40,6 +68,9 @@ Sites
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center space-x-2">
           <a href="/ssg/sites/switch?slug={{ .Slug }}" class="inline-block bg-blue-500 text-white px-6 py-2 rounded w-24">Select</a>
+          <a href="/ssg/sites/delete?id={{ .ID }}"
+             onclick="return confirm('Delete site \'{{ .Name }}\'? Your content files will be preserved as backup.')"
+             class="inline-block bg-red-500 text-white px-6 py-2 rounded w-24">Delete</a>
         </td>
       </tr>
       {{ else }}
@@ -57,7 +88,7 @@ Sites
 {{ define "submenu" }}
 <div class="mx-auto p-4">
   <div class="flex space-x-4 justify-center">
-    <a href="/ssg/sites/new" class="btn btn-primary">New Site</a>
+    <a href="/ssg/sites/new" class="btn btn-primary">New</a>
   </div>
 </div>
 {{ end }}

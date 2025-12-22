@@ -172,6 +172,8 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 		showingTo = response.TotalCount
 	}
 
+	siteSlug, _ := feat.GetSiteSlugFromContext(r.Context())
+
 	pageData := struct {
 		hm.Page
 		CurrentPage int    `json:"current_page"`
@@ -183,6 +185,7 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 		NextPage    int    `json:"next_page"`
 		ShowingFrom int    `json:"showing_from"`
 		ShowingTo   int    `json:"showing_to"`
+		SiteSlug    string `json:"site_slug"`
 	}{
 		Page:        *hm.NewPage(r, contents),
 		CurrentPage: response.Page,
@@ -194,9 +197,11 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 		NextPage:    nextPage,
 		ShowingFrom: showingFrom,
 		ShowingTo:   showingTo,
+		SiteSlug:    siteSlug,
 	}
 
 	pageData.Form.SetAction(ssgPath)
+	pageData.SetFlash(h.GetFlash(r))
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-content")
 	if err != nil {
@@ -506,3 +511,26 @@ func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, f
 
 	h.OK(w, r, &buf, statusCode)
 }
+
+func (h *WebHandler) GenerateHTML(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Generate HTML")
+
+	siteSlug, ok := feat.GetSiteSlugFromContext(r.Context())
+	if !ok {
+		siteSlug = "default"
+	}
+
+	err := h.apiClient.Post(h.addSiteSlugHeader(r), "/ssg/generate-html", nil, nil)
+	if err != nil {
+		h.FlashError(w, r, fmt.Sprintf("Failed to generate HTML: %v", err))
+		h.Redir(w, r, "/ssg/list-content", http.StatusSeeOther)
+		return
+	}
+
+	previewPort := h.Cfg().StrValOrDef("server.preview.port", "8082")
+	previewURL := fmt.Sprintf("http://%s.localhost:%s/", siteSlug, previewPort)
+
+	h.FlashSuccess(w, r, fmt.Sprintf("HTML generated successfully! Preview available at: %s", previewURL))
+	h.Redir(w, r, "/ssg/list-content", http.StatusSeeOther)
+}
+

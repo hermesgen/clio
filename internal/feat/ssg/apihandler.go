@@ -144,7 +144,7 @@ func (h *APIHandler) GenerateHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := "HTML generation process started successfully"
+	msg := "HTML generation process completed successfully"
 	h.OK(w, msg, nil)
 }
 

@@ -14,7 +14,7 @@
             onclick="document.getElementById('flash-{{ $i }}').style.display='none'">
             &times;
         </button>
-        {{ .Msg }}
+        {{ .Msg | safeHTML }}
     </div>
     {{ end }}
 </div>

@@ -33,8 +33,8 @@ snapshot-images:
 	@TIMESTAMP=$$(date +%Y%m%d_%H%M%S); \
 	echo "Creating image snapshot: $$TIMESTAMP"; \
 	mkdir -p .snapshots/$$TIMESTAMP; \
-	if [ -d "_workspace/documents/assets/images" ]; then \
-		cp -r _workspace/documents/assets/images .snapshots/$$TIMESTAMP/; \
+	if [ -d "_workspace/sites/default/documents/assets/images" ]; then \
+		cp -r _workspace/sites/default/documents/assets/images .snapshots/$$TIMESTAMP/; \
 		echo "Images copied to .snapshots/$$TIMESTAMP/images"; \
 	else \
 		echo "No images directory found"; \
@@ -60,8 +60,8 @@ restore-images:
 	fi; \
 	echo "Restoring images from snapshot: $$snapshot"; \
 	if [ -d ".snapshots/$$snapshot/images" ]; then \
-		rm -rf _workspace/documents/assets/images; \
-		cp -r .snapshots/$$snapshot/images _workspace/documents/assets/; \
+		rm -rf _workspace/sites/default/documents/assets/images; \
+		cp -r .snapshots/$$snapshot/images _workspace/sites/default/documents/assets/; \
 		echo "Images restored from snapshot"; \
 	else \
 		echo "No images found in snapshot"; \
@@ -85,14 +85,14 @@ list-snapshots:
 # Set site mode to blog
 set-blog-mode:
 	@echo "Setting site mode to 'blog'..."
-	@sqlite3 $(DB_FILE) "INSERT OR REPLACE INTO param (id, short_id, name, value, description, ref_key, system, created_by, updated_by, created_at, updated_at) SELECT COALESCE((SELECT id FROM param WHERE ref_key = 'site.mode'), lower(hex(randomblob(16)))), COALESCE((SELECT short_id FROM param WHERE ref_key = 'site.mode'), ''), 'Site Mode', 'blog', 'Site operation mode: normal (multi-section) or blog (single chronological feed)', 'site.mode', 0, COALESCE((SELECT created_by FROM param WHERE ref_key = 'site.mode'), '00000000000000000000000000000000'), '00000000000000000000000000000000', COALESCE((SELECT created_at FROM param WHERE ref_key = 'site.mode'), datetime('now')), datetime('now');" 2>/dev/null || echo "Database not ready yet, will set mode after server starts"
+	@sqlite3 $(DB_FILE) "INSERT OR REPLACE INTO param (id, short_id, name, value, description, ref_key, system, created_by, updated_by, created_at, updated_at) SELECT COALESCE((SELECT id FROM param WHERE ref_key = 'site.mode'), lower(hex(randomblob(16)))), COALESCE((SELECT short_id FROM param WHERE ref_key = 'site.mode'), ''), 'Site Mode', 'blog', 'Site operation mode: structured (multi-section) or blog (single chronological feed)', 'site.mode', 0, COALESCE((SELECT created_by FROM param WHERE ref_key = 'site.mode'), '00000000000000000000000000000000'), '00000000000000000000000000000000', COALESCE((SELECT created_at FROM param WHERE ref_key = 'site.mode'), datetime('now')), datetime('now');" 2>/dev/null || echo "Database not ready yet, will set mode after server starts"
 	@echo "Site mode set to 'blog'"
 
-# Set site mode to normal
-set-normal-mode:
-	@echo "Setting site mode to 'normal'..."
-	@sqlite3 $(DB_FILE) "INSERT OR REPLACE INTO param (id, short_id, name, value, description, ref_key, system, created_by, updated_by, created_at, updated_at) SELECT COALESCE((SELECT id FROM param WHERE ref_key = 'site.mode'), lower(hex(randomblob(16)))), COALESCE((SELECT short_id FROM param WHERE ref_key = 'site.mode'), ''), 'Site Mode', 'normal', 'Site operation mode: normal (multi-section) or blog (single chronological feed)', 'site.mode', 0, COALESCE((SELECT created_by FROM param WHERE ref_key = 'site.mode'), '00000000000000000000000000000000'), '00000000000000000000000000000000', COALESCE((SELECT created_at FROM param WHERE ref_key = 'site.mode'), datetime('now')), datetime('now');"
-	@echo "Site mode set to 'normal'"
+# Set site mode to structured
+set-structured-mode:
+	@echo "Setting site mode to 'structured'..."
+	@sqlite3 $(DB_FILE) "INSERT OR REPLACE INTO param (id, short_id, name, value, description, ref_key, system, created_by, updated_by, created_at, updated_at) SELECT COALESCE((SELECT id FROM param WHERE ref_key = 'site.mode'), lower(hex(randomblob(16)))), COALESCE((SELECT short_id FROM param WHERE ref_key = 'site.mode'), ''), 'Site Mode', 'structured', 'Site operation mode: structured (multi-section) or blog (single chronological feed)', 'site.mode', 0, COALESCE((SELECT created_by FROM param WHERE ref_key = 'site.mode'), '00000000000000000000000000000000'), '00000000000000000000000000000000', COALESCE((SELECT created_at FROM param WHERE ref_key = 'site.mode'), datetime('now')), datetime('now');"
+	@echo "Site mode set to 'structured'"
 
 # Run in blog mode
 run-blog: kill-ports setenv build
@@ -102,22 +102,22 @@ run-blog: kill-ports setenv build
 	echo "Waiting for database to be ready..."; \
 	sleep 3; \
 	echo "Setting blog mode and converting posts..."; \
-	sqlite3 $(DB_FILE) "INSERT OR REPLACE INTO param (id, short_id, name, value, description, ref_key, system, created_by, updated_by, created_at, updated_at) SELECT COALESCE((SELECT id FROM param WHERE ref_key = 'site.mode'), lower(hex(randomblob(16)))), COALESCE((SELECT short_id FROM param WHERE ref_key = 'site.mode'), ''), 'Site Mode', 'blog', 'Site operation mode: normal (multi-section) or blog (single chronological feed)', 'site.mode', 0, COALESCE((SELECT created_by FROM param WHERE ref_key = 'site.mode'), '00000000000000000000000000000000'), '00000000000000000000000000000000', COALESCE((SELECT created_at FROM param WHERE ref_key = 'site.mode'), datetime('now')), datetime('now');" 2>/dev/null; \
+	sqlite3 $(DB_FILE) "INSERT OR REPLACE INTO param (id, short_id, name, value, description, ref_key, system, created_by, updated_by, created_at, updated_at) SELECT COALESCE((SELECT id FROM param WHERE ref_key = 'site.mode'), lower(hex(randomblob(16)))), COALESCE((SELECT short_id FROM param WHERE ref_key = 'site.mode'), ''), 'Site Mode', 'blog', 'Site operation mode: structured (multi-section) or blog (single chronological feed)', 'site.mode', 0, COALESCE((SELECT created_by FROM param WHERE ref_key = 'site.mode'), '00000000000000000000000000000000'), '00000000000000000000000000000000', COALESCE((SELECT created_at FROM param WHERE ref_key = 'site.mode'), datetime('now')), datetime('now');" 2>/dev/null; \
 	sqlite3 $(DB_FILE) "UPDATE content SET kind = 'blog' WHERE heading IN ('My First Blog Post', 'Learning Go: Week One', 'Weekend Thoughts on Minimalism', 'Building My First SSG', 'Coffee and Code', 'Debugging Like a Pro', 'The Joy of Simple Solutions', 'Working Remotely: One Year In', 'What I''m Learning Next');" 2>/dev/null; \
 	echo "Blog mode configured. Server running with PID $$SERVER_PID"; \
 	wait $$SERVER_PID
 
-# Run in normal mode (explicit)
-run-normal: kill-ports setenv build set-normal-mode
-	@echo "Restoring article types for normal mode..."
+# Run in structured mode (explicit)
+run-structured: kill-ports setenv build set-structured-mode
+	@echo "Restoring article types for structured mode..."
 	@sqlite3 $(DB_FILE) "UPDATE content SET kind = 'article' WHERE heading IN ('My First Blog Post', 'Learning Go: Week One', 'Weekend Thoughts on Minimalism', 'Building My First SSG', 'Coffee and Code', 'Debugging Like a Pro', 'The Joy of Simple Solutions', 'Working Remotely: One Year In', \"What I'm Learning Next\");" 2>/dev/null || true
-	@echo "Running $(APP_NAME) in normal mode..."
+	@echo "Running $(APP_NAME) in structured mode..."
 	@$(BINARY)
 
 # Show current site mode
 show-mode:
 	@echo "Current site mode:"
-	@sqlite3 $(DB_FILE) "SELECT value FROM param WHERE ref_key = 'site.mode';" 2>/dev/null || echo "Not set (defaults to 'normal')"
+	@sqlite3 $(DB_FILE) "SELECT value FROM param WHERE ref_key = 'site.mode';" 2>/dev/null || echo "Not set (defaults to 'structured')"
 
 # Run with specific header styles (development testing)
 run-stacked: kill-ports build
@@ -162,4 +162,4 @@ new-migration:
 	touch "$$filename"; \
 	echo "Created $$filename"
 
-.PHONY: backup-db reset-db seed-images snapshot-images restore-images list-snapshots set-blog-mode set-normal-mode run-blog run-normal show-mode run-stacked run-overlay run-boxed run-text-only runflags gencsrfkey new-migration
+.PHONY: backup-db reset-db seed-images snapshot-images restore-images list-snapshots set-blog-mode set-structured-mode run-blog run-structured show-mode run-stacked run-overlay run-boxed run-text-only runflags gencsrfkey new-migration

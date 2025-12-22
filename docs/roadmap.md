@@ -89,7 +89,7 @@ Once the core milestones are complete, the project will move into maintenance mo
   Enable a simplified `blog mode` where all content is treated as blog posts under the root path (`/`).
   - Blog mode filters index to show only blog-type content associated with the root section.
   - Content lives at `/{slug}/` instead of `/{section-path}/{slug}/`.
-  - Site can switch between normal mode (multi-section) and blog mode (single chronological feed).
+  - Site can switch between structured mode (multi-section) and blog mode (single chronological feed).
   - Intended for users who only need a single, continuous blog without sections or mixed content types.
 
 - [ ] Tag-based navigation and indexes **(Status: Backlog)**
