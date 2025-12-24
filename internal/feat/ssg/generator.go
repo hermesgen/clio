@@ -1,6 +1,7 @@
 package ssg
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,10 +23,11 @@ func NewGenerator(params hm.XParams) *Generator {
 	return g
 }
 
-func (g *Generator) Generate(contents []Content) error {
+func (g *Generator) Generate(ctx context.Context, siteSlug string, contents []Content) error {
 	g.Log().Info("Starting markdown generation")
 
-	basePath := g.Cfg().StrValOrDef(SSGKey.MarkdownPath, "_workspace/documents/markdown")
+	sitesBasePath := g.Cfg().StrValOrDef(SSGKey.SitesBasePath, "_workspace/sites")
+	basePath := GetSiteMarkdownPath(sitesBasePath, siteSlug)
 
 	for _, content := range contents {
 		fileName := content.Slug() + ".md"
@@ -58,8 +60,8 @@ func (g *Generator) Generate(contents []Content) error {
 		frontMatter = append(frontMatter, yaml.MapItem{Key: "description", Value: content.Meta.Description})
 
 		// Media
-		frontMatter = append(frontMatter, yaml.MapItem{Key: "image", Value: ""})        // TODO: Add image field to a model
-		frontMatter = append(frontMatter, yaml.MapItem{Key: "social-image", Value: ""}) // TODO: Add social-image field
+		frontMatter = append(frontMatter, yaml.MapItem{Key: "image", Value: content.HeaderImageURL})
+		frontMatter = append(frontMatter, yaml.MapItem{Key: "social-image", Value: content.HeaderImageURL})
 
 		// Timestamps
 		frontMatter = append(frontMatter, yaml.MapItem{Key: "published-at", Value: content.PublishedAt})

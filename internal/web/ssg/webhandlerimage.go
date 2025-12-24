@@ -97,8 +97,8 @@ func (h *WebHandler) CreateImage(w http.ResponseWriter, r *http.Request) {
 
 	// Construct feat.Image
 	featImage := ToFeatImage(form)
-	featImage.Mime = "image/" + format
-	featImage.FilesizeByte = header.Size
+	featImage.FileName = header.Filename
+	featImage.FilePath = filename
 	featImage.Width = imgConfig.Width
 	featImage.Height = imgConfig.Height
 
@@ -402,9 +402,9 @@ func (h *WebHandler) CreateImageVariant(w http.ResponseWriter, r *http.Request) 
 	featImageVariant := feat.NewImageVariant()
 	featImageVariant.ImageID = imageID
 	featImageVariant.Kind = form.Name
-	featImageVariant.BlobRef = "/static/images/" + uuid.New().String() + "." + parentImage.Mime // Use BlobRef and generate a new unique name
-	featImageVariant.Mime = parentImage.Mime
-	featImageVariant.FilesizeByte = parentImage.FilesizeByte
+	featImageVariant.BlobRef = "/static/images/" + uuid.New().String() + ".jpg" // Use BlobRef and generate a new unique name
+	featImageVariant.Mime = "image/jpeg"                                         // Default mime type
+	featImageVariant.FilesizeByte = 0                                            // Size unknown for generated variants
 	featImageVariant.Width = parentImage.Width
 	featImageVariant.Height = parentImage.Height
 
@@ -503,9 +503,9 @@ func (h *WebHandler) UpdateImageVariant(w http.ResponseWriter, r *http.Request) 
 	featImageVariant.ID = uuid.MustParse(form.ID)
 	featImageVariant.ImageID = imageID
 	featImageVariant.Kind = form.Name
-	featImageVariant.BlobRef = "/static/images/" + uuid.New().String() + "." + parentImage.Mime // Use BlobRef and generate a new unique name
-	featImageVariant.Mime = parentImage.Mime
-	featImageVariant.FilesizeByte = parentImage.FilesizeByte
+	featImageVariant.BlobRef = "/static/images/" + uuid.New().String() + ".jpg" // Use BlobRef and generate a new unique name
+	featImageVariant.Mime = "image/jpeg"                                         // Default mime type
+	featImageVariant.FilesizeByte = 0                                            // Size unknown for generated variants
 	featImageVariant.Width = parentImage.Width
 	featImageVariant.Height = parentImage.Height
 

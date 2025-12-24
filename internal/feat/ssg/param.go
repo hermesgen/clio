@@ -14,10 +14,13 @@ type Param struct {
 	ShortID string    `json:"-" db:"short_id"` // Note: short_id was removed from DB migration, but kept here for consistency with other models' Go struct definitions.
 	ref     string    `json:"-"`
 
+	// Site relationship
+	SiteID uuid.UUID `json:"site_id" db:"site_id"`
+
 	Name        string `json:"name" db:"name"`
 	Description string `json:"description" db:"description"`
 	Value       string `json:"value" db:"value"`
-	RefKey      string `json:"ref_key" db:"ref_key"` // Should match xxx.yyy.zzz congfig property
+	RefKey      string `json:"ref_key" db:"ref_key"`
 	System      int    `json:"system" db:"system"`
 
 	// Audit

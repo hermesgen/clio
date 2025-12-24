@@ -55,6 +55,14 @@ func NewImageManager(params hm.XParams) *ImageManager {
 
 // ProcessUpload handles the complete upload process for any image type
 func (im *ImageManager) ProcessUpload(ctx context.Context, file multipart.File, header *multipart.FileHeader, content *Content, section *Section, imageType ImageType, altText, caption string) (*ImageProcessResult, error) {
+	siteSlug, ok := GetSiteSlugFromContext(ctx)
+	if !ok || siteSlug == "" {
+		return nil, fmt.Errorf("site slug not found in context")
+	}
+
+	sitesBasePath := im.Cfg().StrValOrDef(SSGKey.SitesBasePath, "_workspace/sites")
+	baseImagePath := GetSiteImagesPath(sitesBasePath, siteSlug)
+
 	directory, err := im.generateDirectoryPath(content, section, imageType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate directory path: %w", err)
@@ -65,7 +73,7 @@ func (im *ImageManager) ProcessUpload(ctx context.Context, file multipart.File, 
 		return nil, fmt.Errorf("failed to generate filename: %w", err)
 	}
 
-	fullDirectory := filepath.Join(im.baseImagePath, directory)
+	fullDirectory := filepath.Join(baseImagePath, directory)
 	if err := im.ensureDirectory(fullDirectory); err != nil {
 		return nil, fmt.Errorf("failed to create directory: %w", err)
 	}

@@ -14,6 +14,7 @@ type Content struct {
 	ShortID string    `json:"-" db:"short_id"`
 	ref     string    `json:"-"`
 
+	SiteID      uuid.UUID  `json:"site_id" db:"site_id"`
 	UserID      uuid.UUID  `json:"user_id" db:"user_id"`
 	SectionID   uuid.UUID  `json:"section_id" db:"section_id"`
 	Kind        string     `json:"kind" db:"kind"`

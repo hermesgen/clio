@@ -18,11 +18,8 @@ type ImageContext struct {
 
 // ImageMetadata holds accessibility and semantic information for an image
 type ImageMetadata struct {
-	AltText         string
-	Caption         string
-	LongDescription string
-	Title           string
-	Decorative      bool
+	AltText string
+	Title   string
 }
 
 // TailwindRenderer is a custom renderer for goldmark that adds Tailwind CSS classes.
@@ -288,14 +285,9 @@ func (r *TailwindRenderer) renderImage(w util.BufWriter, source []byte, node gma
 		if metadata, found := r.ImageContext.Images[imgPath]; found {
 			hasMetadata = true
 			altText = metadata.AltText
-			figCaption = metadata.LongDescription
 
 			if altText == "" {
 				altText = textAlt
-			}
-
-			if figCaption != "" {
-				figCaptionHTML = fmt.Sprintf("<figcaption class=\"prose-figcaption\">%s</figcaption>", figCaption)
 			}
 		}
 	}
@@ -377,14 +369,9 @@ func (r *ImageRenderer) renderImage(w util.BufWriter, source []byte, node gmast.
 		if metadata, found := r.ImageContext.Images[imgPath]; found {
 			hasMetadata = true
 			altText = metadata.AltText
-			figCaption = metadata.LongDescription
 
 			if altText == "" {
 				altText = textAlt
-			}
-
-			if figCaption != "" {
-				figCaptionHTML = fmt.Sprintf("<figcaption class=\"prose-figcaption\">%s</figcaption>", figCaption)
 			}
 		}
 	}

@@ -15,6 +15,9 @@ type Tag struct {
 	ShortID string    `json:"-" db:"short_id"`
 	ref     string    `json:"-"`
 
+	// Site relationship
+	SiteID uuid.UUID `json:"site_id" db:"site_id"`
+
 	// Tag specific fields
 	Name      string `json:"name" db:"name"`
 	SlugField string `json:"slug" db:"slug"`

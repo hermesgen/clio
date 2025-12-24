@@ -127,7 +127,11 @@ async function loadHeaderImageGallery() {
 
   try {
     // Get header image from API
-    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`);
+    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`, {
+      headers: {
+        'X-Site-Slug': 'structured'
+      }
+    });
     if (response.ok) {
       const data = await response.json();
       const images = data.data.images || [];
@@ -215,7 +219,11 @@ async function loadHeaderImageMetadata(imagePath) {
   }
 
   try {
-    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`);
+    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`, {
+      headers: {
+        'X-Site-Slug': 'structured'
+      }
+    });
     if (response.ok) {
       const data = await response.json();
       const images = data.data.images || [];
@@ -323,7 +331,8 @@ async function deleteHeaderImageFromServer(headerImagePath) {
     const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images/delete`, {
       method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Site-Slug': 'structured'
       },
       body: JSON.stringify({
         image_path: headerImagePath
@@ -350,7 +359,11 @@ async function loadImageGallery() {
 
   try {
     // TODO: Hardcoded localhost:8081 breaks when backend port changes
-    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`);
+    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`, {
+      headers: {
+        'X-Site-Slug': 'structured'
+      }
+    });
     if (response.ok) {
       const data = await response.json();
       displayImages(data.data.images || []);
@@ -388,7 +401,8 @@ async function deleteContentImageFromServer(contentId, imagePath) {
     const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images/delete`, {
       method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Site-Slug': 'structured'
       },
       body: JSON.stringify({
         image_path: imagePath

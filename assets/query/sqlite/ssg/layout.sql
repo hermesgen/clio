@@ -3,9 +3,9 @@
 
 -- Create
 INSERT INTO layout (
-    id, short_id, name, description, code, created_by, updated_by, created_at, updated_at, header_image_id
+    id, site_id, short_id, name, description, code, created_by, updated_by, created_at, updated_at, header_image_id
 ) VALUES (
-    :id, :shortID, :name, :description, :code, :created_by, :updated_by, :created_at, :updated_at, :header_image_id
+    :id, :site_id, :shortID, :name, :description, :code, :created_by, :updated_by, :created_at, :updated_at, :header_image_id
 );
 
 -- GetAll

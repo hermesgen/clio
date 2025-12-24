@@ -15,6 +15,9 @@ type Layout struct {
 	ShortID  string    `json:"-" db:"short_id"`
 	RefValue string    `json:"ref"`
 
+	// Site relationship
+	SiteID uuid.UUID `json:"site_id" db:"site_id"`
+
 	// Layout specific fields
 	Name          string     `json:"name" db:"name"`
 	Description   string     `json:"description" db:"description"`

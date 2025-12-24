@@ -1,0 +1,124 @@
+{
+  "site_ref": "blog",
+  "layouts": [
+    {
+      "ref": "alt",
+      "name": "alt",
+      "description": "Alternative editable layout, copy of the default layout from the filesystem.",
+      "code": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>{{.Content.Heading}}</title>\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap\" rel=\"stylesheet\">\n    <style>\n        body {\n            font-family: 'Montserrat', sans-serif;\n            line-height: 1.6;\n            margin: 0;\n            padding: 0;\n            background-color: #fdfdfd;\n            color: #333;\n        }\n        .container {\n            max-width: 800px;\n            margin: 0 auto;\n            padding: 2rem;\n        }\n        h1 {\n            font-weight: 700;\n        }\n        nav {\n            padding: 1rem 2rem;\n            border-bottom: 1px solid #eee;\n        }\n        nav a {\n            margin-right: 1rem;\n            text-decoration: none;\n            color: #333;\n            font-weight: 700;\n        }\n\n        /* Hero Styles */\n        .hero-wrapper {\n            position: relative;\n            width: 100%;\n        }\n        .hero-image {\n            width: 100%;\n            max-height: 450px;\n            object-fit: cover;\n            object-position: center;\n            display: block; /* Removes bottom space */\n        }\n\n        /* Stacked Style Specific */\n        .hero-stacked-image {\n             margin-bottom: 2rem;\n        }\n\n        /* Overlay Style */\n        .hero-wrapper.overlay::before {\n            content: '';\n            position: absolute;\n            top: 0;\n            left: 0;\n            right: 0;\n            bottom: 0;\n            background-color: rgba(0, 0, 0, 0.4);\n            z-index: 1;\n        }\n        .hero-wrapper.overlay .hero-title {\n            position: absolute;\n            top: 50%;\n            left: 50%;\n            transform: translate(-50%, -50%);\n            color: white;\n            z-index: 2;\n            text-align: center;\n            width: 90%;\n        }\n\n        /* Boxed Style - Frosted Glass */\n        .hero-wrapper.boxed .hero-title-box {\n            position: absolute;\n            bottom: 0;\n            left: 0;\n            width: 100%;\n            background-color: rgba(255, 255, 255, 0.3);\n            backdrop-filter: blur(8px);\n            -webkit-backdrop-filter: blur(8px);\n            padding: 1.5rem 0;\n            z-index: 2;\n            border-top: 1px solid rgba(255, 255, 255, 0.5);\n        }\n         .hero-wrapper.boxed .hero-title {\n            color: #333;\n            margin: 0;\n            text-align: center;\n        }\n\n        /* Styles for prose content (h1-h6, p, ul, ol, li, blockquote, hr, code, pre, table) */\n        .prose-h1 {\n          font-size: 3rem;\n          font-weight: 700;\n          margin-bottom: 2.5rem;\n          color: #1f2937;\n        }\n        .prose-h2 {\n          font-size: 2.25rem;\n          font-weight: 700;\n          margin-bottom: 2rem;\n          color: #1f2937;\n        }\n        .prose-h3 {\n          font-size: 1.875rem;\n          font-weight: 700;\n          margin-bottom: 1.5rem;\n          color: #374151;\n        }\n        .prose-h4 {\n          font-size: 1.5rem;\n          font-weight: 700;\n          margin-bottom: 1rem;\n          color: #4b5563;\n        }\n        .prose-h5 {\n          font-size: 1.25rem;\n          font-weight: 700;\n          margin-bottom: 0.75rem;\n          color: #6b7280;\n        }\n        .prose-h6 {\n          font-size: 1.125rem;\n          font-weight: 700;\n          margin-bottom: 0.5rem;\n          color: #9ca3af;\n        }\n        p {\n          font-size: 1.125rem;\n          color: #333;\n          margin-bottom: 1.5rem;\n        }\n        ul {\n          list-style-type: disc;\n          list-style-position: inside;\n          margin-top: 1rem;\n          margin-bottom: 1rem;\n        }\n        ol {\n          list-style-type: decimal;\n          list-style-position: inside;\n          margin-top: 1rem;\n          margin-bottom: 1rem;\n        }\n        li {\n          margin-left: 1.5rem;\n          margin-bottom: 0.5rem;\n        }\n        blockquote {\n          border-left-width: 4px;\n          border-color: #d1d5db;\n          padding-left: 1.5rem;\n          font-style: italic;\n          color: #4b5563;\n          margin-bottom: 1.5rem;\n        }\n        hr {\n          border-top-width: 2px;\n          border-color: #d1d5db;\n          margin-top: 2rem;\n          margin-bottom: 2rem;\n        }\n        code {\n          background-color: #e5e7eb;\n          padding: 0.3rem 0.5rem;\n          border-radius: 0.3rem;\n        }\n        pre {\n          background-color: #1f2937;\n          color: #ffffff;\n          padding: 1.5rem;\n          border-radius: 0.25rem;\n          margin-bottom: 1.5rem;\n        }\n        table {\n          width: 100%;\n          table-layout: auto;\n          margin-bottom: 1.5rem;\n        }\n        thead {\n          background-color: #e5e7eb;\n        }\n        tr {\n          border-width: 1px;\n        }\n        td {\n          border-width: 1px;\n          padding: 0.5rem 1rem;\n        }\n\n        /* New styles from list.tmpl */\n        .list-grid {\n          display: grid;\n          grid-template-columns: repeat(1, minmax(0, 1fr));\n          gap: 2rem;\n        }\n        @media (min-width: 768px) {\n          .list-grid {\n            grid-template-columns: repeat(2, minmax(0, 1fr));\n          }\n        }\n        @media (min-width: 1024px) {\n          .list-grid {\n            grid-template-columns: repeat(3, minmax(0, 1fr));\n          }\n        }\n        @media (min-width: 1280px) {\n          .list-grid {\n            gap: 3rem;\n          }\n        }\n        .list-card {\n          background-color: #ffffff;\n          border-radius: 0.5rem;\n          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);\n          overflow: hidden;\n          transform: translateY(0);\n          transition-property: transform;\n          transition-duration: 300ms;\n          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n        }\n        .list-card:hover {\n          transform: translateY(-0.25rem);\n        }\n        .list-card-link {\n          display: block;\n          text-decoration: none !important;\n        }\n        .list-card-link a {\n          text-decoration: none !important;\n        }\n        .list-card-image {\n          height: 10rem;\n          width: 100%;\n          object-fit: cover;\n        }\n        .list-card-image-placeholder {\n          height: 10rem;\n          width: 100%;\n          background-color: #e5e7eb;\n        }\n        .list-card-content {\n          padding: 2rem;\n        }\n        .list-card-title {\n          font-size: 1.25rem;\n          font-weight: 600;\n          color: #1f2937;\n          margin-bottom: 0.75rem;\n        }\n        .list-card-meta {\n          display: flex;\n          align-items: center;\n          font-size: 0.75rem;\n          color: #6b7280;\n        }\n        .list-card-meta-icon {\n          height: 1rem;\n          width: 1rem;\n          margin-right: 0.25rem;\n        }\n    </style>\n</head>\n<body class=\"site-body\">\n    <nav class=\"site-nav\">\n        <div class=\"site-container\">\n            <a class=\"site-nav-link\" href=\"{{.AssetPath}}index.html\">Home</a>\n            {{range .Menu}}\n            <a class=\"site-nav-link\" href=\"{{$.AssetPath}}{{.Path}}/index.html\">{{.Name}}</a>\n            {{end}}\n        </div>\n    </nav>\n\n    {{if .IsIndex}}\n        <div class=\"site-container\">\n            <h1 class=\"site-h1\">Index</h1>\n        </div>\n        <div class=\"site-container\">\n            <main>\n                {{template \"list.tmpl\" .ListPageContent}}\n            </main>\n        }\n    {{else}}\n        {{if eq .HeaderStyle \"text-only\"}}\n            <div class=\"site-container\">\n                <main>\n                    {{.Content.Body}}\n                </main>\n            </div>\n        {{else if eq .HeaderStyle \"overlay\"}}\n            <div class=\"hero-wrapper overlay\">\n                <img class=\"hero-image\" src=\"{{.Content.HeaderImage}}\" alt=\"Header Image\">\n                <h1 class=\"hero-title\">{{.Content.Heading}}</h1>\n            </div>\n            <div class=\"site-container\">\n                <hr>\n                <main>\n                    {{.Content.Body}}\n                </main>\n            </div>\n        {{else if eq .HeaderStyle \"boxed\"}}\n            <div class=\"hero-wrapper boxed\">\n                <img class=\"hero-image\" src=\"{{.Content.HeaderImage}}\" alt=\"Header Image\">\n                <div class=\"hero-title-box\">\n                    <h1 class=\"hero-title\">{{.Content.Heading}}</h1>\n                </div>\n            </div>\n            <div class=\"site-container\">\n                <main>\n                    {{.Content.Body}}\n                </main>\n            </div>\n        {{else}} {{/* Default to stacked */}}\n            <img class=\"hero-image hero-stacked-image\" src=\"{{.Content.HeaderImage}}\" alt=\"Header Image\">\n            <div class=\"site-container\">\n                <main>\n                    {{.Content.Body}}\n                </main>\n            </div>\n        {{end}}\n\n    {{end}}\n\n    <div class=\"site-container\">\n        {{template \"blocks\" .}}\n    </div>\n</body>\n</html>\n"
+    }
+  ],
+  "sections": [
+    {
+      "name": "root",
+      "description": "Root section",
+      "path": "/",
+      "layout_id": "b1018279-be2c-440c-a52e-322239b63b93",
+      "ref": "root"
+    }
+  ],
+  "contents": [
+    {
+      "ref": "blog-test-1",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "My First Blog Post",
+      "body": "# Welcome to my blog\n\nThis is my first blog post. I'm excited to share my thoughts and experiences with you.\n\n## What to Expect\n\nIn this blog, I'll be writing about:\n- Technology and programming\n- Philosophy and life lessons\n- Food and travel experiences\n\nStay tuned for more!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-11T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-2",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Learning Go: Week One",
+      "body": "# Learning Go: Week One\n\nI started learning Go this week and it's been an interesting journey.\n\n## First Impressions\n\nGo is surprisingly simple yet powerful. The syntax is clean and the standard library is comprehensive.\n\n## What I Learned\n\n- Basic syntax and data types\n- Goroutines and channels\n- Error handling patterns\n\nLooking forward to week two!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-12T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-3",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Weekend Thoughts on Minimalism",
+      "body": "# Weekend Thoughts on Minimalism\n\nThis weekend I spent some time decluttering my workspace.\n\n## The Process\n\nI removed everything that didn't serve a purpose. The result? A cleaner mind and better focus.\n\n## Key Takeaways\n\n- Less is often more\n- Physical clutter affects mental clarity\n- Keep only what you truly need\n\nHighly recommend trying this!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-13T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-4",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Building My First SSG",
+      "body": "# Building My First SSG\n\nI decided to build a static site generator to better understand how they work.\n\n## The Architecture\n\nThe basic flow is simple:\n1. Read markdown files\n2. Convert to HTML\n3. Apply templates\n4. Generate static pages\n\n## Challenges\n\n- Template rendering\n- Asset management\n- Performance optimization\n\nIt's been a great learning experience!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-14T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-5",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Coffee and Code",
+      "body": "# Coffee and Code\n\nThere's something special about coding in a good cafe.\n\n## My Favorite Spots\n\n- The Corner Cafe: Great wifi, excellent espresso\n- Code & Brew: Developer-friendly atmosphere\n- The Quiet Corner: Perfect for deep work\n\n## Tips for Cafe Coding\n\n1. Bring headphones\n2. Order early to secure a good spot\n3. Be respectful of space during busy hours\n\nHappy coding!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-15T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-6",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Debugging Like a Pro",
+      "body": "# Debugging Like a Pro\n\nDebugging is an art. Here are my top strategies.\n\n## Essential Techniques\n\n- **Read the error message**: Sounds obvious, but many skip this\n- **Divide and conquer**: Binary search through your code\n- **Rubber duck debugging**: Explain the problem out loud\n\n## Tools I Use\n\n- Print statements (yes, really)\n- Debugger when needed\n- Git bisect for regression bugs\n\nMaster these and you'll save hours!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-16T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-7",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "The Joy of Simple Solutions",
+      "body": "# The Joy of Simple Solutions\n\nToday I refactored 200 lines into 50. It felt amazing.\n\n## What Changed\n\nI realized I was over-engineering. The complex solution wasn't adding value.\n\n## Lessons Learned\n\n- YAGNI: You Aren't Gonna Need It\n- Start simple, add complexity only when needed\n- Simple code is easier to maintain\n\n## The Result\n\nCleaner, faster, and easier to understand. Win-win-win!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-17T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-8",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "Working Remotely: One Year In",
+      "body": "# Working Remotely: One Year In\n\nIt's been a year since I went fully remote. Here are my thoughts.\n\n## The Good\n\n- No commute\n- Flexible schedule\n- Better work-life balance\n\n## The Challenges\n\n- Isolation can be real\n- Home distractions\n- Harder to separate work and life\n\n## My Setup\n\n- Dedicated workspace\n- Regular video calls with the team\n- Daily walks to break up the day\n\nOverall: 10/10 would recommend!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-18T10:00:00Z"
+    },
+    {
+      "ref": "blog-test-9",
+      "user_ref": "user-superadmin",
+      "kind": "blog",
+      "heading": "What I'm Learning Next",
+      "body": "# What I'm Learning Next\n\nAlways learning, always growing. Here's what's on my list.\n\n## Technical Skills\n\n1. **Rust**: For systems programming\n2. **WebAssembly**: The future of web performance\n3. **Distributed systems**: Understanding scalability\n\n## Non-Technical\n\n- Writing: Improving my communication\n- Public speaking: Conquering my fear\n- Design: Better UI/UX sense\n\n## The Plan\n\nOne topic at a time, deep focus, deliberate practice.\n\nLet's see where this takes me!",
+      "section_ref": "root",
+      "draft": false,
+      "featured": false,
+      "published_at": "2025-12-19T10:00:00Z"
+    }
+  ],
+  "tags": [],
+  "content_tags": [],
+  "params": []
+}

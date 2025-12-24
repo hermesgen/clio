@@ -1,45 +1,45 @@
 -- Res: ssg
 -- Table: image
 -- Create
-INSERT INTO images (id, short_id, content_hash, mime, width, height, filesize_bytes, etag, file_path, title, alt_text, alt_lang, long_description, caption, decorative, described_by_id, created_by, updated_by, created_at, updated_at)
-VALUES (:id, :short_id, :content_hash, :mime, :width, :height, :filesize_bytes, :etag, :file_path, :title, :alt_text, :alt_lang, :long_description, :caption, :decorative, :described_by_id, :created_by, :updated_by, :created_at, :updated_at);
+INSERT INTO image (id, site_id, short_id, file_name, file_path, alt_text, title, width, height, created_by, updated_by, created_at, updated_at)
+VALUES (:id, :site_id, :short_id, :file_name, :file_path, :alt_text, :title, :width, :height, :created_by, :updated_by, :created_at, :updated_at);
 
 -- Res: ssg
 -- Table: image
 -- Get
-SELECT id, short_id, content_hash, mime, width, height, filesize_bytes, etag, file_path, title, alt_text, alt_lang, long_description, caption, decorative, described_by_id, created_by, updated_by, created_at, updated_at
-FROM images
+SELECT id, site_id, short_id, file_name, file_path, alt_text, title, width, height, created_by, updated_by, created_at, updated_at
+FROM image
 WHERE id = ?;
 
 -- Res: ssg
 -- Table: image
 -- GetImageByShortID
-SELECT id, short_id, content_hash, mime, width, height, filesize_bytes, etag, file_path, title, alt_text, alt_lang, long_description, caption, decorative, described_by_id, created_by, updated_by, created_at, updated_at
-FROM images
+SELECT id, site_id, short_id, file_name, file_path, alt_text, title, width, height, created_by, updated_by, created_at, updated_at
+FROM image
 WHERE short_id = ?;
 
 -- Res: ssg
 -- Table: image
 -- GetImageByContentHash
-SELECT id, short_id, content_hash, mime, width, height, filesize_bytes, etag, file_path, title, alt_text, alt_lang, long_description, caption, decorative, described_by_id, created_by, updated_by, created_at, updated_at
-FROM images
-WHERE content_hash = ?;
+SELECT id, site_id, short_id, file_name, file_path, alt_text, title, width, height, created_by, updated_by, created_at, updated_at
+FROM image
+WHERE file_path = ?;
 
 -- Res: ssg
 -- Table: image
 -- Update
-UPDATE images
-SET content_hash = :content_hash, mime = :mime, width = :width, height = :height, filesize_bytes = :filesize_bytes, etag = :etag, file_path = :file_path, title = :title, alt_text = :alt_text, alt_lang = :alt_lang, long_description = :long_description, caption = :caption, decorative = :decorative, described_by_id = :described_by_id, updated_by = :updated_by, updated_at = :updated_at
+UPDATE image
+SET file_name = :file_name, file_path = :file_path, alt_text = :alt_text, title = :title, width = :width, height = :height, updated_by = :updated_by, updated_at = :updated_at
 WHERE id = :id;
 
 -- Res: ssg
 -- Table: image
 -- Delete
-DELETE FROM images
+DELETE FROM image
 WHERE id = ?;
 
 -- Res: ssg
 -- Table: image
 -- List
-SELECT id, short_id, content_hash, mime, width, height, filesize_bytes, etag, file_path, title, alt_text, alt_lang, long_description, caption, decorative, described_by_id, created_by, updated_by, created_at, updated_at
-FROM images;
+SELECT id, site_id, short_id, file_name, file_path, alt_text, title, width, height, created_by, updated_by, created_at, updated_at
+FROM image;

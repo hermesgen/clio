@@ -116,16 +116,13 @@ func (i *Image) StringID() string {
 // ToWebImage converts a feat.Image model to a web.Image model.
 func ToWebImage(featImage feat.Image) Image {
 	return Image{
-		ID:          featImage.ID,
-		ShortID:     featImage.ShortID,
-		Name:        featImage.Title,           // Map Title to Name
-		Description: featImage.LongDescription, // Map LongDescription to Description
+		ID:      featImage.ID,
+		ShortID: featImage.ShortID,
+		Name:    featImage.Title, // Map Title to Name
 		// Path and URL are not directly in feat.Image, they come from variants
-		AltText:  featImage.AltText,
-		MimeType: featImage.Mime,
-		Size:     featImage.FilesizeByte,
-		Width:    featImage.Width,
-		Height:   featImage.Height,
+		AltText: featImage.AltText,
+		Width:   featImage.Width,
+		Height:  featImage.Height,
 	}
 }
 
@@ -159,10 +156,9 @@ func NewImageForm(r *http.Request) ImageForm {
 func ToFeatImage(form ImageForm) feat.Image {
 	id, _ := uuid.Parse(form.ID)
 	return feat.Image{
-		ID:              id,
-		Title:           form.Name,        // Map Name to Title
-		LongDescription: form.Description, // Map Description to LongDescription
-		AltText:         form.AltText,
+		ID:      id,
+		Title:   form.Name, // Map Name to Title
+		AltText: form.AltText,
 		// Path, URL, MimeType, Size, Width, Height are set in webhandlerimage.go from file upload
 	}
 }

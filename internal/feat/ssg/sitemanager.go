@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/google/uuid"
 	"github.com/hermesgen/clio/internal/feat/auth"
@@ -13,33 +14,35 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type DBProvider interface {
-	GetDB() *sqlx.DB
-}
-
 // SiteManager handles site lifecycle operations.
 type SiteManager struct {
 	hm.Core
-	siteRepo    SiteRepo
-	dbProvider  DBProvider
-	assetsFS    embed.FS
-	engine      string
-	repoFactory RepoFactory
+	siteRepo SiteRepo
+	repo     Repo
+	assetsFS embed.FS
+	engine   string
 }
 
 // NewSiteManager creates a new site manager.
-func NewSiteManager(dbProvider DBProvider, assetsFS embed.FS, engine string, repoFactory RepoFactory, params hm.XParams) *SiteManager {
+func NewSiteManager(repo Repo, assetsFS embed.FS, engine string, params hm.XParams) *SiteManager {
 	return &SiteManager{
-		Core:        hm.NewCore("site-manager", params),
-		dbProvider:  dbProvider,
-		assetsFS:    assetsFS,
-		engine:      engine,
-		repoFactory: repoFactory,
+		Core:     hm.NewCore("site-manager", params),
+		repo:     repo,
+		assetsFS: assetsFS,
+		engine:   engine,
 	}
 }
 
 func (sm *SiteManager) Setup(ctx context.Context) error {
-	sm.siteRepo = NewSiteRepo(sm.dbProvider.GetDB())
+	// Extract DB from repo for SiteRepo
+	type DBGetter interface {
+		GetDB() *sqlx.DB
+	}
+	if dbGetter, ok := sm.repo.(DBGetter); ok {
+		sm.siteRepo = NewSiteRepo(dbGetter.GetDB())
+	} else {
+		return fmt.Errorf("repo does not provide GetDB() method")
+	}
 	return nil
 }
 
@@ -101,11 +104,10 @@ func (sm *SiteManager) CreateSite(ctx context.Context, name, slug, mode string, 
 
 // createSiteDirectories creates the directory structure for a site.
 func (sm *SiteManager) createSiteDirectories(slug string) error {
-	dbBasePath := sm.Cfg().StrValOrDef(SSGKey.DBBasePath, "_workspace/db")
 	sitesBasePath := sm.Cfg().StrValOrDef(SSGKey.SitesBasePath, "_workspace/sites")
 
 	dirs := []string{
-		GetSiteDBPath(dbBasePath, slug),    // e.g., _workspace/db/slug/clio.db
+		GetSiteDBPath(sitesBasePath, slug),    // e.g., _workspace/sites/slug/db/clio.db
 		GetSiteMarkdownPath(sitesBasePath, slug),
 		GetSiteHTMLPath(sitesBasePath, slug),
 		GetSiteImagesPath(sitesBasePath, slug),
@@ -113,8 +115,8 @@ func (sm *SiteManager) createSiteDirectories(slug string) error {
 
 	for _, dir := range dirs {
 		// For the DB path, we only want the directory (parent of clio.db), not the file
-		if dir == GetSiteDBPath(dbBasePath, slug) {
-			dir = dbBasePath + "/" + slug // Just the directory, not the .db file
+		if dir == GetSiteDBPath(sitesBasePath, slug) {
+			dir = filepath.Join(sitesBasePath, slug, "db") // Just the directory, not the .db file
 		}
 
 		if err := os.MkdirAll(dir, 0755); err != nil {
@@ -127,75 +129,33 @@ func (sm *SiteManager) createSiteDirectories(slug string) error {
 
 // deleteSiteDirectories removes the directory structure for a site.
 func (sm *SiteManager) deleteSiteDirectories(slug string) {
-	dbBasePath := sm.Cfg().StrValOrDef(SSGKey.DBBasePath, "_workspace/db")
 	sitesBasePath := sm.Cfg().StrValOrDef(SSGKey.SitesBasePath, "_workspace/sites")
 
-	// Remove site documents directory
+	// Remove entire site directory (includes db, documents, etc.)
 	siteBase := GetSiteBasePath(sitesBasePath, slug)
 	if err := os.RemoveAll(siteBase); err != nil {
 		sm.Log().Error("Failed to remove site directories", "slug", slug, "error", err)
 	}
-
-	// Remove site database directory
-	dbDir := dbBasePath + "/" + slug
-	if err := os.RemoveAll(dbDir); err != nil {
-		sm.Log().Error("Failed to remove site database directory", "slug", slug, "error", err)
-	}
 }
 
-// initializeSiteDatabase creates and initializes the database for a site.
+// initializeSiteDatabase initializes data for a new site.
+// With single-DB architecture, migrations are already run.
+// This only performs seeding for the new site.
 func (sm *SiteManager) initializeSiteDatabase(ctx context.Context, slug string, userID uuid.UUID) error {
-	dbBasePath := sm.Cfg().StrValOrDef(SSGKey.DBBasePath, "_workspace/db")
-	dsn := GetSiteDBDSN(dbBasePath, slug)
+	sm.Log().Info("Initializing site data", "slug", slug)
 
-	// Open database connection
-	db, err := sqlx.Connect("sqlite3", dsn)
-	if err != nil {
-		return fmt.Errorf("failed to connect to site database: %w", err)
-	}
-	defer db.Close()
-
-	sm.Log().Info("Connected to site database", "dsn", dsn)
-
-	// Create XParams for this database
 	params := hm.XParams{
 		Cfg: sm.Cfg(),
 		Log: sm.Log(),
 	}
 
-	// Run migrations
-	migrator := hm.NewMigrator(sm.assetsFS, sm.engine, params)
-	migrator.SetDB(db.DB) // Set the database connection
-	if err := migrator.Setup(ctx); err != nil {
-		return fmt.Errorf("failed to run migrations: %w", err)
-	}
-
-	sm.Log().Info("Migrations completed", "slug", slug)
-
-	// Create repository for seeding
-	queryManager := hm.NewQueryManager(sm.assetsFS, sm.engine, params)
-	if err := queryManager.Setup(ctx); err != nil {
-		return fmt.Errorf("failed to setup query manager: %w", err)
-	}
-
-	repo := sm.repoFactory(queryManager, params)
-
-	// Set the database connection on the repo
-	if setter, ok := repo.(interface{ SetDB(*sqlx.DB) }); ok {
-		setter.SetDB(db)
-	}
-
-	if err := repo.Setup(ctx); err != nil {
-		return fmt.Errorf("failed to setup repository: %w", err)
-	}
-
 	// Type assert repo to auth.Repo for seeding
-	authRepo, ok := repo.(auth.Repo)
+	authRepo, ok := sm.repo.(auth.Repo)
 	if !ok {
 		return fmt.Errorf("repository does not implement auth.Repo interface")
 	}
 
-	// Run auth seeding
+	// Run auth seeding for this site
 	authSeeder := auth.NewSeeder(sm.assetsFS, sm.engine, authRepo, params)
 	if err := authSeeder.Setup(ctx); err != nil {
 		return fmt.Errorf("failed to seed auth data: %w", err)
@@ -203,8 +163,8 @@ func (sm *SiteManager) initializeSiteDatabase(ctx context.Context, slug string, 
 
 	sm.Log().Info("Auth seeding completed", "slug", slug)
 
-	// Run SSG seeding
-	ssgSeeder := NewSeeder(sm.assetsFS, sm.engine, repo, params)
+	// Run SSG seeding for this site
+	ssgSeeder := NewSeeder(sm.assetsFS, sm.engine, sm.repo, params)
 	if err := ssgSeeder.Setup(ctx); err != nil {
 		return fmt.Errorf("failed to seed SSG data: %w", err)
 	}
@@ -222,15 +182,16 @@ func (sm *SiteManager) ListSites(ctx context.Context, activeOnly bool) ([]Site, 
 		return nil, err
 	}
 
-	dbBasePath := sm.Cfg().StrValOrDef(SSGKey.DBBasePath, "_workspace/db")
+	sitesBasePath := sm.Cfg().StrValOrDef(SSGKey.SitesBasePath, "_workspace/sites")
 	validSites := make([]Site, 0, len(sites))
 
 	for _, site := range sites {
-		dbPath := GetSiteDBPath(dbBasePath, site.Slug())
-		if _, err := os.Stat(dbPath); err == nil {
+		// Check if site directory exists (not just DB file, since DB is created on first access)
+		siteDir := GetSiteBasePath(sitesBasePath, site.Slug())
+		if _, err := os.Stat(siteDir); err == nil {
 			validSites = append(validSites, site)
 		} else {
-			sm.Log().Info("Site database not found, auto-deleting orphaned record", "slug", site.Slug(), "path", dbPath)
+			sm.Log().Info("Site directory not found, auto-deleting orphaned record", "slug", site.Slug(), "path", siteDir)
 			if delErr := sm.siteRepo.DeleteSite(ctx, site.ID); delErr != nil {
 				sm.Log().Error("Failed to auto-delete orphaned site", "slug", site.Slug(), "error", delErr)
 			}
@@ -241,39 +202,13 @@ func (sm *SiteManager) ListSites(ctx context.Context, activeOnly bool) ([]Site, 
 }
 
 // GetSiteBySlug retrieves a site by its slug.
-// Returns error if site database files don't exist.
 func (sm *SiteManager) GetSiteBySlug(ctx context.Context, slug string) (Site, error) {
-	site, err := sm.siteRepo.GetSiteBySlug(ctx, slug)
-	if err != nil {
-		return Site{}, err
-	}
-
-	dbBasePath := sm.Cfg().StrValOrDef(SSGKey.DBBasePath, "_workspace/db")
-	dbPath := GetSiteDBPath(dbBasePath, site.Slug())
-
-	if _, err := os.Stat(dbPath); err != nil {
-		return Site{}, fmt.Errorf("site database not found: %s", dbPath)
-	}
-
-	return site, nil
+	return sm.siteRepo.GetSiteBySlug(ctx, slug)
 }
 
 // GetSite retrieves a site by ID.
-// Returns error if site database files don't exist.
 func (sm *SiteManager) GetSite(ctx context.Context, id uuid.UUID) (Site, error) {
-	site, err := sm.siteRepo.GetSite(ctx, id)
-	if err != nil {
-		return Site{}, err
-	}
-
-	dbBasePath := sm.Cfg().StrValOrDef(SSGKey.DBBasePath, "_workspace/db")
-	dbPath := GetSiteDBPath(dbBasePath, site.Slug())
-
-	if _, err := os.Stat(dbPath); err != nil {
-		return Site{}, fmt.Errorf("site database not found: %s", dbPath)
-	}
-
-	return site, nil
+	return sm.siteRepo.GetSite(ctx, id)
 }
 
 // DeleteSite removes a site from the database (files remain for backup).

@@ -50,16 +50,15 @@ func (w *Workspace) setupDirs() error {
 			sitesBase,
 		}
 
-		// Set admin DB path (sites catalog + global users)
-		adminDSN := "file:" + filepath.Join(configDir, "clioadmin.db") + "?cache=shared&mode=rwc"
-		w.Cfg().Set(ssg.SSGKey.AdminDSN, adminDSN)
+		// Set single DB path (all data)
+		dbDSN := "file:" + filepath.Join(dbBase, "clio.db") + "?cache=shared&mode=rwc"
+		w.Cfg().Set(hm.Key.DBSQLiteDSN, dbDSN)
 
 		// Set base paths for multi-site structure
 		w.Cfg().Set(ssg.SSGKey.WorkspacePath, base)
-		w.Cfg().Set(ssg.SSGKey.DBBasePath, dbBase)
 		w.Cfg().Set(ssg.SSGKey.SitesBasePath, sitesBase)
 
-		w.Log().Info("Overriding config for DEV mode", "admin_dsn", adminDSN)
+		w.Log().Info("Overriding config for DEV mode", "db_dsn", dbDSN)
 
 	} else {
 		w.Log().Info("Running in PROD mode, using system paths.")
@@ -69,23 +68,25 @@ func (w *Workspace) setupDirs() error {
 			return err
 		}
 
+		dataDir := filepath.Join(homeDir, ".clio")
 		configDir := filepath.Join(homeDir, ".config", "clio")
-		dbBase := filepath.Join(homeDir, ".local", "share", "clio", "db")
 		sitesBase := filepath.Join(homeDir, "Documents", "Clio", "sites")
 
 		dirs = []string{
+			dataDir,
 			configDir,
-			dbBase,
 			sitesBase,
 		}
 
-		// Set admin DB path (sites catalog + global users)
-		adminDSN := "file:" + filepath.Join(configDir, "clioadmin.db") + "?cache=shared&mode=rwc"
-		w.Cfg().Set(ssg.SSGKey.AdminDSN, adminDSN)
+		// Set single DB path (all data)
+		dbDSN := "file:" + filepath.Join(dataDir, "clio.db") + "?cache=shared&mode=rwc"
+		w.Cfg().Set(hm.Key.DBSQLiteDSN, dbDSN)
 
 		// Set base paths for multi-site structure
-		w.Cfg().Set(ssg.SSGKey.DBBasePath, dbBase)
+		w.Cfg().Set(ssg.SSGKey.WorkspacePath, filepath.Join(homeDir, "Documents", "Clio"))
 		w.Cfg().Set(ssg.SSGKey.SitesBasePath, sitesBase)
+
+		w.Log().Info("Running in PROD mode", "db_dsn", dbDSN)
 	}
 
 	w.Log().Info("Ensuring base directory structure exists...")

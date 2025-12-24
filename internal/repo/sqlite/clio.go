@@ -58,8 +58,8 @@ func (repo *ClioRepo) Stop(ctx context.Context) error {
 	return nil
 }
 
-// DB returns the underlying *sqlx.DB for transaction management.
-func (repo *ClioRepo) DB() *sqlx.DB {
+// GetDB returns the underlying *sqlx.DB for transaction management.
+func (repo *ClioRepo) GetDB() *sqlx.DB {
 	return repo.db
 }
 

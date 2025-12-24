@@ -10,29 +10,22 @@ import (
 // Image represents an image asset with its metadata.
 type Image struct {
 	// Common
-	ID      uuid.UUID `json:"id" db:"id"`
-	ShortID string    `json:"-" db:"short_id"`
-	ref     string    `json:"-"`
+	ID       uuid.UUID `json:"id" db:"id"`
+	ShortID  string    `json:"-" db:"short_id"`
+	ref      string    `json:"-"`
 
-	ContentHash  string `json:"content_hash" db:"content_hash"`
-	Mime         string `json:"mime" db:"mime"`
-	Width        int    `json:"width" db:"width"`
-	Height       int    `json:"height" db:"height"`
-	FilesizeByte int64  `json:"filesize_bytes" db:"filesize_bytes"`
-	Etag         string `json:"etag" db:"etag"`
-	FilePath     string `json:"file_path" db:"file_path"`
+	// Site relationship
+	SiteID uuid.UUID `json:"site_id" db:"site_id"`
+
+	// File information
+	FileName string `json:"file_name" db:"file_name"`
+	FilePath string `json:"file_path" db:"file_path"`
+	Width    int    `json:"width" db:"width"`
+	Height   int    `json:"height" db:"height"`
 
 	// Accessibility fields
-	Title           string    `json:"title" db:"title"`
-	AltText         string    `json:"alt_text" db:"alt_text"`
-	AltLang         string    `json:"alt_lang" db:"alt_lang"`
-	LongDescription string    `json:"long_description" db:"long_description"`
-	Caption         string    `json:"caption" db:"caption"`
-	Decorative      bool      `json:"decorative" db:"decorative"`
-	DescribedByID   uuid.UUID `json:"described_by_id" db:"described_by_id"`
-
-	// Purpose from relationship (not stored in DB, populated from relationship table)
-	Purpose string `json:"purpose" db:"-"`
+	Title   string `json:"title" db:"title"`
+	AltText string `json:"alt_text" db:"alt_text"`
 
 	// Audit
 	CreatedBy uuid.UUID `json:"-" db:"created_by"`
@@ -149,7 +142,7 @@ func (i *Image) Slug() string {
 	if i.Title != "" {
 		return hm.Normalize(i.Title) + "-" + i.GetShortID()
 	}
-	return hm.Normalize(i.ContentHash) + "-" + i.GetShortID()
+	return hm.Normalize(i.FileName) + "-" + i.GetShortID()
 }
 
 func (i *Image) Ref() string {

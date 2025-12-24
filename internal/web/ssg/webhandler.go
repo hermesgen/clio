@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/google/uuid"
@@ -38,6 +39,22 @@ func (wh *WebHandler) addSiteSlugHeader(r *http.Request) *http.Request {
 		r.Header.Set("X-Site-Slug", siteSlug)
 	}
 	return r
+}
+
+func (wh *WebHandler) ServeStaticImage(w http.ResponseWriter, r *http.Request) {
+	siteSlug, ok := feat.GetSiteSlugFromContext(r.Context())
+	if !ok || siteSlug == "" {
+		http.Error(w, "Site not found", http.StatusNotFound)
+		return
+	}
+
+	sitesBasePath := wh.Cfg().StrValOrDef(feat.SSGKey.SitesBasePath, "_workspace/sites")
+	imagesPath := feat.GetSiteImagesPath(sitesBasePath, siteSlug)
+
+	requestPath := strings.TrimPrefix(r.URL.Path, "/static/images/")
+	fullPath := filepath.Join(imagesPath, requestPath)
+
+	http.ServeFile(w, r, fullPath)
 }
 
 func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, paramManager *feat.ParamManager, siteManager *feat.SiteManager, sessionManager interface {

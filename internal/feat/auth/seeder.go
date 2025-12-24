@@ -27,40 +27,52 @@ func NewSeeder(assetsFS embed.FS, engine string, repo Repo, params hm.XParams) *
 }
 
 func (s *Seeder) Setup(ctx context.Context) error {
-	if err := s.JSONSeeder.Setup(ctx); err != nil {
-		return err
-	}
+	return s.JSONSeeder.Setup(ctx)
+}
+
+func (s *Seeder) Start(ctx context.Context) error {
 	return s.SeedAll(ctx)
 }
 
 // SeedAll loads and applies all auth seeds in a single transaction.
 func (s *Seeder) SeedAll(ctx context.Context) error {
-	s.Log().Info("Seeding GitAuth data...")
+	s.Log().Info("Seeding Auth data...")
 	byFeature, err := s.JSONSeeder.LoadJSONSeeds()
 	if err != nil {
 		return fmt.Errorf("failed to load JSON seeds: %w", err)
 	}
+
+	s.Log().Info("Loaded seed files", "feature_count", len(byFeature))
+	for feat, seeds := range byFeature {
+		s.Log().Info("Feature seeds found", "feature", feat, "count", len(seeds))
+	}
+
 	const authFeat = "auth"
 	for feature, seeds := range byFeature {
 		if feature != authFeat {
+			s.Log().Info("Skipping non-auth feature", "feature", feature)
 			continue
 		}
 
 		for _, seed := range seeds {
+			s.Log().Info("Processing auth seed", "name", seed.Name, "datetime", seed.Datetime)
 			applied, err := s.JSONSeeder.SeedApplied(seed.Datetime, seed.Name, feature)
 			if err != nil {
 				return fmt.Errorf("failed to check if seed was applied: %w", err)
 			}
 			if applied {
-				s.Log().Debugf("Seed already applied: %s-%s [%s]", seed.Datetime, seed.Name, feature)
+				s.Log().Info("Seed already applied, skipping", "name", seed.Name)
 				continue
 			}
 
+			s.Log().Info("Unmarshaling seed data", "content_length", len(seed.Content))
 			var data SeedData
 			err = json.Unmarshal([]byte(seed.Content), &data)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal %s seed: %w", feature, err)
 			}
+
+			s.Log().Info("Seed data unmarshaled", "users_count", len(data.Users))
 
 			err = s.seedData(ctx, &data)
 			if err != nil {
@@ -91,22 +103,35 @@ func (s *Seeder) seedData(ctx context.Context, data *SeedData) error {
 // --- Helper functions for each entity type ---
 
 func (s *Seeder) seedUsers(ctx context.Context, data *SeedData, userRefMap map[string]uuid.UUID) error {
+	s.Log().Info("Seeding users", "user_count", len(data.Users))
+	if len(data.Users) == 0 {
+		s.Log().Info("No users in seed data to insert")
+		return nil
+	}
+
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
 		return fmt.Errorf("error at beginning tx for seedUsers: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	s.Log().Debug("Seeding users: start")
-	defer s.Log().Debug("Seeding users: end")
+
 	for i := range data.Users {
 		u := &data.Users[i]
+		s.Log().Info("Creating user", "username", u.Username, "ref", u.Ref())
 		u.GenCreateValues()
 
 		err = s.repo.CreateUser(ctx, u)
 		if err != nil {
-			return fmt.Errorf("error inserting user: %w", err)
+			return fmt.Errorf("error inserting user %s: %w", u.Username, err)
 		}
 		userRefMap[u.Ref()] = u.GetID()
+		s.Log().Info("User created successfully", "username", u.Username)
 	}
-	return tx.Commit()
+
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("error committing user transaction: %w", err)
+	}
+	s.Log().Info("All users committed successfully")
+	return nil
 }

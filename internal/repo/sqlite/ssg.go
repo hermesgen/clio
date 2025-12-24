@@ -25,6 +25,7 @@ var (
 	resImageVariant = "image_variant"
 )
 
+
 // sanitizeURLPath sanitizes a file path for safe use in URLs
 func sanitizeURLPath(path string) string {
 	// Split path into directory and filename components
@@ -151,12 +152,17 @@ func (repo *ClioRepo) DeleteContent(ctx context.Context, id uuid.UUID) error {
 }
 
 func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content, error) {
+	siteID, ok := ssg.GetSiteIDFromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("no site ID in context")
+	}
+
 	query, err := repo.BaseRepo.Query().Get(featSSG, resContent, "GetAllContentWithMeta")
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := repo.db.QueryxContext(ctx, query)
+	rows, err := repo.db.QueryxContext(ctx, query, siteID)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +183,8 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 		var tableOfContents, share, comments sql.NullBool
 
 		var tagID, tagShortID, tagName, tagSlug sql.NullString
-		var contentImageID, imagePurpose, imageFilePath, imageAltText, imageLongDescription sql.NullString
+		var contentImageID, imageFilePath, imageAltText sql.NullString
+		var isHeader sql.NullBool
 
 		err := rows.Scan(
 			&c.ID, &c.UserID, &c.SectionID, &c.Kind, &c.Heading, &c.Body, &c.Draft, &c.Featured, &publishedAt, &c.ShortID,
@@ -185,7 +192,7 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 			&sectionPath, &sectionName,
 			&metaID, &description, &keywords, &robots, &canonicalURL, &sitemap, &tableOfContents, &share, &comments,
 			&tagID, &tagShortID, &tagName, &tagSlug,
-			&contentImageID, &imagePurpose, &imageFilePath, &imageAltText, &imageLongDescription,
+			&contentImageID, &isHeader, &imageFilePath, &imageAltText,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error scanning row: %w", err)
@@ -218,21 +225,10 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 
 		// Handle images
 		if contentImageID.Valid && imageFilePath.Valid {
-			// Sanitize the file path for URL safety
 			sanitizedPath := sanitizeURLPath(imageFilePath.String)
-			// Convert file_path to URL (add /static/images prefix)
-			imageURL := "/static/images" + sanitizedPath
-			if imagePurpose.String == "thumbnail" {
-				contentMap[c.ID].ThumbnailURL = imageURL
-			} else if imagePurpose.String == "header" {
-				contentMap[c.ID].HeaderImageURL = imageURL
+			if isHeader.Valid && isHeader.Bool {
+				contentMap[c.ID].HeaderImageURL = "/static/images/" + sanitizedPath
 				contentMap[c.ID].HeaderImageAlt = imageAltText.String
-				contentMap[c.ID].HeaderImageCaption = imageLongDescription.String
-			} else if imagePurpose.String == "content" {
-				// Use content images as fallback for thumbnails if no thumbnail exists
-				if contentMap[c.ID].ThumbnailURL == "" {
-					contentMap[c.ID].ThumbnailURL = imageURL
-				}
 			}
 		}
 
@@ -254,13 +250,18 @@ func (repo *ClioRepo) GetAllContentWithMeta(ctx context.Context) ([]ssg.Content,
 }
 
 func (repo *ClioRepo) GetContentWithPaginationAndSearch(ctx context.Context, offset, limit int, searchQuery string) ([]ssg.Content, int, error) {
+	siteID, ok := ssg.GetSiteIDFromContext(ctx)
+	if !ok {
+		return nil, 0, fmt.Errorf("no site ID in context")
+	}
+
 	countQuery, err := repo.BaseRepo.Query().Get(featSSG, resContent, "GetContentCountWithSearch")
 	if err != nil {
 		return nil, 0, fmt.Errorf("cannot get count query: %w", err)
 	}
 
 	var totalCount int
-	row := repo.db.QueryRowxContext(ctx, countQuery, searchQuery, searchQuery)
+	row := repo.db.QueryRowxContext(ctx, countQuery, siteID, searchQuery, searchQuery)
 	err = row.Scan(&totalCount)
 	if err != nil {
 		return nil, 0, fmt.Errorf("cannot get total count: %w", err)
@@ -271,7 +272,7 @@ func (repo *ClioRepo) GetContentWithPaginationAndSearch(ctx context.Context, off
 		return nil, 0, fmt.Errorf("cannot get pagination query: %w", err)
 	}
 
-	rows, err := repo.db.QueryxContext(ctx, query, searchQuery, searchQuery, limit, offset)
+	rows, err := repo.db.QueryxContext(ctx, query, siteID, searchQuery, searchQuery, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("cannot execute pagination query: %w", err)
 	}
@@ -292,7 +293,8 @@ func (repo *ClioRepo) GetContentWithPaginationAndSearch(ctx context.Context, off
 		var tableOfContents, share, comments sql.NullBool
 
 		var tagID, tagShortID, tagName, tagSlug sql.NullString
-		var contentImageID, imagePurpose, imageFilePath, imageAltText, imageLongDescription sql.NullString
+		var contentImageID, imageFilePath, imageAltText sql.NullString
+		var isHeader sql.NullBool
 
 		err := rows.Scan(
 			&c.ID, &c.UserID, &c.SectionID, &c.Kind, &c.Heading, &c.Body, &c.Draft, &c.Featured, &publishedAt, &c.ShortID,
@@ -300,7 +302,7 @@ func (repo *ClioRepo) GetContentWithPaginationAndSearch(ctx context.Context, off
 			&sectionPath, &sectionName,
 			&metaID, &description, &keywords, &robots, &canonicalURL, &sitemap, &tableOfContents, &share, &comments,
 			&tagID, &tagShortID, &tagName, &tagSlug,
-			&contentImageID, &imagePurpose, &imageFilePath, &imageAltText, &imageLongDescription,
+			&contentImageID, &isHeader, &imageFilePath, &imageAltText,
 		)
 		if err != nil {
 			return nil, 0, fmt.Errorf("error scanning row: %w", err)
@@ -334,16 +336,9 @@ func (repo *ClioRepo) GetContentWithPaginationAndSearch(ctx context.Context, off
 		if contentImageID.Valid && imageFilePath.Valid {
 			sanitizedPath := sanitizeURLPath(imageFilePath.String)
 			imageURL := "/static/images" + sanitizedPath
-			if imagePurpose.String == "thumbnail" {
-				contentMap[c.ID].ThumbnailURL = imageURL
-			} else if imagePurpose.String == "header" {
+			if isHeader.Valid && isHeader.Bool {
 				contentMap[c.ID].HeaderImageURL = imageURL
 				contentMap[c.ID].HeaderImageAlt = imageAltText.String
-				contentMap[c.ID].HeaderImageCaption = imageLongDescription.String
-			} else if imagePurpose.String == "content" {
-				if contentMap[c.ID].ThumbnailURL == "" {
-					contentMap[c.ID].ThumbnailURL = imageURL
-				}
 			}
 		}
 
@@ -374,11 +369,13 @@ func (repo *ClioRepo) CreateSection(ctx context.Context, section ssg.Section) er
 
 	_, err = repo.db.ExecContext(ctx, query,
 		section.GetID(),
+		section.SiteID,
 		section.GetShortID(),
 		section.Name,
 		section.Description,
 		section.Path,
 		section.LayoutID,
+		section.LayoutName,
 		section.GetCreatedBy(),
 		section.GetUpdatedBy(),
 		section.GetCreatedAt(),
@@ -401,15 +398,16 @@ func (repo *ClioRepo) GetSections(ctx context.Context) ([]ssg.Section, error) {
 	var sections []ssg.Section
 	for rows.Next() {
 		var s ssg.Section
-		var layoutName sql.NullString
+		var layoutNameTable, layoutNameJoin sql.NullString
 		err := rows.Scan(
-			&s.ID, &s.ShortID, &s.Name, &s.Description, &s.Path, &s.LayoutID,
-			&s.CreatedBy, &s.UpdatedBy, &s.CreatedAt, &s.UpdatedAt, &layoutName,
+			&s.ID, &s.SiteID, &s.ShortID, &s.Name, &s.Description, &s.Path, &s.LayoutID, &layoutNameTable,
+			&s.CreatedBy, &s.UpdatedBy, &s.CreatedAt, &s.UpdatedAt,
+			&layoutNameJoin,
 		)
 		if err != nil {
 			return nil, err
 		}
-		s.LayoutName = layoutName.String
+		s.LayoutName = layoutNameJoin.String
 		sections = append(sections, s)
 	}
 	return sections, nil
@@ -424,22 +422,24 @@ func (repo *ClioRepo) GetSection(ctx context.Context, id uuid.UUID) (ssg.Section
 	row := repo.db.QueryRowxContext(ctx, query, id)
 
 	var (
-		sectionID   uuid.UUID
-		name        string
-		description string
-		path        string
-		layoutID    uuid.UUID
-		shortID     string
-		createdBy   uuid.UUID
-		updatedBy   uuid.UUID
-		createdAt   time.Time
-		updatedAt   time.Time
-		layoutName  sql.NullString
+		sectionID       uuid.UUID
+		siteID          uuid.UUID
+		name            string
+		description     string
+		path            string
+		layoutID        uuid.UUID
+		shortID         string
+		createdBy       uuid.UUID
+		updatedBy       uuid.UUID
+		createdAt       time.Time
+		updatedAt       time.Time
+		layoutNameTable sql.NullString
+		layoutNameJoin  sql.NullString
 	)
 
 	err = row.Scan(
-		&sectionID, &shortID, &name, &description, &path, &layoutID,
-		&createdBy, &updatedBy, &createdAt, &updatedAt, &layoutName,
+		&sectionID, &siteID, &shortID, &name, &description, &path, &layoutID, &layoutNameTable,
+		&createdBy, &updatedBy, &createdAt, &updatedAt, &layoutNameJoin,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -450,8 +450,8 @@ func (repo *ClioRepo) GetSection(ctx context.Context, id uuid.UUID) (ssg.Section
 
 	section := ssg.NewSection(name, description, path, layoutID)
 	section.SetID(sectionID)
-	// TODO: Remove header and blogHeader field assignments
-	section.LayoutName = layoutName.String
+	section.SiteID = siteID
+	section.LayoutName = layoutNameJoin.String
 	section.SetShortID(shortID)
 	section.SetCreatedBy(createdBy)
 	section.SetUpdatedBy(updatedBy)
@@ -490,6 +490,7 @@ func (repo *ClioRepo) CreateLayout(ctx context.Context, layout ssg.Layout) error
 	}
 	_, err = repo.db.ExecContext(ctx, query,
 		layout.GetID(),
+		layout.SiteID,
 		layout.GetShortID(),
 		layout.Name,
 		layout.Description,
@@ -1067,18 +1068,17 @@ func (repo *ClioRepo) GetContentForTag(ctx context.Context, tagID uuid.UUID) ([]
 
 func (repo *ClioRepo) CreateContentImage(ctx context.Context, contentImage *ssg.ContentImage) error {
 	query := `
-		INSERT INTO content_images (id, content_id, image_id, purpose, position, is_active, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO content_images (id, content_id, image_id, is_header, is_featured, order_num, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 	_, err := repo.db.ExecContext(ctx, query,
 		contentImage.ID,
 		contentImage.ContentID,
 		contentImage.ImageID,
-		contentImage.Purpose,
-		contentImage.Position,
-		contentImage.IsActive,
+		contentImage.IsHeader,
+		contentImage.IsFeatured,
+		contentImage.OrderNum,
 		contentImage.CreatedAt,
-		contentImage.UpdatedAt,
 	)
 	return err
 }
@@ -1091,10 +1091,10 @@ func (repo *ClioRepo) DeleteContentImage(ctx context.Context, id uuid.UUID) erro
 
 func (repo *ClioRepo) GetContentImagesByContentID(ctx context.Context, contentID uuid.UUID) ([]ssg.ContentImage, error) {
 	query := `
-		SELECT id, content_id, image_id, purpose, position, is_active, created_at, updated_at
+		SELECT id, content_id, image_id, is_header, is_featured, order_num, created_at
 		FROM content_images
-		WHERE content_id = ? AND is_active = true
-		ORDER BY position
+		WHERE content_id = ?
+		ORDER BY order_num
 	`
 	var contentImages []ssg.ContentImage
 	err := repo.db.SelectContext(ctx, &contentImages, query, contentID)
@@ -1105,17 +1105,17 @@ func (repo *ClioRepo) GetContentImagesByContentID(ctx context.Context, contentID
 
 func (repo *ClioRepo) CreateSectionImage(ctx context.Context, sectionImage *ssg.SectionImage) error {
 	query := `
-		INSERT INTO section_images (id, section_id, image_id, purpose, is_active, created_at, updated_at)
+		INSERT INTO section_images (id, section_id, image_id, is_header, is_featured, order_num, created_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 	_, err := repo.db.ExecContext(ctx, query,
 		sectionImage.ID,
 		sectionImage.SectionID,
 		sectionImage.ImageID,
-		sectionImage.Purpose,
-		sectionImage.IsActive,
+		sectionImage.IsHeader,
+		sectionImage.IsFeatured,
+		sectionImage.OrderNum,
 		sectionImage.CreatedAt,
-		sectionImage.UpdatedAt,
 	)
 	return err
 }
@@ -1128,12 +1128,28 @@ func (repo *ClioRepo) DeleteSectionImage(ctx context.Context, id uuid.UUID) erro
 
 func (repo *ClioRepo) GetSectionImagesBySectionID(ctx context.Context, sectionID uuid.UUID) ([]ssg.SectionImage, error) {
 	query := `
-		SELECT id, section_id, image_id, purpose, is_active, created_at, updated_at
+		SELECT id, section_id, image_id, is_header, is_featured, order_num, created_at
 		FROM section_images
-		WHERE section_id = ? AND is_active = true
-		ORDER BY created_at
+		WHERE section_id = ?
+		ORDER BY order_num
 	`
 	var sectionImages []ssg.SectionImage
 	err := repo.db.SelectContext(ctx, &sectionImages, query, sectionID)
 	return sectionImages, err
+}
+// Site related
+
+func (repo *ClioRepo) GetSiteBySlug(ctx context.Context, slug string) (ssg.Site, error) {
+	var site ssg.Site
+	query := `SELECT * FROM site WHERE slug = ? LIMIT 1`
+
+	err := repo.db.GetContext(ctx, &site, query, slug)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ssg.Site{}, fmt.Errorf("site not found: %w", err)
+		}
+		return ssg.Site{}, fmt.Errorf("failed to get site by slug: %w", err)
+	}
+
+	return site, nil
 }

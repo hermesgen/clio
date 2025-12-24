@@ -285,7 +285,11 @@ async function loadImageGallery() {
 
   try {
     // TODO: Make API base URL configurable instead of hardcoded localhost:8081
-    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`);
+    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`, {
+      headers: {
+        'X-Site-Slug': 'structured'
+      }
+    });
     if (response.ok) {
       const data = await response.json();
       displayImages(data.data.images || []);
@@ -307,7 +311,7 @@ function displayImages(images) {
 
   images.forEach(image => {
     // Skip header images - they're handled separately now
-    if (image.purpose === 'header') {
+    if (image.is_header) {
       return;
     }
 
@@ -318,7 +322,7 @@ function displayImages(images) {
     console.log('Displaying image:', imageUrl, 'Alt:', image.alt_text);
 
     div.innerHTML = `
-      <img src="${imageUrl}" alt="${image.alt_text || 'Content image'}" class="w-full h-32 object-cover cursor-pointer brightness-90 group-hover:brightness-100" style="transition: filter 300ms ease-out;" onclick="insertImageIntoMarkdown('${image.file_path}', '${image.alt_text || ''}', '${image.long_description || ''}')">
+      <img src="${imageUrl}" alt="${image.alt_text || 'Content image'}" class="w-full h-32 object-cover cursor-pointer brightness-90 group-hover:brightness-100" style="transition: filter 300ms ease-out;" onclick="insertImageIntoMarkdown('${image.file_path}', '${image.alt_text || ''}')">
       <button
         type="button"
         class="delete-image-btn absolute top-2 right-2 z-50 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
@@ -327,10 +331,10 @@ function displayImages(images) {
       >
         ×
       </button>
-      ${image.alt_text || image.long_description ? `
+      ${image.alt_text || image.title ? `
         <div class="image-overlay absolute bottom-0 left-0 right-0 p-4 text-white text-left" style="background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transform: translateY(100%); transition: transform 250ms ease-out;">
           ${image.alt_text ? `<div class="font-semibold text-sm mb-1.5 leading-tight">${image.alt_text}</div>` : ''}
-          ${image.long_description ? `<div class="text-xs italic opacity-90 leading-tight">[${image.long_description}]</div>` : ''}
+          ${image.title ? `<div class="text-xs italic opacity-90 leading-tight">${image.title}</div>` : ''}
         </div>
       ` : ''}
     `;
@@ -358,7 +362,7 @@ function displayImages(images) {
 }
 
 // Insert image into markdown at cursor position
-function insertImageIntoMarkdown(imagePath, altText, longDescription) {
+function insertImageIntoMarkdown(imagePath, altText) {
   const textarea = document.getElementById('body');
   const cursorPos = textarea.selectionStart;
   const textBefore = textarea.value.substring(0, cursorPos);
@@ -367,18 +371,9 @@ function insertImageIntoMarkdown(imagePath, altText, longDescription) {
   // Use provided alt text or fallback to filename
   const filename = imagePath.split('/').pop().replace(/\.[^/.]+$/, ""); // Remove extension for alt text
   const displayAltText = altText || filename;
-  
-  // Create enhanced markdown with long description in alt text
-  let imageMarkdown;
-  if (longDescription && altText) {
-    // Include long description in alt text separated by ||| for renderer to parse
-    imageMarkdown = `![${altText}|||${longDescription}](/static/images/${imagePath})`;
-  } else if (altText) {
-    imageMarkdown = `![${altText}](/static/images/${imagePath})`;
-  } else {
-    // Fallback to standard markdown for images without metadata
-    imageMarkdown = `![${displayAltText}](/static/images/${imagePath})`;
-  }
+
+  // Create markdown image
+  const imageMarkdown = `![${displayAltText}](/static/images/${imagePath})`;
 
   textarea.value = textBefore + imageMarkdown + textAfter;
 
@@ -422,11 +417,15 @@ async function loadHeaderImageGallery() {
   }
 
   try {
-    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`);
+    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`, {
+      headers: {
+        'X-Site-Slug': 'structured'
+      }
+    });
     if (response.ok) {
       const data = await response.json();
       const images = data.data.images || [];
-      const headerImage = images.find(img => img.purpose === 'header');
+      const headerImage = images.find(img => img.is_header);
       if (headerImage) {
         displayHeaderImage(headerImage.file_path);
         // Update hidden field for backwards compatibility
@@ -505,13 +504,17 @@ async function loadHeaderImageMetadata(imagePath) {
   }
 
   try {
-    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`);
+    const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images`, {
+      headers: {
+        'X-Site-Slug': 'structured'
+      }
+    });
     if (response.ok) {
       const data = await response.json();
       const images = data.data.images || [];
 
       // Find the header image
-      const headerImage = images.find(img => img.purpose === 'header' && img.file_path === imagePath);
+      const headerImage = images.find(img => img.is_header && img.file_path === imagePath);
 
       if (headerImage) {
         // Update the metadata display
@@ -522,8 +525,8 @@ async function loadHeaderImageMetadata(imagePath) {
           altTextElement.textContent = headerImage.alt_text || 'Header Image';
         }
         if (captionElement) {
-          captionElement.textContent = headerImage.caption ? `[${headerImage.caption}]` : '';
-          captionElement.style.display = headerImage.caption ? 'block' : 'none';
+          captionElement.textContent = headerImage.title ? `[${headerImage.title}]` : '';
+          captionElement.style.display = headerImage.title ? 'block' : 'none';
         }
       } else {
         // Fallback if header image not found in API
@@ -609,7 +612,8 @@ async function deleteHeaderImageFromServer(headerImagePath) {
     const response = await fetch(`http://localhost:8081/api/v1/ssg/contents/${contentId}/images/delete`, {
       method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Site-Slug': 'structured'
       },
       body: JSON.stringify({
         image_path: headerImagePath
@@ -662,7 +666,8 @@ async function deleteContentImageFromServer(contentId, imagePath) {
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Site-Slug': 'structured'
       },
       body: JSON.stringify({
         image_path: imagePath

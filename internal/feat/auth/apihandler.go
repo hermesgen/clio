@@ -2,11 +2,9 @@ package auth
 
 import (
 	"context"
-	"embed"
 	"net/http"
 
 	"github.com/hermesgen/hm"
-	"github.com/jmoiron/sqlx"
 )
 
 const (
@@ -14,41 +12,23 @@ const (
 	resUserNameCap = "User"
 )
 
-type DBProvider interface {
-	GetDB() *sqlx.DB
-}
-
-type RepoFactory func(qm *hm.QueryManager, db *sqlx.DB, params hm.XParams) Repo
-
 type APIHandler struct {
 	*hm.APIHandler
-	svc         Service
-	dbProvider  DBProvider
-	assetsFS    embed.FS
-	engine      string
-	repoFactory RepoFactory
+	repo Repo
+	svc  Service
 }
 
-func NewAPIHandler(name string, dbProvider DBProvider, assetsFS embed.FS, engine string, repoFactory RepoFactory, params hm.XParams) *APIHandler {
+func NewAPIHandler(name string, repo Repo, params hm.XParams) *APIHandler {
 	h := hm.NewAPIHandler(name, params)
 	return &APIHandler{
-		APIHandler:  h,
-		dbProvider:  dbProvider,
-		assetsFS:    assetsFS,
-		engine:      engine,
-		repoFactory: repoFactory,
+		APIHandler: h,
+		repo:       repo,
 	}
 }
 
 func (h *APIHandler) Setup(ctx context.Context) error {
 	params := hm.XParams{Cfg: h.Cfg(), Log: h.Log()}
-	qm := hm.NewQueryManager(h.assetsFS, h.engine, params)
-	if err := qm.Setup(ctx); err != nil {
-		return err
-	}
-
-	repo := h.repoFactory(qm, h.dbProvider.GetDB(), params)
-	h.svc = NewService(repo, params)
+	h.svc = NewService(h.repo, params)
 	return nil
 }
 

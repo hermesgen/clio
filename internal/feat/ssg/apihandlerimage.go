@@ -23,19 +23,13 @@ func (h *APIHandler) CreateImage(w http.ResponseWriter, r *http.Request) {
 
 	newImage := NewImage() // Call constructor without arguments
 	// Assign fields from the decoded JSON to the newImage instance
-	newImage.ContentHash = image.ContentHash
-	newImage.Mime = image.Mime
+	newImage.SiteID = image.SiteID
+	newImage.FileName = image.FileName
+	newImage.FilePath = image.FilePath
 	newImage.Width = image.Width
 	newImage.Height = image.Height
-	newImage.FilesizeByte = image.FilesizeByte
-	newImage.Etag = image.Etag
 	newImage.Title = image.Title
 	newImage.AltText = image.AltText
-	newImage.AltLang = image.AltLang
-	newImage.LongDescription = image.LongDescription
-	newImage.Caption = image.Caption
-	newImage.Decorative = image.Decorative
-	newImage.DescribedByID = image.DescribedByID
 
 	newImage.GenCreateValues()
 
@@ -137,19 +131,13 @@ func (h *APIHandler) UpdateImage(w http.ResponseWriter, r *http.Request) {
 	updatedImage.SetID(id, true) // Set the ID from the URL on the decoded content
 
 	// Assign fields from the decoded JSON to the updatedImage instance
-	updatedImage.ContentHash = image.ContentHash
-	updatedImage.Mime = image.Mime
+	updatedImage.SiteID = image.SiteID
+	updatedImage.FileName = image.FileName
+	updatedImage.FilePath = image.FilePath
 	updatedImage.Width = image.Width
 	updatedImage.Height = image.Height
-	updatedImage.FilesizeByte = image.FilesizeByte
-	updatedImage.Etag = image.Etag
 	updatedImage.Title = image.Title
 	updatedImage.AltText = image.AltText
-	updatedImage.AltLang = image.AltLang
-	updatedImage.LongDescription = image.LongDescription
-	updatedImage.Caption = image.Caption
-	updatedImage.Decorative = image.Decorative
-	updatedImage.DescribedByID = image.DescribedByID
 
 	updatedImage.GenUpdateValues()
 

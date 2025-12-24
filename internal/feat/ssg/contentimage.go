@@ -9,14 +9,13 @@ import (
 // ContentImage represents the relationship between content and images
 type ContentImage struct {
 	// Common
-	ID        uuid.UUID `json:"id" db:"id"`
-	ContentID uuid.UUID `json:"content_id" db:"content_id"`
-	ImageID   uuid.UUID `json:"image_id" db:"image_id"`
-	Purpose   string    `json:"purpose" db:"purpose"` // 'header', 'content', 'thumbnail'
-	Position  int       `json:"position" db:"position"`
-	IsActive  bool      `json:"is_active" db:"is_active"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID         uuid.UUID `json:"id" db:"id"`
+	ContentID  uuid.UUID `json:"content_id" db:"content_id"`
+	ImageID    uuid.UUID `json:"image_id" db:"image_id"`
+	IsHeader   bool      `json:"is_header" db:"is_header"`
+	IsFeatured bool      `json:"is_featured" db:"is_featured"`
+	OrderNum   int       `json:"order_num" db:"order_num"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 
 	// Related objects (populated by joins)
 	Image   *Image   `json:"image,omitempty" db:"-"`
@@ -24,46 +23,45 @@ type ContentImage struct {
 }
 
 // NewContentImage creates a new ContentImage
-func NewContentImage(contentID, imageID uuid.UUID, purpose string) *ContentImage {
+func NewContentImage(contentID, imageID uuid.UUID, isHeader bool) *ContentImage {
 	now := time.Now()
 	return &ContentImage{
-		ID:        uuid.New(),
-		ContentID: contentID,
-		ImageID:   imageID,
-		Purpose:   purpose,
-		Position:  0,
-		IsActive:  true,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:         uuid.New(),
+		ContentID:  contentID,
+		ImageID:    imageID,
+		IsHeader:   isHeader,
+		IsFeatured: false,
+		OrderNum:   0,
+		CreatedAt:  now,
 	}
 }
 
 // SectionImage represents the relationship between sections and images
 type SectionImage struct {
 	// Common
-	ID        uuid.UUID `json:"id" db:"id"`
-	SectionID uuid.UUID `json:"section_id" db:"section_id"`
-	ImageID   uuid.UUID `json:"image_id" db:"image_id"`
-	Purpose   string    `json:"purpose" db:"purpose"` // 'header', 'blog_header'
-	IsActive  bool      `json:"is_active" db:"is_active"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID         uuid.UUID `json:"id" db:"id"`
+	SectionID  uuid.UUID `json:"section_id" db:"section_id"`
+	ImageID    uuid.UUID `json:"image_id" db:"image_id"`
+	IsHeader   bool      `json:"is_header" db:"is_header"`
+	IsFeatured bool      `json:"is_featured" db:"is_featured"`
+	OrderNum   int       `json:"order_num" db:"order_num"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 
 	// Related objects (populated by joins)
 	Image *Image `json:"image,omitempty" db:"-"`
 }
 
 // NewSectionImage creates a new SectionImage
-func NewSectionImage(sectionID uuid.UUID, imageID uuid.UUID, purpose string) *SectionImage {
+func NewSectionImage(sectionID uuid.UUID, imageID uuid.UUID, isHeader bool) *SectionImage {
 	now := time.Now()
 	return &SectionImage{
-		ID:        uuid.New(),
-		SectionID: sectionID,
-		ImageID:   imageID,
-		Purpose:   purpose,
-		IsActive:  true,
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:         uuid.New(),
+		SectionID:  sectionID,
+		ImageID:    imageID,
+		IsHeader:   isHeader,
+		IsFeatured: false,
+		OrderNum:   0,
+		CreatedAt:  now,
 	}
 }
 

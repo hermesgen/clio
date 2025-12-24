@@ -23,6 +23,7 @@ type Seeder struct {
 }
 
 type SeedFile struct {
+	SiteRef     string           `json:"site_ref"`
 	Layouts     []map[string]any `json:"layouts"`
 	Sections    []map[string]any `json:"sections"`
 	Contents    []map[string]any `json:"contents"`
@@ -40,9 +41,10 @@ func NewSeeder(assetsFS embed.FS, engine string, repo Repo, params hm.XParams) *
 }
 
 func (s *Seeder) Setup(ctx context.Context) error {
-	if err := s.JSONSeeder.Setup(ctx); err != nil {
-		return err
-	}
+	return s.JSONSeeder.Setup(ctx)
+}
+
+func (s *Seeder) Start(ctx context.Context) error {
 	return s.SeedAll(ctx)
 }
 
@@ -88,27 +90,40 @@ func (s *Seeder) SeedAll(ctx context.Context) error {
 }
 
 func (s *Seeder) seedData(ctx context.Context, data *SeedFile) error {
+	// Resolve site_ref to site_id
+	if data.SiteRef == "" {
+		return fmt.Errorf("site_ref is required in seed file")
+	}
+
+	site, err := s.repo.GetSiteBySlug(ctx, data.SiteRef)
+	if err != nil {
+		return fmt.Errorf("site '%s' not found: %w", data.SiteRef, err)
+	}
+	siteID := site.ID
+
 	userCache := make(map[string]auth.User)
 
 	layoutRefToID := make(map[string]uuid.UUID)
 	for _, lMap := range data.Layouts {
-		l := Newlayout(
+		layout := Newlayout(
 			lMap["name"].(string),
 			lMap["description"].(string),
 			lMap["code"].(string),
 		)
-		l.GenCreateValues()
-		if err := s.repo.CreateLayout(ctx, l); err != nil {
+		layout.SiteID = siteID
+		layout.GenCreateValues()
+		if err := s.repo.CreateLayout(ctx, layout); err != nil {
 			return fmt.Errorf("error inserting layout: %w", err)
 		}
 		if ref, ok := lMap["ref"].(string); ok {
-			layoutRefToID[ref] = l.GetID()
+			layoutRefToID[ref] = layout.GetID()
 		}
 	}
 
 	sectionRefToID := make(map[string]uuid.UUID)
 	for _, sMap := range data.Sections {
 		sec := Section{
+			SiteID:      siteID,
 			Name:        sMap["name"].(string),
 			Description: sMap["description"].(string),
 			Path:        sMap["path"].(string),
@@ -181,6 +196,7 @@ func (s *Seeder) seedData(ctx context.Context, data *SeedFile) error {
 		contentRef := cMap["ref"].(string)
 		if mMap, ok := metaByContentRef[contentRef]; ok {
 			meta := Meta{
+				SiteID:          siteID,
 				Description:     mMap["description"].(string),
 				Keywords:        mMap["keywords"].(string),
 				Robots:          mMap["robots"].(string),
@@ -193,6 +209,7 @@ func (s *Seeder) seedData(ctx context.Context, data *SeedFile) error {
 			con.Meta = meta
 		}
 
+		con.SiteID = siteID
 		con.GenID()
 		con.GenShortID()
 		now := time.Now()
@@ -211,7 +228,8 @@ func (s *Seeder) seedData(ctx context.Context, data *SeedFile) error {
 	tagRefToID := make(map[string]uuid.UUID)
 	for _, tMap := range data.Tags {
 		tag := Tag{
-			Name: tMap["name"].(string),
+			SiteID: siteID,
+			Name:   tMap["name"].(string),
 		}
 		tag.GenCreateValues()
 		existingTag, err := s.repo.GetTagByName(ctx, tag.Name)
@@ -247,11 +265,12 @@ func (s *Seeder) seedData(ctx context.Context, data *SeedFile) error {
 		}
 
 		p := Param{
+			SiteID:      siteID,
 			Name:        pMap["name"].(string),
-			Description: pMap["description"].(string),
+			Description:pMap["description"].(string),
 			Value:       pMap["value"].(string),
 			RefKey:      pMap["ref_key"].(string),
-			System:      systemVal, // Assign System here
+			System:      systemVal,
 		}
 		p.GenCreateValues()
 		if err := s.repo.CreateParam(ctx, &p); err != nil {

@@ -12,6 +12,7 @@ type Meta struct {
 	ID              uuid.UUID `json:"id" db:"id"`
 	ShortID         string    `json:"-" db:"short_id"`
 	ref             string    `json:"-"`
+	SiteID          uuid.UUID `json:"site_id" db:"site_id"`
 	ContentID       uuid.UUID `json:"content_id" db:"content_id"`
 	Summary         string    `json:"summary" db:"summary"`
 	Excerpt         string    `json:"excerpt" db:"excerpt"`

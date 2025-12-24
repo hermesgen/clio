@@ -1,6 +1,9 @@
 # Development-only targets
 # These are used by the developer during development and testing
 
+# Unified database location
+DB_FILE = _workspace/db/clio.db
+
 # Backup database in current directory
 backup-db:
 	$(call backup_db,.)
@@ -11,20 +14,76 @@ reset-db:
 	$(call backup_db,$(DB_BACKUP_DIR))
 	@echo "A fresh database will be created on next application start"
 
-# Seed image relations (run with server running)
-seed-images:
-	@echo "Seeding image database relations..."
-	@if [ ! -f "$(DB_FILE)" ]; then \
-		echo "ERROR: Database not found. Start the server first with 'make run'"; \
+# Seed image relations for a specific site (run with server running)
+# Usage: make seed-images-structured or make seed-images-blog
+seed-images-structured:
+	@echo "Seeding image relations for structured site..."
+	@SITE_SLUG=structured $(MAKE) seed-images-site
+
+seed-images-blog:
+	@echo "Seeding image relations for blog site..."
+	@SITE_SLUG=blog $(MAKE) seed-images-site
+
+seed-images-site:
+	@if [ -z "$(SITE_SLUG)" ]; then \
+		echo "ERROR: SITE_SLUG not set"; \
 		exit 1; \
 	fi; \
-	if [ -f "tmp/seeding/seed-images.go" ]; then \
-		echo "Running image seeding script..."; \
-		go run tmp/seeding/seed-images.go; \
-		echo "✓ Images seeded successfully"; \
-	else \
-		echo "ERROR: tmp/seeding/seed-images.go not found"; \
+	if [ ! -f "$(DB_FILE)" ]; then \
+		echo "ERROR: Database not found: $(DB_FILE)"; \
+		echo "Start the server first"; \
 		exit 1; \
+	fi; \
+	if [ -f "scripts/seeding/seed-images.go" ]; then \
+		echo "Running image seeding script for $(SITE_SLUG)..."; \
+		SITE_SLUG=$(SITE_SLUG) DB_FILE=$(DB_FILE) go run scripts/seeding/seed-images.go; \
+		echo "Images seeded successfully for $(SITE_SLUG)"; \
+	else \
+		echo "ERROR: scripts/seeding/seed-images.go not found"; \
+		exit 1; \
+	fi
+
+# Reset and seed structured site (multi-section, multiple content types)
+seed-structured:
+	@./scripts/seed-site.sh structured
+
+# Reset and seed blog site (single section, blog posts only)
+seed-blog:
+	@./scripts/seed-site.sh blog
+
+# Complete setup for a site (clean, seed images, generate markdown & HTML)
+setup-site:
+	@if [ -z "$(SITE_SLUG)" ]; then \
+		echo "ERROR: SITE_SLUG not set"; \
+		echo "Usage: make setup-site SITE_SLUG=structured"; \
+		exit 1; \
+	fi
+	@./scripts/setup/setup-site.sh $(SITE_SLUG) $(DB_FILE)
+
+# Verify seeding status for both sites
+verify-seeding:
+	@./scripts/verify-seeding.sh
+
+# Clean up active seed files after seeding
+clean-seed:
+	@echo "Removing active SSG seed files..."
+	@rm -f assets/seed/sqlite/*-ssg-*.json 2>/dev/null || true
+	@echo "✓ Cleaned up seed files"
+
+# Restore backed up seed files
+restore-seed:
+	@if [ -d ".seed-backup" ]; then \
+		LATEST=$$(ls -t .seed-backup/ | head -1); \
+		if [ -n "$$LATEST" ]; then \
+			echo "Restoring seeds from: .seed-backup/$$LATEST"; \
+			cp .seed-backup/$$LATEST/*-ssg-*.json assets/seed/sqlite/ 2>/dev/null && \
+			echo "✓ Seeds restored" || \
+			echo "No seed files found in backup"; \
+		else \
+			echo "No seed backups found"; \
+		fi; \
+	else \
+		echo "No .seed-backup directory found"; \
 	fi
 
 # Snapshot current images and their database relations
@@ -33,8 +92,8 @@ snapshot-images:
 	@TIMESTAMP=$$(date +%Y%m%d_%H%M%S); \
 	echo "Creating image snapshot: $$TIMESTAMP"; \
 	mkdir -p .snapshots/$$TIMESTAMP; \
-	if [ -d "_workspace/sites/default/documents/assets/images" ]; then \
-		cp -r _workspace/sites/default/documents/assets/images .snapshots/$$TIMESTAMP/; \
+	if [ -d "_workspace/sites/structured/documents/assets/images" ]; then \
+		cp -r _workspace/sites/structured/documents/assets/images .snapshots/$$TIMESTAMP/; \
 		echo "Images copied to .snapshots/$$TIMESTAMP/images"; \
 	else \
 		echo "No images directory found"; \
@@ -60,8 +119,8 @@ restore-images:
 	fi; \
 	echo "Restoring images from snapshot: $$snapshot"; \
 	if [ -d ".snapshots/$$snapshot/images" ]; then \
-		rm -rf _workspace/sites/default/documents/assets/images; \
-		cp -r .snapshots/$$snapshot/images _workspace/sites/default/documents/assets/; \
+		rm -rf _workspace/sites/structured/documents/assets/images; \
+		cp -r .snapshots/$$snapshot/images _workspace/sites/structured/documents/assets/; \
 		echo "Images restored from snapshot"; \
 	else \
 		echo "No images found in snapshot"; \
@@ -162,4 +221,4 @@ new-migration:
 	touch "$$filename"; \
 	echo "Created $$filename"
 
-.PHONY: backup-db reset-db seed-images snapshot-images restore-images list-snapshots set-blog-mode set-structured-mode run-blog run-structured show-mode run-stacked run-overlay run-boxed run-text-only runflags gencsrfkey new-migration
+.PHONY: backup-db reset-db seed-images-structured seed-images-blog seed-images-site seed-structured seed-blog verify-seeding clean-seed restore-seed snapshot-images restore-images list-snapshots set-blog-mode set-structured-mode run-blog run-structured show-mode run-stacked run-overlay run-boxed run-text-only runflags gencsrfkey new-migration

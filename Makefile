@@ -7,7 +7,7 @@ BUILD_DIR = build
 SRC_DIR = .
 MAIN_SRC = $(SRC_DIR)/main.go
 BINARY = $(BUILD_DIR)/$(APP_NAME)
-DB_FILE = _workspace/db/default/clio.db
+SITES_BASE = _workspace/sites
 DB_BACKUP_DIR = bak
 
 CSS_SOURCES = assets/static/css/prose.css assets/ssg/**/*.html assets/ssg/**/*.tmpl assets/static/css/main.css

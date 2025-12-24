@@ -55,7 +55,10 @@ func BuildIndexes(allContent []Content, allSections []Section, mode string) []*I
 				indexes["/"].Content = append(indexes["/"].Content, content)
 			}
 		} else {
-			indexes["/"].Content = append(indexes["/"].Content, content)
+			// Only add to root if not already added via section (i.e., sectionPath != "/")
+			if content.SectionPath != "/" {
+				indexes["/"].Content = append(indexes["/"].Content, content)
+			}
 		}
 
 		// Add to a dedicated blog index if it's a blog post (only in structured mode).

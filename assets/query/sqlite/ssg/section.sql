@@ -1,7 +1,7 @@
 
 -- Create
-INSERT INTO section (id, short_id, name, description, path, layout_id, created_by, updated_by, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO section (id, site_id, short_id, name, description, path, layout_id, layout_name, created_by, updated_by, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- Update
 UPDATE section SET

@@ -517,7 +517,7 @@ func (h *WebHandler) GenerateHTML(w http.ResponseWriter, r *http.Request) {
 
 	siteSlug, ok := feat.GetSiteSlugFromContext(r.Context())
 	if !ok {
-		siteSlug = "default"
+		siteSlug = "structured"
 	}
 
 	err := h.apiClient.Post(h.addSiteSlugHeader(r), "/ssg/generate-html", nil, nil)

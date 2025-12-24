@@ -114,14 +114,33 @@ func (sm *SessionManager) GetUserSession(r *http.Request) (userID uuid.UUID, sit
 }
 
 // SetSiteSlug updates only the site slug in the session (keeps user_id unchanged).
+// If no session exists, creates a new session with only site_slug.
 func (sm *SessionManager) SetSiteSlug(w http.ResponseWriter, r *http.Request, siteSlug string) error {
-	// Get current session
+	// Try to get current session
 	userID, _, err := sm.GetUserSession(r)
 	if err != nil {
-		return fmt.Errorf("failed to get current session: %w", err)
+		// No session exists, create one with only site_slug
+		value := map[string]string{
+			"site_slug": siteSlug,
+		}
+		encoded, err := sm.encoder.Encode(sessionCookieName, value)
+		if err != nil {
+			return fmt.Errorf("failed to encode session: %w", err)
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     sessionCookieName,
+			Value:    encoded,
+			Path:     "/",
+			MaxAge:   86400 * 30,
+			HttpOnly: true,
+			Secure:   false,
+			SameSite: http.SameSiteLaxMode,
+		})
+		return nil
 	}
 
-	// Set new session with updated site slug
+	// Session exists, update with new site slug
 	return sm.SetUserSession(w, userID, siteSlug)
 }
 

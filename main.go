@@ -17,7 +17,6 @@ import (
 	webssg "github.com/hermesgen/clio/internal/web/ssg"
 	"github.com/hermesgen/hm"
 	"github.com/hermesgen/hm/github"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -45,61 +44,56 @@ func main() {
 	app.PreviewHandler = core.NewMultiSitePreviewHandler(xparams)
 	templateManager := hm.NewTemplateManager(assetsFS, xparams)
 	fileServer := hm.NewFileServer(assetsFS, xparams)
-
-	sitesMigrator := hm.NewMigrator(assetsFS, engine, xparams)
-	sitesMigrator.SetPath("assets/migration/sqlite-sites")
-	adminDBManager := core.NewAdminDBManager(assetsFS, engine, sitesMigrator, xparams)
-
-	repoFactory := func(qm *hm.QueryManager, params hm.XParams) ssg.Repo {
-		return sqlite.NewClioRepo(qm, params)
-	}
-
-	repoManager := ssg.NewRepoManager(assetsFS, engine, repoFactory, xparams)
+	migrator := hm.NewMigrator(assetsFS, engine, xparams)
+	migrator.SetPath("assets/migration/sqlite")
+	dbManager := core.NewAdminDBManager(assetsFS, engine, migrator, xparams)
 	sessionManager := auth.NewSessionManager(xparams)
-	siteManager := ssg.NewSiteManager(adminDBManager, assetsFS, engine, repoFactory, xparams)
-
+	dynamicImageServer := core.NewDynamicImageServer(xparams)
 	apiRouter := hm.NewAPIRouter("api-router", xparams)
 	gitClient := github.NewClient(xparams)
 	ssgPublisher := ssg.NewPublisher(gitClient, xparams)
 	ssgGenerator := ssg.NewGenerator(xparams)
+	qm := hm.NewQueryManager(assetsFS, engine, xparams)
+	clioRepo := sqlite.NewClioRepo(qm, xparams)
+	siteManager := ssg.NewSiteManager(clioRepo, assetsFS, engine, xparams)
+	siteContextMw := ssg.NewSiteContextMw(sessionManager, siteManager, xparams)
+	authSeeder := auth.NewSeeder(assetsFS, engine, clioRepo, xparams)
+	ssgSeeder := ssg.NewSeeder(assetsFS, engine, clioRepo, xparams)
+	paramManager := ssg.NewParamManager(clioRepo, xparams)
+	imageManager := ssg.NewImageManager(xparams)
+	ssgAPIService := ssg.NewService(assetsFS, clioRepo, ssgGenerator, ssgPublisher, paramManager, imageManager, xparams)
+	ssgAPIHandler := ssg.NewAPIHandler("ssg-api-handler", ssgAPIService, siteManager, xparams)
+	ssgAPIRouter := ssg.NewAPIRouter(ssgAPIHandler, []hm.Middleware{hm.CORSMw, siteContextMw.APIHandler}, xparams)
+
+	authAPIHandler := auth.NewAPIHandler("auth-api-handler", clioRepo, xparams)
+	authAPIRouter := auth.NewAPIRouter(authAPIHandler, []hm.Middleware{}, xparams)
 
 	app.Add(workspace)
-	app.Add(adminDBManager)
-	app.Add(sitesMigrator)
+	app.Add(dbManager)
+	app.Add(migrator)
+	app.Add(qm)
+	app.Add(clioRepo)
 	app.Add(fm)
 	app.Add(fileServer)
+	app.Add(dynamicImageServer)
 	app.Add(templateManager)
 	app.Add(sessionManager)
-	app.Add(repoManager)
 	app.Add(siteManager)
 	app.Add(gitClient)
 	app.Add(ssgPublisher)
 	app.Add(ssgGenerator)
 	app.Add(apiRouter)
-
-	siteContextMw := ssg.NewSiteContextMw(sessionManager, siteManager, repoManager, xparams)
-
-	authRepoFactory := func(qm *hm.QueryManager, db *sqlx.DB, params hm.XParams) auth.Repo {
-		repo := sqlite.NewClioRepo(qm, params)
-		repo.SetDB(db)
-		return repo
-	}
-	authAPIHandler := auth.NewAPIHandler("auth-api-handler", adminDBManager, assetsFS, engine, authRepoFactory, xparams)
-	authAPIRouter := auth.NewAPIRouter(authAPIHandler, []hm.Middleware{}, xparams)
+	app.Add(authSeeder)
+	app.Add(ssgSeeder)
 	app.Add(authAPIHandler)
 	app.Add(authAPIRouter)
-
-	paramManager := ssg.NewParamManager(nil, xparams)
-	imageManager := ssg.NewImageManager(xparams)
-	ssgAPIService := ssg.NewService(assetsFS, nil, ssgGenerator, ssgPublisher, paramManager, imageManager, xparams)
-	ssgAPIHandler := ssg.NewAPIHandler("ssg-api-handler", ssgAPIService, siteManager, xparams)
-	ssgAPIRouter := ssg.NewAPIRouter(ssgAPIHandler, []hm.Middleware{hm.CORSMw, siteContextMw.APIHandler}, xparams)
 	app.Add(ssgAPIHandler)
 	app.Add(ssgAPIRouter)
 
 	ssgWebHandler := webssg.NewWebHandler(templateManager, fm, paramManager, siteManager, sessionManager, xparams)
 	ssgWebRouter := webssg.NewWebRouter(ssgWebHandler, append(fm.Middlewares(), siteContextMw.WebHandler), xparams)
 
+	// TODO: This also needs to be handled by lifecycle hooks
 	app.Router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
 			ssgWebHandler.RootRedirect(w, r)
@@ -111,6 +105,7 @@ func main() {
 		return
 	}
 
+	app.Router.HandleFunc("/static/images/*", dynamicImageServer.Handler())
 	app.MountAPI("/api/v1/auth", authAPIRouter)
 	app.MountAPI("/api/v1/ssg", ssgAPIRouter)
 	app.MountWeb("/ssg", ssgWebRouter)

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hermesgen/clio/internal/feat/auth"
 	"github.com/hermesgen/hm"
 )
@@ -14,31 +15,29 @@ import (
 type contextKey string
 
 const (
-	siteSlugKey      = contextKey("siteSlug")
-	siteRepoKey      = contextKey("siteRepo")
-	lastSiteCookie   = "last_site"
-	lastSiteMaxAge   = 3600 * 24 * 365 // 1 year
+	siteSlugKey    = contextKey("siteSlug")
+	siteIDKey      = contextKey("siteID")
+	lastSiteCookie = "last_site"
+	lastSiteMaxAge = 3600 * 24 * 365 // 1 year
 )
 
 type SiteRepoProvider interface {
 	GetSiteBySlug(ctx context.Context, slug string) (Site, error)
 }
 
-// SiteContextMw is middleware that extracts site slug from session and injects appropriate repo.
+// SiteContextMw is middleware that extracts site slug from session and injects site context.
 type SiteContextMw struct {
 	hm.Core
 	sessionMgr       *auth.SessionManager
 	siteRepoProvider SiteRepoProvider
-	repoManager      *RepoManager
 }
 
 // NewSiteContextMw creates a new site context middleware.
-func NewSiteContextMw(sessionMgr *auth.SessionManager, siteRepoProvider SiteRepoProvider, repoManager *RepoManager, params hm.XParams) *SiteContextMw {
+func NewSiteContextMw(sessionMgr *auth.SessionManager, siteRepoProvider SiteRepoProvider, params hm.XParams) *SiteContextMw {
 	return &SiteContextMw{
 		Core:             hm.NewCore("site-context-mw", params),
 		sessionMgr:       sessionMgr,
 		siteRepoProvider: siteRepoProvider,
-		repoManager:      repoManager,
 	}
 }
 
@@ -83,23 +82,9 @@ func (mw *SiteContextMw) WebHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		_, err := mw.siteRepoProvider.GetSiteBySlug(ctx, siteSlug)
+		site, err := mw.siteRepoProvider.GetSiteBySlug(ctx, siteSlug)
 		if err != nil {
 			mw.Log().Info("Site not found in database, clearing session", "slug", siteSlug)
-			http.SetCookie(w, &http.Cookie{
-				Name:     lastSiteCookie,
-				Value:    "",
-				Path:     "/",
-				MaxAge:   -1,
-				SameSite: http.SameSiteLaxMode,
-			})
-			http.Redirect(w, r, "/ssg/sites", http.StatusFound)
-			return
-		}
-
-		repo, err := mw.repoManager.GetRepoForSite(ctx, siteSlug)
-		if err != nil {
-			mw.Log().Info("Failed to access site database, clearing session", "slug", siteSlug, "error", err)
 			http.SetCookie(w, &http.Cookie{
 				Name:     lastSiteCookie,
 				Value:    "",
@@ -120,9 +105,9 @@ func (mw *SiteContextMw) WebHandler(next http.Handler) http.Handler {
 			SameSite: http.SameSiteLaxMode,
 		})
 
-		// Add site slug and repo to context
+		// Add site slug and ID to context
 		ctx = context.WithValue(ctx, siteSlugKey, siteSlug)
-		ctx = context.WithValue(ctx, siteRepoKey, repo)
+		ctx = context.WithValue(ctx, siteIDKey, site.ID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -138,22 +123,15 @@ func (mw *SiteContextMw) APIHandler(next http.Handler) http.Handler {
 			return
 		}
 
-		_, err := mw.siteRepoProvider.GetSiteBySlug(ctx, siteSlug)
+		site, err := mw.siteRepoProvider.GetSiteBySlug(ctx, siteSlug)
 		if err != nil {
 			mw.Log().Error("Site not found", "slug", siteSlug)
 			http.Error(w, "Site not found", http.StatusNotFound)
 			return
 		}
 
-		repo, err := mw.repoManager.GetRepoForSite(ctx, siteSlug)
-		if err != nil {
-			mw.Log().Error("Failed to get repo for site", "slug", siteSlug, "error", err)
-			http.Error(w, "Failed to access site database", http.StatusInternalServerError)
-			return
-		}
-
 		ctx = context.WithValue(ctx, siteSlugKey, siteSlug)
-		ctx = context.WithValue(ctx, siteRepoKey, repo)
+		ctx = context.WithValue(ctx, siteIDKey, site.ID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -168,10 +146,10 @@ func GetSiteSlugFromContext(ctx context.Context) (string, bool) {
 	return slug, ok
 }
 
-// GetRepoFromContext retrieves the site-specific repository from request context.
-func GetRepoFromContext(ctx context.Context) (Repo, bool) {
-	repo, ok := ctx.Value(siteRepoKey).(Repo)
-	return repo, ok
+// GetSiteIDFromContext retrieves site ID from request context.
+func GetSiteIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	id, ok := ctx.Value(siteIDKey).(uuid.UUID)
+	return id, ok
 }
 
 // RequireSiteSlug is a helper to get site slug or return error.
@@ -183,11 +161,11 @@ func RequireSiteSlug(ctx context.Context) (string, error) {
 	return slug, nil
 }
 
-// RequireRepo is a helper to get repo from context or return error.
-func RequireRepo(ctx context.Context) (Repo, error) {
-	repo, ok := GetRepoFromContext(ctx)
-	if !ok {
-		return nil, fmt.Errorf("no site repository in context")
+// RequireSiteID is a helper to get site ID from context or return error.
+func RequireSiteID(ctx context.Context) (uuid.UUID, error) {
+	id, ok := GetSiteIDFromContext(ctx)
+	if !ok || id == uuid.Nil {
+		return uuid.Nil, fmt.Errorf("no site ID in context")
 	}
-	return repo, nil
+	return id, nil
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"embed"
 
-	"github.com/hermesgen/clio/internal/feat/ssg"
 	"github.com/hermesgen/hm"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -28,7 +27,7 @@ func NewAdminDBManager(assetsFS embed.FS, engine string, migrator *hm.Migrator, 
 }
 
 func (m *AdminDBManager) Setup(ctx context.Context) error {
-	dsn := m.Cfg().StrValOrDef(ssg.SSGKey.AdminDSN, "file:_workspace/config/clioadmin.db?cache=shared&mode=rwc")
+	dsn := m.Cfg().StrValOrDef(hm.Key.DBSQLiteDSN, "file:_workspace/db/clio.db?cache=shared&mode=rwc")
 
 	db, err := sqlx.Connect("sqlite3", dsn)
 	if err != nil {
@@ -36,7 +35,7 @@ func (m *AdminDBManager) Setup(ctx context.Context) error {
 	}
 	m.db = db
 
-	m.Log().Infof("Connected to admin database: %s", dsn)
+	m.Log().Infof("Connected to database: %s", dsn)
 
 	m.migrator.SetDB(m.db.DB)
 	if err := m.migrator.Setup(ctx); err != nil {

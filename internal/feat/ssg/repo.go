@@ -8,6 +8,9 @@ import (
 	"github.com/hermesgen/hm"
 )
 
+// RepoFactory is a function that creates a Repo from a QueryManager.
+type RepoFactory func(*hm.QueryManager, hm.XParams) Repo
+
 type Repo interface {
 	hm.Repo
 
@@ -77,4 +80,7 @@ type Repo interface {
 	GetContentForTag(ctx context.Context, tagID uuid.UUID) ([]Content, error)
 
 	GetUserByUsername(ctx context.Context, username string) (auth.User, error)
+
+	// Site related
+	GetSiteBySlug(ctx context.Context, slug string) (Site, error)
 }

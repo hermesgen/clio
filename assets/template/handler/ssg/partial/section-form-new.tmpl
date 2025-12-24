@@ -204,7 +204,10 @@ async function deleteSectionImageFromServer(sectionId, imageType) {
   try {
     // TODO: API base URL should be configurable - hardcoded port is fragile
     const response = await fetch(`http://localhost:8081/api/v1/ssg/sections/${sectionId}/images/${imageType}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        'X-Site-Slug': 'structured'
+      }
     });
 
     if (!response.ok) {

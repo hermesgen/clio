@@ -113,14 +113,14 @@ func GetSiteBasePath(sitesBasePath, siteSlug string) string {
 }
 
 // GetSiteDBPath returns the database file path for a specific site.
-// e.g., _workspace/db/my-blog/clio.db or ~/.local/share/clio/db/my-blog/clio.db
-func GetSiteDBPath(dbBasePath, siteSlug string) string {
-	return filepath.Join(dbBasePath, siteSlug, "clio.db")
+// e.g., _workspace/sites/my-blog/db/clio.db
+func GetSiteDBPath(sitesBasePath, siteSlug string) string {
+	return filepath.Join(sitesBasePath, siteSlug, "db", "clio.db")
 }
 
 // GetSiteDBDSN returns the DSN for a specific site's database.
-func GetSiteDBDSN(dbBasePath, siteSlug string) string {
-	dbPath := GetSiteDBPath(dbBasePath, siteSlug)
+func GetSiteDBDSN(sitesBasePath, siteSlug string) string {
+	dbPath := GetSiteDBPath(sitesBasePath, siteSlug)
 	return fmt.Sprintf("file:%s?cache=shared&mode=rwc", dbPath)
 }
 

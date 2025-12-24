@@ -3,9 +3,9 @@
 
 -- Create
 INSERT INTO meta (
-    id, content_id, description, keywords, robots, canonical_url, sitemap, table_of_contents, share, comments, created_by, updated_by, created_at, updated_at
+    id, site_id, short_id, content_id, summary, excerpt, description, keywords, robots, canonical_url, sitemap, table_of_contents, share, comments, created_by, updated_by, created_at, updated_at
 ) VALUES (
-    :id, :content_id, :description, :keywords, :robots, :canonical_url, :sitemap, :table_of_contents, :share, :comments, :created_by, :updated_by, :created_at, :updated_at
+    :id, :site_id, :short_id, :content_id, :summary, :excerpt, :description, :keywords, :robots, :canonical_url, :sitemap, :table_of_contents, :share, :comments, :created_by, :updated_by, :created_at, :updated_at
 );
 
 -- GetByContentID

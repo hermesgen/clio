@@ -73,7 +73,7 @@ type Service interface {
 
 	// Content Image Management
 	UploadContentImage(ctx context.Context, contentID uuid.UUID, file multipart.File, header *multipart.FileHeader, imageType ImageType, altText, caption string) (*ImageProcessResult, error)
-	GetContentImages(ctx context.Context, contentID uuid.UUID) ([]Image, error)
+	GetContentImages(ctx context.Context, contentID uuid.UUID) ([]ImageWithMeta, error)
 	DeleteContentImage(ctx context.Context, contentID uuid.UUID, imagePath string) error
 
 	// Section Image Management
@@ -116,14 +116,10 @@ func NewService(assetsFS embed.FS, repo Repo, gen *Generator, publisher Publishe
 }
 
 func (svc *BaseService) getRepo(ctx context.Context) (Repo, error) {
-	repo, ok := GetRepoFromContext(ctx)
-	if ok {
-		return repo, nil
-	}
 	if svc.repo != nil {
 		return svc.repo, nil
 	}
-	return nil, fmt.Errorf("no repository available in context or service")
+	return nil, fmt.Errorf("no repository available in service")
 }
 
 // Publish delegates the publishing task to the underlying pub.
@@ -199,12 +195,17 @@ func (svc *BaseService) Plan(ctx context.Context) (PlanReport, error) {
 func (svc *BaseService) GenerateMarkdown(ctx context.Context) error {
 	svc.Log().Info("Service starting markdown generation")
 
+	siteSlug, ok := GetSiteSlugFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("no site slug in context")
+	}
+
 	contents, err := svc.repo.GetAllContentWithMeta(ctx)
 	if err != nil {
 		return fmt.Errorf("cannot get all content with meta: %w", err)
 	}
 
-	if err := svc.gen.Generate(contents); err != nil {
+	if err := svc.gen.Generate(ctx, siteSlug, contents); err != nil {
 		return fmt.Errorf("cannot generate markdown: %w", err)
 	}
 
@@ -216,9 +217,9 @@ func (svc *BaseService) GenerateMarkdown(ctx context.Context) error {
 func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 	svc.Log().Info("Service starting HTML generation")
 
-	repo, err := RequireRepo(ctx)
+	repo, err := svc.getRepo(ctx)
 	if err != nil {
-		return fmt.Errorf("repo not found in context: %w", err)
+		return fmt.Errorf("repo not available: %w", err)
 	}
 
 	contents, err := repo.GetAllContentWithMeta(ctx)
@@ -344,7 +345,7 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		contentImages, err := svc.GetContentImages(ctx, content.ID)
 		if err != nil {
 			svc.Log().Debug("Failed to load content images", "contentID", content.ID, "error", err)
-			contentImages = []Image{}
+			contentImages = []ImageWithMeta{}
 		}
 
 		imageContext := &ImageContext{
@@ -352,13 +353,10 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		}
 
 		for _, img := range contentImages {
-			svc.Log().Debug("Adding image to context", "filePath", img.FilePath, "caption", img.Caption, "altText", img.AltText)
+			svc.Log().Debug("Adding image to context", "filePath", img.FilePath, "altText", img.AltText)
 			imageContext.Images[img.FilePath] = ImageMetadata{
-				AltText:         img.AltText,
-				Caption:         img.Caption,
-				LongDescription: img.LongDescription,
-				Title:           img.Title,
-				Decorative:      img.Decorative,
+				AltText: img.AltText,
+				Title:   img.Title,
 			}
 		}
 
@@ -897,19 +895,11 @@ func (svc *BaseService) UploadContentImage(ctx context.Context, contentID uuid.U
 		return nil, fmt.Errorf("failed to process upload: %w", err)
 	}
 
-	contentHash, err := calculateFileHash(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to calculate file hash: %w", err)
-	}
-
 	// Create Image record with accessibility metadata - always create new record
 	image := Image{
-		Title:           result.Filename,
-		FilePath:        result.RelativePath,
-		ContentHash:     contentHash,
-		AltText:         altText,
-		Caption:         caption,
-		LongDescription: caption, // Use caption as long description for now
+		Title:    caption,
+		FilePath: result.RelativePath,
+		AltText:  altText,
 	}
 	image.GenCreateValues()
 
@@ -918,7 +908,8 @@ func (svc *BaseService) UploadContentImage(ctx context.Context, contentID uuid.U
 		return nil, fmt.Errorf("failed to create image record: %w", err)
 	}
 
-	contentImage := NewContentImage(contentID, image.GetID(), string(imageType))
+	isHeader := imageType == ImageTypeHeader
+	contentImage := NewContentImage(contentID, image.GetID(), isHeader)
 
 	if err := svc.repo.CreateContentImage(ctx, contentImage); err != nil {
 		svc.im.DeleteImage(ctx, result.RelativePath)
@@ -937,13 +928,28 @@ func (svc *BaseService) UploadContentImage(ctx context.Context, contentID uuid.U
 	return result, nil
 }
 
+// ImageWithMeta combines Image with ContentImage metadata for API responses
+type ImageWithMeta struct {
+	ID         uuid.UUID `json:"id"`
+	SiteID     uuid.UUID `json:"site_id"`
+	FileName   string    `json:"file_name"`
+	FilePath   string    `json:"file_path"`
+	Width      int       `json:"width"`
+	Height     int       `json:"height"`
+	Title      string    `json:"title"`
+	AltText    string    `json:"alt_text"`
+	IsHeader   bool      `json:"is_header"`
+	IsFeatured bool      `json:"is_featured"`
+	OrderNum   int       `json:"order_num"`
+}
+
 // GetContentImages returns all images for a specific content via relationships
-func (svc *BaseService) GetContentImages(ctx context.Context, contentID uuid.UUID) ([]Image, error) {
+func (svc *BaseService) GetContentImages(ctx context.Context, contentID uuid.UUID) ([]ImageWithMeta, error) {
 	svc.Log().Debugf("Getting content images: contentID=%s", contentID)
 
-	repo, err := RequireRepo(ctx)
+	repo, err := svc.getRepo(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("repo not found in context: %w", err)
+		return nil, fmt.Errorf("repo not available: %w", err)
 	}
 
 	contentImages, err := repo.GetContentImagesByContentID(ctx, contentID)
@@ -951,20 +957,28 @@ func (svc *BaseService) GetContentImages(ctx context.Context, contentID uuid.UUI
 		return nil, fmt.Errorf("failed to get content images: %w", err)
 	}
 
-	var images []Image
+	var images []ImageWithMeta
 	for _, ci := range contentImages {
-		if !ci.IsActive {
-			continue
-		}
-
 		image, err := repo.GetImage(ctx, ci.ImageID)
 		if err != nil {
 			svc.Log().Info("Failed to get image %s: %v", ci.ImageID, err)
 			continue
 		}
 
-		image.Purpose = ci.Purpose
-		images = append(images, image)
+		imageWithMeta := ImageWithMeta{
+			ID:         image.ID,
+			SiteID:     image.SiteID,
+			FileName:   image.FileName,
+			FilePath:   image.FilePath,
+			Width:      image.Width,
+			Height:     image.Height,
+			Title:      image.Title,
+			AltText:    image.AltText,
+			IsHeader:   ci.IsHeader,
+			IsFeatured: ci.IsFeatured,
+			OrderNum:   ci.OrderNum,
+		}
+		images = append(images, imageWithMeta)
 	}
 
 	return images, nil
@@ -978,7 +992,7 @@ func (svc *BaseService) GetContentHeaderImage(ctx context.Context, contentID uui
 	}
 
 	for _, ci := range contentImages {
-		if ci.Purpose == "header" && ci.IsActive {
+		if ci.IsHeader {
 			image, err := svc.repo.GetImage(ctx, ci.ImageID)
 			if err != nil {
 				svc.Log().Info("Failed to get header image %s: %v", ci.ImageID, err)
@@ -994,9 +1008,9 @@ func (svc *BaseService) GetContentHeaderImage(ctx context.Context, contentID uui
 
 // GetSectionHeaderImage returns the header image for a specific section
 func (svc *BaseService) GetSectionHeaderImage(ctx context.Context, sectionID uuid.UUID) (string, error) {
-	repo, err := RequireRepo(ctx)
+	repo, err := svc.getRepo(ctx)
 	if err != nil {
-		return "", fmt.Errorf("repo not found in context: %w", err)
+		return "", fmt.Errorf("repo not available: %w", err)
 	}
 
 	sectionImages, err := repo.GetSectionImagesBySectionID(ctx, sectionID)
@@ -1005,7 +1019,7 @@ func (svc *BaseService) GetSectionHeaderImage(ctx context.Context, sectionID uui
 	}
 
 	for _, si := range sectionImages {
-		if si.Purpose == "header" && si.IsActive {
+		if si.IsHeader {
 			image, err := repo.GetImage(ctx, si.ImageID)
 			if err != nil {
 				svc.Log().Info("Failed to get section header image %s: %v", si.ImageID, err)
@@ -1027,7 +1041,7 @@ func (svc *BaseService) GetSectionBlogHeaderImage(ctx context.Context, sectionID
 	}
 
 	for _, si := range sectionImages {
-		if si.Purpose == "blog_header" && si.IsActive {
+		if si.IsHeader {
 			image, err := svc.repo.GetImage(ctx, si.ImageID)
 			if err != nil {
 				svc.Log().Info("Failed to get section blog header image %s: %v", si.ImageID, err)
@@ -1108,19 +1122,11 @@ func (svc *BaseService) UploadSectionImage(ctx context.Context, sectionID uuid.U
 		return nil, fmt.Errorf("failed to process upload: %w", err)
 	}
 
-	contentHash, err := calculateFileHash(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to calculate file hash: %w", err)
-	}
-
 	// Create Image record with accessibility metadata - always create new record
 	image := Image{
-		Title:           result.Filename,
-		FilePath:        result.RelativePath,
-		ContentHash:     contentHash,
-		AltText:         altText,
-		Caption:         caption,
-		LongDescription: caption, // Use caption as long description for now
+		Title:    caption,
+		FilePath: result.RelativePath,
+		AltText:  altText,
 	}
 	image.GenCreateValues()
 
@@ -1129,13 +1135,8 @@ func (svc *BaseService) UploadSectionImage(ctx context.Context, sectionID uuid.U
 		return nil, fmt.Errorf("failed to create image record: %w", err)
 	}
 
-	purposeStr := string(imageType)
-	if imageType == ImageTypeSectionHeader {
-		purposeStr = "header"
-	} else if imageType == ImageTypeBlogHeader {
-		purposeStr = "blog_header"
-	}
-	sectionImage := NewSectionImage(sectionID, image.GetID(), purposeStr)
+	isHeader := imageType == ImageTypeSectionHeader || imageType == ImageTypeBlogHeader
+	sectionImage := NewSectionImage(sectionID, image.GetID(), isHeader)
 
 	if err := svc.repo.CreateSectionImage(ctx, sectionImage); err != nil {
 		svc.im.DeleteImage(ctx, result.RelativePath)
@@ -1159,15 +1160,9 @@ func (svc *BaseService) DeleteSectionImage(ctx context.Context, sectionID uuid.U
 
 	var imageToDelete *Image
 	var relationshipToDelete *SectionImage
-	purposeStr := string(imageType)
-	if imageType == ImageTypeSectionHeader {
-		purposeStr = "header"
-	} else if imageType == ImageTypeBlogHeader {
-		purposeStr = "blog_header"
-	}
 
 	for _, si := range sectionImages {
-		if si.Purpose == purposeStr && si.IsActive {
+		if si.IsHeader {
 			image, err := svc.repo.GetImage(ctx, si.ImageID)
 			if err != nil {
 				svc.Log().Info("Failed to get image %s: %v", si.ImageID, err)

@@ -297,6 +297,9 @@ async function uploadImage() {
 
     const response = await fetch(endpoint, {
       method: 'POST',
+      headers: {
+        'X-Site-Slug': 'structured'
+      },
       body: formData
     });
 
