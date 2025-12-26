@@ -140,10 +140,15 @@
     </div>
   </div>
 
-  
+
 
 </form>
 
+  {{/* Floating Zen Mode Controls */}}
+  <div class="floating-action-buttons">
+    <button type="button" id="zen-mode-btn-floating" class="p-2 rounded-md" title="Exit zen mode (alt+z)">💻</button>
+    <button type="button" id="dark-mode-btn-floating" class="p-2 rounded-md" title="Dark mode (alt+d)">🌙</button>
+  </div>
 
   {{/* Meta Modal */}}
   <div id="meta-modal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity">
@@ -156,20 +161,27 @@
                             <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">Publishing</h3>
                             <div class="mt-2 space-y-4" id="meta-fields">
                                 <div class="grid grid-cols-3 gap-x-4 gap-y-2">
+                                    <div>
+                                      <label for="kind" class="block text-sm font-medium text-gray-700">Type:</label>
+                                      <select id="kind" name="kind" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <option value="article" selected>Article</option>
+                                        <option value="blog">Blog</option>
+                                        <option value="series">Series</option>
+                                        <option value="page">Page</option>
+                                      </select>
+                                    </div>
                                     <div class="flex items-center pt-6">
                                       <input type="checkbox" id="featured" name="featured" value="true" {{ if .Data.Featured }}checked{{ end }} class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                                       <label for="featured" class="ml-2 block text-sm text-gray-900">Featured</label>
                                     </div>
-                                    <div class="col-span-2">
-                                      <label for="published_at" class="block text-sm font-medium text-gray-700">Published At:</label>
-                                      <input type="datetime-local" id="published_at" name="published_at" value="{{ if .Data.PublishedAt }}{{ .Data.PublishedAt.Format "2006-01-02T15:04" }}{{ end }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <div class="flex items-center pt-6">
+                                        <input type="checkbox" id="draft" name="draft" value="true" {{ if .Data.Draft }}checked{{ end }} class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <label for="draft" class="ml-2 block text-sm text-gray-900">Draft</label>
                                     </div>
-                                    <div class="col-start-2 col-span-2 flex justify-end">
-                                        <div class="flex items-center">
-                                            <input type="checkbox" id="draft" name="draft" value="true" {{ if .Data.Draft }}checked{{ end }} class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                            <label for="draft" class="ml-2 block text-sm text-gray-900">Draft</label>
-                                        </div>
-                                    </div>
+                                  </div>
+                                  <div>
+                                    <label for="published_at" class="block text-sm font-medium text-gray-700">Published At:</label>
+                                    <input type="datetime-local" id="published_at" name="published_at" value="{{ if .Data.PublishedAt }}{{ .Data.PublishedAt.Format "2006-01-02T15:04" }}{{ end }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                   </div>
                                 
                                   <fieldset class="border-t border-gray-200 pt-4">
@@ -699,4 +711,6 @@ document.addEventListener('DOMContentLoaded', function() {
   loadImageGallery(); // Load content images since section is visible by default
 });
 </script>
+
+<script src="/static/js/editor-enhancements.js"></script>
 {{ end }}

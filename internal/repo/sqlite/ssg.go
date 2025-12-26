@@ -520,6 +520,7 @@ func (repo *ClioRepo) GetAllLayouts(ctx context.Context) ([]ssg.Layout, error) {
 	for rows.Next() {
 		var (
 			id            uuid.UUID
+			siteID        uuid.UUID
 			shortID       string
 			name          string
 			description   string
@@ -532,8 +533,8 @@ func (repo *ClioRepo) GetAllLayouts(ctx context.Context) ([]ssg.Layout, error) {
 		)
 
 		err := rows.Scan(
-			&id, &shortID, &name, &description, &code,
-			&createdBy, &updatedBy, &createdAt, &updatedAt, &headerImageID,
+			&id, &siteID, &shortID, &name, &description, &code, &headerImageID,
+			&createdBy, &updatedBy, &createdAt, &updatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -541,6 +542,7 @@ func (repo *ClioRepo) GetAllLayouts(ctx context.Context) ([]ssg.Layout, error) {
 
 		layout := ssg.Newlayout(name, description, code)
 		layout.SetID(id)
+		layout.SetSiteID(siteID)
 		layout.SetShortID(shortID)
 		layout.SetCreatedBy(createdBy)
 		layout.SetUpdatedBy(updatedBy)

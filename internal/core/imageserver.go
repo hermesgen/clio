@@ -10,22 +10,22 @@ import (
 	"github.com/hermesgen/hm"
 )
 
-type DynamicImageServer struct {
+type AdminFileServer struct {
 	hm.Core
 }
 
-func NewDynamicImageServer(params hm.XParams) *DynamicImageServer {
-	core := hm.NewCore("dynamic-image-server", params)
-	return &DynamicImageServer{
+func NewAdminFileServer(params hm.XParams) *AdminFileServer {
+	core := hm.NewCore("admin-file-server", params)
+	return &AdminFileServer{
 		Core: core,
 	}
 }
 
-func (s *DynamicImageServer) Setup(ctx context.Context) error {
+func (s *AdminFileServer) Setup(ctx context.Context) error {
 	return nil
 }
 
-func (s *DynamicImageServer) Handler() http.HandlerFunc {
+func (s *AdminFileServer) Handler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		siteSlug, ok := ssg.GetSiteSlugFromContext(r.Context())
 		if !ok || siteSlug == "" {

@@ -80,6 +80,21 @@ func (h *APIHandler) CreateContent(w http.ResponseWriter, r *http.Request) {
 	content.GenCreateValues()
 	h.Log().Infof("API: Generated create values - ID: %s", content.ID)
 
+	// Set site_id from context
+	siteID, err := RequireSiteID(r.Context())
+	if err != nil {
+		h.Err(w, http.StatusBadRequest, "No site selected", err)
+		return
+	}
+	content.SiteID = siteID
+	h.Log().Infof("API: Set SiteID from context: %s", siteID)
+
+	// Set default kind if not provided
+	if content.Kind == "" {
+		content.Kind = "article"
+		h.Log().Infof("API: Set default Kind to 'article'")
+	}
+
 	err = h.svc.CreateContent(r.Context(), &content)
 	if err != nil {
 		msg := fmt.Sprintf(hm.ErrCannotCreateResource, resContentName)
@@ -121,6 +136,14 @@ func (h *APIHandler) UpdateContent(w http.ResponseWriter, r *http.Request) {
 
 	content.SetID(id, true)
 	content.GenUpdateValues()
+
+	// Set site_id from context
+	siteID, err := RequireSiteID(r.Context())
+	if err != nil {
+		h.Err(w, http.StatusBadRequest, "No site selected", err)
+		return
+	}
+	content.SiteID = siteID
 
 	err = h.svc.UpdateContent(r.Context(), &content)
 	if err != nil {

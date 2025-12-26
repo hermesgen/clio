@@ -90,6 +90,9 @@
 
   <div class="flex items-center justify-between gap-4">
     <div>
+        <button type="button" id="meta-modal-btn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-400">
+            Meta
+        </button>
         <button
           type="button"
           onclick="toggleImageSection()"
@@ -103,6 +106,97 @@
     </div>
   </div>
 </form>
+
+  {{/* Floating Zen Mode Controls */}}
+  <div class="floating-action-buttons">
+    <button type="button" id="zen-mode-btn-floating" class="p-2 rounded-md" title="Exit zen mode (alt+z)">💻</button>
+    <button type="button" id="dark-mode-btn-floating" class="p-2 rounded-md" title="Dark mode (alt+d)">🌙</button>
+  </div>
+
+  {{/* Meta Modal */}}
+  <div id="meta-modal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity">
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">Publishing</h3>
+                            <div class="mt-2 space-y-4" id="meta-fields">
+                                <div class="grid grid-cols-3 gap-x-4 gap-y-2">
+                                    <div>
+                                      <label for="kind" class="block text-sm font-medium text-gray-700">Type:</label>
+                                      <select id="kind" name="kind" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <option value="article" {{ if or (eq .Data.Kind "article") (eq .Data.Kind "") }}selected{{ end }}>Article</option>
+                                        <option value="blog" {{ if eq .Data.Kind "blog" }}selected{{ end }}>Blog</option>
+                                        <option value="series" {{ if eq .Data.Kind "series" }}selected{{ end }}>Series</option>
+                                        <option value="page" {{ if eq .Data.Kind "page" }}selected{{ end }}>Page</option>
+                                      </select>
+                                    </div>
+                                    <div class="flex items-center pt-6">
+                                      <input type="checkbox" id="featured" name="featured" value="true" {{ if .Data.Featured }}checked{{ end }} class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                      <label for="featured" class="ml-2 block text-sm text-gray-900">Featured</label>
+                                    </div>
+                                    <div class="flex items-center pt-6">
+                                        <input type="checkbox" id="draft" name="draft" value="true" {{ if .Data.Draft }}checked{{ end }} class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <label for="draft" class="ml-2 block text-sm text-gray-900">Draft</label>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label for="published_at" class="block text-sm font-medium text-gray-700">Published At:</label>
+                                    <input type="datetime-local" id="published_at" name="published_at" value="{{ if .Data.PublishedAt }}{{ .Data.PublishedAt.Format "2006-01-02T15:04" }}{{ end }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                  </div>
+
+                                  <fieldset class="border-t border-gray-200 pt-4">
+                                    <legend class="text-lg font-medium text-gray-900">SEO</legend>
+                                    <div class="space-y-4 mt-2">
+                                      <div>
+                                        <label for="description" class="block text-sm font-medium text-gray-700">Description:</label>
+                                        <textarea id="description" name="description" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">{{ .Data.Meta.Description }}</textarea>
+                                      </div>
+                                      <div>
+                                        <label for="keywords" class="block text-sm font-medium text-gray-700">Keywords:</label>
+                                        <input type="text" id="keywords" name="keywords" value="{{ .Data.Meta.Keywords }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                      </div>
+                                      <div>
+                                        <label for="robots" class="block text-sm font-medium text-gray-700">Robots:</label>
+                                        <input type="text" id="robots" name="robots" value="{{ .Data.Meta.Robots }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                      </div>
+                                      <div>
+                                        <label for="canonical_url" class="block text-sm font-medium text-gray-700">Canonical URL:</label>
+                                        <input type="url" id="canonical_url" name="canonical_url" value="{{ .Data.Meta.CanonicalURL }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                      </div>
+                                    </div>
+                                  </fieldset>
+
+                                  <fieldset class="border-t border-gray-200 pt-4">
+                                    <legend class="text-lg font-medium text-gray-900">Settings</legend>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="table_of_contents" name="table_of_contents" value="true" {{ if .Data.Meta.TableOfContents }}checked{{ end }} class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                            <label for="table_of_contents" class="ml-2 block text-sm text-gray-900">Show Table of Contents</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="share" name="share" value="true" {{ if .Data.Meta.Share }}checked{{ end }} class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                            <label for="share" class="ml-2 block text-sm text-gray-900">Enable Share Buttons</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="comments" name="comments" value="true" {{ if .Data.Meta.Comments }}checked{{ end }} class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                            <label for="comments" class="ml-2 block text-sm text-gray-900">Enable Comments</label>
+                                        </div>
+                                    </div>
+                                  </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <button type="button" id="meta-modal-close-btn" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <script>
@@ -618,4 +712,5 @@ function onImageUploadSuccess(result) {
   </div>
 </div>
 
+<script src="/static/js/editor-enhancements.js"></script>
 {{ end }}

@@ -115,11 +115,13 @@ func (i *Image) StringID() string {
 
 // ToWebImage converts a feat.Image model to a web.Image model.
 func ToWebImage(featImage feat.Image) Image {
+	url := "/static/images/" + featImage.FilePath
 	return Image{
 		ID:      featImage.ID,
 		ShortID: featImage.ShortID,
-		Name:    featImage.Title, // Map Title to Name
-		// Path and URL are not directly in feat.Image, they come from variants
+		Name:    featImage.Title,
+		Path:    featImage.FilePath,
+		URL:     url,
 		AltText: featImage.AltText,
 		Width:   featImage.Width,
 		Height:  featImage.Height,

@@ -1008,19 +1008,14 @@ func (svc *BaseService) GetContentHeaderImage(ctx context.Context, contentID uui
 
 // GetSectionHeaderImage returns the header image for a specific section
 func (svc *BaseService) GetSectionHeaderImage(ctx context.Context, sectionID uuid.UUID) (string, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return "", fmt.Errorf("repo not available: %w", err)
-	}
-
-	sectionImages, err := repo.GetSectionImagesBySectionID(ctx, sectionID)
+	sectionImages, err := svc.repo.GetSectionImagesBySectionID(ctx, sectionID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get layout images: %w", err)
 	}
 
 	for _, si := range sectionImages {
 		if si.IsHeader {
-			image, err := repo.GetImage(ctx, si.ImageID)
+			image, err := svc.repo.GetImage(ctx, si.ImageID)
 			if err != nil {
 				svc.Log().Info("Failed to get section header image %s: %v", si.ImageID, err)
 				continue

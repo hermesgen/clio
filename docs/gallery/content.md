@@ -1,105 +1,95 @@
-# Content Management Gallery
+# Clio Gallery
 
-This gallery showcases the content management features of Clio.
+This gallery showcases the features and interface of Clio, a lightweight static site generator.
 
-## Index Page
+## Site Index
 
-The main index page showing the section with its header image and content listings.
+The main site index page showing sections with header images and content listings.
 
-![Index Page](../img/index.png)
+![Site Index](../img/site-index.png)
 
-## Content List
+## Rendered Content
 
-The main view for listing all the content available in the system. Soon, the listed results will be paginated to avoid long scrolls.
+View the final rendered HTML of your content with proper styling.
+
+![Rendered Content](../img/view-rendered-content.png)
+
+---
+
+## Content Management
+
+### Content List
+
+Browse and manage all content in the system with filtering capabilities.
 
 ![Content List](../img/list-content.png)
 
-## New/Edit Content
+### Content Search
 
-The view for creating and editing content. It features a side-by-side markdown editor and preview, as well as fields for metadata like section, author, and tags.
+Search functionality to find content across your site.
 
-![New/Edit Content](../img/new-content.png)
+![Search Content](../img/search-content.png)
 
-## Metadata Editor
+### Image Upload
 
-A dedicated modal for editing content metadata, including publishing status, SEO fields, and other settings.
+Upload header and content images with alt text and captions.
 
-![Metadata Editor](../img/meta.png)
+![Upload Header Image](../img/upload-header-image.png)
 
-## Zen Mode
+### Content Metadata
 
-A distraction-free writing environment that focuses solely on the markdown editor.
+Edit publishing status, SEO fields, content type, and other metadata via a dedicated modal.
 
-![Zen Mode](../img/zen-mode.png)
+![Edit Content Metadata](../img/edit-content-metadata.png)
 
-## Image Upload
+### Zen Mode with Dark Theme
 
-Shows the image upload interface.
+Distraction-free writing environment with dark mode support for comfortable writing.
 
-![Image Upload](../img/image-upload.png)
-
-## New Content Editor
-
-Shows the markdown editor with the new preview function for the header image and content images.
-
-![New Content Editor](../img/new-content-editor.png)
-
-## Insert Image
-
-Shows how pressing on a content image adds it at the document's insertion point.
-
-![Insert Image](../img/insert-image.png)
-
-## Section Images
-
-Shows how it is now possible to "load" images that define the section's hero and the associated blog's image.
-
-![Section Images](../img/section-images.png)
-
-## Generated Markdown
-
-An example of a generated markdown file, including some related content code blocks.
-
-![Generated Markdown](../img/generated-html.png)
-
-## Section Index
-
-A draft of the section index page. Thumbnails currently display a default placeholder. Includes pagination controls and a configurable external search box (Google for now), which can be enabled via configuration.
-
-![Section Index](../img/section-index.png)
+![Zen Mode Dark](../img/zen-dark-mode.png)
 
 ---
 
-# Header Styles Gallery
+## Sections Management
 
-This section showcases the different header styles available in Clio.
+Organize content into sections, each with its own header image and configuration.
 
-## "Stacked" Style
-
-The title is rendered below the image.
-
-![Stacked Style](../img/generated-html-stacked.png)
+![Sections List](../img/list-sections.png)
 
 ---
 
-## "Overlay" Style
+## Layouts Management
 
-The title is rendered in white text centered directly on top of the image, with a dark scrim to ensure contrast.
+Customize the HTML layout templates for your generated sites.
 
-![Overlay Style](../img/generated-html-overlay.png)
-
----
-
-## "Boxed" Style (Frosted Glass)
-
-The default style. The title is rendered inside a frosted-glass effect stripe at the bottom of the image.
-
-![Boxed Style](../img/generated-html-boxed.png)
+![Layouts List](../img/list-layouts.png)
 
 ---
 
-## "Text-Only" Style
+## Assets Management
 
-A minimalist style with no header image, showing only the title.
+### Image Library
 
-![Text-Only Style](../img/generated-html-text-only.png)
+Manage and browse uploaded images with thumbnails.
+
+![Images List](../img/list-images.png)
+
+---
+
+## Configuration Parameters
+
+Configure site-wide settings and parameters.
+
+![Configuration Parameters](../img/list-config-params.png)
+
+---
+
+## Sites Management
+
+Manage multiple independent sites from a single Clio installation.
+
+![Sites List](../img/list-sites.png)
+
+---
+
+<p align="right"><i><a href="old/20251010-gallery.md">View previous gallery version...</a></i></p>

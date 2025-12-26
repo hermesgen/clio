@@ -1,6 +1,6 @@
 # Clio
 
-![Index Page](docs/img/index-crop.png)
+![Main Index](docs/img/main-index.png)
 <p align="right"><i><a href="docs/gallery/content.md">view gallery...</a></i></p>
 
 Clio is a lightweight static site generator written in Go. It enables you to create and publish static content with a simple, direct workflow. The project is a work in progress.

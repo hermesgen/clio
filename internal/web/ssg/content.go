@@ -19,6 +19,7 @@ type Content struct {
 	ShortID     string     `json:"-"`
 	UserID      uuid.UUID  `json:"user_id"`
 	SectionID   uuid.UUID  `json:"section_id"`
+	Kind        string     `json:"kind"`
 	Heading     string     `json:"heading"`
 	Body        string     `json:"body"`
 	Image       string     `json:"image"`
@@ -112,9 +113,10 @@ func ToWebContent(featContent feat.Content) Content {
 		ShortID:     featContent.ShortID,
 		UserID:      featContent.UserID,
 		SectionID:   featContent.SectionID,
+		Kind:        featContent.Kind,
 		Heading:     featContent.Heading,
 		Body:        featContent.Body,
-		Image:       "", // TODO: Get image via relationship
+		Image:       "",
 		Draft:       featContent.Draft,
 		Featured:    featContent.Featured,
 		PublishedAt: featContent.PublishedAt,

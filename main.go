@@ -48,7 +48,7 @@ func main() {
 	migrator.SetPath("assets/migration/sqlite")
 	dbManager := core.NewAdminDBManager(assetsFS, engine, migrator, xparams)
 	sessionManager := auth.NewSessionManager(xparams)
-	dynamicImageServer := core.NewDynamicImageServer(xparams)
+	adminFileServer := core.NewAdminFileServer(xparams)
 	apiRouter := hm.NewAPIRouter("api-router", xparams)
 	gitClient := github.NewClient(xparams)
 	ssgPublisher := ssg.NewPublisher(gitClient, xparams)
@@ -75,7 +75,7 @@ func main() {
 	app.Add(clioRepo)
 	app.Add(fm)
 	app.Add(fileServer)
-	app.Add(dynamicImageServer)
+	app.Add(adminFileServer)
 	app.Add(templateManager)
 	app.Add(sessionManager)
 	app.Add(siteManager)
@@ -105,7 +105,7 @@ func main() {
 		return
 	}
 
-	app.Router.HandleFunc("/static/images/*", dynamicImageServer.Handler())
+	app.Router.HandleFunc("/static/images/*", adminFileServer.Handler())
 	app.MountAPI("/api/v1/auth", authAPIRouter)
 	app.MountAPI("/api/v1/ssg", ssgAPIRouter)
 	app.MountWeb("/ssg", ssgWebRouter)

@@ -54,13 +54,13 @@ This workspace is selectively version controlled for development purposes:
 When you clone this repository fresh from the remote, you need to reconstruct the workspace. The database (`_workspace/db/clio.db`) is **already seeded** with all content and comes from version control, but the following need to be generated:
 
 **What's missing after clone:**
-- ❌ Workspace images (`sites/*/documents/assets/images/`)
-- ❌ Markdown exports (`sites/*/documents/markdown/`)
-- ❌ Generated HTML (`sites/*/documents/html/`)
+- Workspace images (`sites/*/documents/assets/images/`)
+- Markdown exports (`sites/*/documents/markdown/`)
+- Generated HTML (`sites/*/documents/html/`)
 
 **What's already there:**
-- ✅ Database with all content (`_workspace/db/clio.db`)
-- ✅ Source seed images (`assets/seed/images/`)
+- Database with all content (`_workspace/db/clio.db`)
+- Source seed images (`assets/seed/images/`)
 
 ### Step-by-Step Setup
 
@@ -102,8 +102,8 @@ SITE_SLUG=blog DB_FILE=_workspace/db/clio.db go run scripts/seeding/seed-images.
 
 **Expected output:**
 ```
-✓ Imported: image-name.png (1936x608, 1.5 MB)
-⚠ Error inserting image: UNIQUE constraint failed  # ← OK if re-running
+Imported: image-name.png (1936x608, 1.5 MB)
+Error inserting image: UNIQUE constraint failed  # ← OK if re-running
 ```
 
 **Note:** UNIQUE constraint errors are normal if you re-run this script - it means images are already seeded.
@@ -143,9 +143,9 @@ Open your browser:
 - **Admin interface:** http://localhost:8080/ssg/
 
 **Check that:**
-- ✅ Images display correctly (no placeholders or 404s)
-- ✅ All pages load without errors
-- ✅ Navigation works between sections
+- Images display correctly (no placeholders or 404s)
+- All pages load without errors
+- Navigation works between sections
 
 ### Quick Setup Script
 

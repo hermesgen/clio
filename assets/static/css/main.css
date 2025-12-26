@@ -136,6 +136,26 @@ body.zen-mode-active .floating-action-buttons {
     display: flex; /* Show floating buttons in Zen Mode */
 }
 
+.floating-action-buttons button {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    opacity: 0.5;
+    transition: opacity 0.3s, background-color 0.3s;
+    cursor: pointer;
+}
+
+.floating-action-buttons button:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: rgba(255, 255, 255, 1);
+}
+
+body.zen-mode-active #markdown-pane.dark-mode-active ~ .floating-action-buttons button {
+    background-color: rgba(40, 40, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
 .zen-mode-toggle {
     padding: 10px 15px;
     background-color: rgba(0, 0, 0, 0.7);

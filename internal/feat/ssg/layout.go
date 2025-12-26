@@ -65,6 +65,11 @@ func (l *Layout) SetID(id uuid.UUID, force ...bool) {
 	}
 }
 
+// SetSiteID sets the site ID.
+func (l *Layout) SetSiteID(siteID uuid.UUID) {
+	l.SiteID = siteID
+}
+
 // ShortID returns the short ID portion of the slug.
 func (l *Layout) GetShortID() string {
 	return l.ShortID
