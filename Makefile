@@ -45,6 +45,7 @@ help:
 	@echo "  coverage-func    - Show function-level coverage"
 	@echo "  coverage-check   - Check coverage meets 85% threshold"
 	@echo "  coverage-100     - Check coverage is 100%"
+	@echo "  coverage-summary - Display coverage table by package"
 	@echo "  lint             - Run golangci-lint"
 	@echo "  format           - Format code"
 	@echo "  vet              - Run go vet"
@@ -201,6 +202,32 @@ coverage-100: coverage-profile
 		echo "🎉 Perfect! 100% test coverage achieved!"; \
 	fi
 
+# Display coverage summary table by package
+coverage-summary:
+	@echo "🧪 Running coverage tests by package..."
+	@echo ""
+	@echo "Coverage by package:"
+	@echo "┌────────────────────────────────────────────────────────┬──────────┐"
+	@echo "│ Package                                                │ Coverage │"
+	@echo "├────────────────────────────────────────────────────────┼──────────┤"
+	@for pkg in $$(go list ./... | grep -v "/build/"); do \
+		pkgname=$$(echo $$pkg | sed 's|github.com/hermesgen/clio||' | sed 's|^/||'); \
+		if [ -z "$$pkgname" ]; then pkgname="."; fi; \
+		result=$$(go test -cover $$pkg 2>&1); \
+		cov=$$(echo "$$result" | grep -oE '[0-9]+\.[0-9]+% of statements' | grep -v '^0\.0%' | tail -1 | grep -oE '[0-9]+\.[0-9]+%'); \
+		if [ -z "$$cov" ]; then \
+			if echo "$$result" | grep -qE '\[no test files\]|no test files'; then \
+				cov="no tests"; \
+			elif echo "$$result" | grep -q "FAIL"; then \
+				cov="FAIL"; \
+			else \
+				cov="0.0%"; \
+			fi; \
+		fi; \
+		printf "│ %-54s │ %8s │\n" "$$pkgname" "$$cov"; \
+	done
+	@echo "└────────────────────────────────────────────────────────┴──────────┘"
+
 # Run go vet
 vet:
 	go vet ./...
@@ -222,4 +249,4 @@ clean:
 	@echo "Clean complete."
 
 # Phony targets
-.PHONY: all build run setenv clean generate-markdown generate-html clean-html regenerate-html publish test test-v test-short coverage coverage-profile coverage-html coverage-func coverage-check coverage-100 vet check ci build-css kill-ports lint format
+.PHONY: all build run setenv clean generate-markdown generate-html clean-html regenerate-html publish test test-v test-short coverage coverage-profile coverage-html coverage-func coverage-check coverage-100 coverage-summary vet check ci build-css kill-ports lint format
