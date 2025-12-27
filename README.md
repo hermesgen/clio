@@ -1,5 +1,8 @@
 # Clio
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/adrianpk/clio.svg)](https://pkg.go.dev/github.com/adrianpk/clio)
+[![codecov](https://codecov.io/gh/adrianpk/clio/branch/main/graph/badge.svg)](https://codecov.io/gh/adrianpk/clio)
+
 ![Main Index](docs/img/main-index.png)
 <p align="right"><i><a href="docs/gallery/content.md">view gallery...</a></i></p>
 
@@ -17,6 +20,36 @@ Clio is a lightweight static site generator written in Go. It enables you to cre
 Clio maintains a versioned record of both the Markdown source and the generated content, giving you a complete history of your site's evolution.
 
 The workflow is straightforward: write in Markdown, preview, and publish when ready.
+
+---
+
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+make test
+
+# Run tests with coverage
+make coverage
+
+# Run tests with HTML coverage report
+make coverage-html
+
+# Check if coverage meets 85% threshold
+make coverage-check
+```
+
+### Quality Checks
+
+```bash
+# Run all quality checks (format, vet, test, coverage, lint)
+make check
+
+# Run CI pipeline (strict)
+make ci
+```
 
 ---
 

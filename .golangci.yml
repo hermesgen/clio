@@ -1,14 +1,20 @@
 run:
-  timeout: 3m
+  timeout: 5m
+
 linters:
-  disable:
-    - unused
+  disable-all: true
   enable:
+    - gofmt
+    - goimports
     - govet
-    - staticcheck
     - errcheck
+    - staticcheck
+    - unused
     - gosimple
-    - gofumpt
-linters-settings:
-  gofumpt:
-    extra-rules: true
+    - ineffassign
+
+issues:
+  exclude-rules:
+    - path: "_test\\.go"
+      linters:
+        - errcheck

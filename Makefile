@@ -32,6 +32,26 @@ endef
 # Default target
 all: build
 
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  build            - Build the application"
+	@echo "  run              - Run the application"
+	@echo "  test             - Run all tests"
+	@echo "  test-v           - Run tests with verbose output"
+	@echo "  test-short       - Run tests in short mode"
+	@echo "  coverage         - Run tests with coverage report"
+	@echo "  coverage-html    - Generate HTML coverage report"
+	@echo "  coverage-func    - Show function-level coverage"
+	@echo "  coverage-check   - Check coverage meets 85% threshold"
+	@echo "  coverage-100     - Check coverage is 100%"
+	@echo "  lint             - Run golangci-lint"
+	@echo "  format           - Format code"
+	@echo "  vet              - Run go vet"
+	@echo "  check            - Run all quality checks (fmt, vet, test, coverage-check, lint)"
+	@echo "  ci               - Run CI pipeline (strict, 100% coverage)"
+	@echo "  clean            - Clean build and coverage files"
+
 # Build CSS
 build-css:
 	@echo "Building CSS..."
@@ -130,14 +150,76 @@ setenv:
 
 # Run tests
 test:
-	@echo "Running tests..."
-	@go test -v ./...
+	go test ./...
+
+# Run tests with verbose output
+test-v:
+	go test -v ./...
+
+# Run tests in short mode
+test-short:
+	go test -short ./...
+
+# Run tests with coverage
+coverage:
+	go test -cover ./...
+
+# Generate coverage profile and show percentage
+coverage-profile:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out | tail -1
+
+# Generate HTML coverage report
+coverage-html: coverage-profile
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+# Show function-level coverage
+coverage-func: coverage-profile
+	go tool cover -func=coverage.out
+
+# Check coverage percentage and fail if below threshold (85%)
+coverage-check: coverage-profile
+	@COVERAGE=$$(go tool cover -func=coverage.out | tail -1 | awk '{print $$3}' | sed 's/%//'); \
+	echo "Current coverage: $$COVERAGE%"; \
+	if [ $$(echo "$$COVERAGE < 85" | bc -l) -eq 1 ]; then \
+		echo "❌ Coverage $$COVERAGE% is below 85% threshold"; \
+		exit 1; \
+	else \
+		echo "✅ Coverage $$COVERAGE% meets the 85% threshold"; \
+	fi
+
+# Check coverage percentage and fail if not 100%
+coverage-100: coverage-profile
+	@COVERAGE=$$(go tool cover -func=coverage.out | tail -1 | awk '{print $$3}' | sed 's/%//'); \
+	echo "Current coverage: $$COVERAGE%"; \
+	if [ "$$COVERAGE" != "100.0" ]; then \
+		echo "❌ Coverage $$COVERAGE% is not 100%"; \
+		go tool cover -func=coverage.out | grep -v "100.0%"; \
+		exit 1; \
+	else \
+		echo "🎉 Perfect! 100% test coverage achieved!"; \
+	fi
+
+# Run go vet
+vet:
+	go vet ./...
+
+# Run all quality checks
+check: format vet test coverage-check lint
+	@echo "✅ All quality checks passed!"
+
+# CI pipeline - strict checks including 100% coverage
+ci: format vet test coverage-100 lint
+	@echo "🚀 CI pipeline passed!"
 
 # Clean the build directory
 clean:
 	@echo "Cleaning up..."
 	@rm -rf $(BUILD_DIR)
+	@go clean -testcache
+	@rm -f coverage.out coverage.html
 	@echo "Clean complete."
 
 # Phony targets
-.PHONY: all build run setenv clean generate-markdown generate-html clean-html regenerate-html publish test build-css kill-ports lint format
+.PHONY: all build run setenv clean generate-markdown generate-html clean-html regenerate-html publish test test-v test-short coverage coverage-profile coverage-html coverage-func coverage-check coverage-100 vet check ci build-css kill-ports lint format
