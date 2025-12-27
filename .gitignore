@@ -22,3 +22,5 @@ assets/static/css/prose.compiled.css
 scripts/priv/
 .snapshots/
 go.work*
+coverage.out
+coverage.html
