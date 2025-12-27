@@ -533,4 +533,3 @@ func (h *WebHandler) GenerateHTML(w http.ResponseWriter, r *http.Request) {
 	h.FlashSuccess(w, r, fmt.Sprintf("HTML generated successfully! Preview available at: %s", previewURL))
 	h.Redir(w, r, "/ssg/list-content", http.StatusSeeOther)
 }
-

@@ -3,7 +3,6 @@ package ssg_test
 import (
 	"context"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -101,7 +100,7 @@ func TestPublisherPublishFakeClient(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sourceDir, err := ioutil.TempDir("", "test-source-*")
+			sourceDir, err := os.MkdirTemp("", "test-source-*")
 			if err != nil {
 				t.Fatalf("cannot create temp source dir: %v", err)
 			}
@@ -112,12 +111,13 @@ func TestPublisherPublishFakeClient(t *testing.T) {
 				if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
 					t.Fatalf("cannot create dir for source file: %v", err)
 				}
-				if err := ioutil.WriteFile(filePath, []byte(content), 0644); err != nil {
+				if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
 					t.Fatalf("cannot write source file: %v", err)
 				}
 			}
 
-			publisher := ssg.NewPublisher(tt.gitClient, hm.WithLog(hm.NewLogger("debug")))
+			params := hm.XParams{Log: hm.NewLogger("debug")}
+			publisher := ssg.NewPublisher(tt.gitClient, params)
 
 			_, err = publisher.Publish(context.Background(), tt.config, sourceDir)
 

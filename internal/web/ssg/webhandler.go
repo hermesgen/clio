@@ -76,9 +76,9 @@ func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, paramManager 
 			return template.HTML(s)
 		},
 	}
-	
+
 	tm.RegisterFunctions(ssgFunctions)
-	
+
 	handler := hm.NewWebHandler(tm, flash, params)
 	apiClient := hm.NewAPIClient("web-api-client", func() string { return "" }, defaultAPIBaseURL, params)
 	return &WebHandler{

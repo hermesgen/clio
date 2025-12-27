@@ -93,10 +93,10 @@ func (s *Site) GenUpdateValues(userID ...uuid.UUID) {
 }
 
 // Audit method implementations
-func (s *Site) GetCreatedBy() uuid.UUID { return s.CreatedBy }
-func (s *Site) GetUpdatedBy() uuid.UUID { return s.UpdatedBy }
-func (s *Site) GetCreatedAt() time.Time { return s.CreatedAt }
-func (s *Site) GetUpdatedAt() time.Time { return s.UpdatedAt }
+func (s *Site) GetCreatedBy() uuid.UUID  { return s.CreatedBy }
+func (s *Site) GetUpdatedBy() uuid.UUID  { return s.UpdatedBy }
+func (s *Site) GetCreatedAt() time.Time  { return s.CreatedAt }
+func (s *Site) GetUpdatedAt() time.Time  { return s.UpdatedAt }
 func (s *Site) SetCreatedAt(t time.Time) { s.CreatedAt = t }
 func (s *Site) SetUpdatedAt(t time.Time) { s.UpdatedAt = t }
 func (s *Site) SetCreatedBy(u uuid.UUID) { s.CreatedBy = u }

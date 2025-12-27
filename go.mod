@@ -7,7 +7,7 @@ toolchain go1.24.7
 require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/securecookie v1.1.2
-	github.com/hermesgen/hm v0.1.0
+	github.com/hermesgen/hm v0.2.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/stretchr/testify v1.11.1
@@ -24,5 +24,3 @@ require (
 	golang.org/x/crypto v0.42.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/hermesgen/hm => ../hm

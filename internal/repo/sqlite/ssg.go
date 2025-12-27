@@ -25,7 +25,6 @@ var (
 	resImageVariant = "image_variant"
 )
 
-
 // sanitizeURLPath sanitizes a file path for safe use in URLs
 func sanitizeURLPath(path string) string {
 	// Split path into directory and filename components
@@ -1139,6 +1138,7 @@ func (repo *ClioRepo) GetSectionImagesBySectionID(ctx context.Context, sectionID
 	err := repo.db.SelectContext(ctx, &sectionImages, query, sectionID)
 	return sectionImages, err
 }
+
 // Site related
 
 func (repo *ClioRepo) GetSiteBySlug(ctx context.Context, slug string) (ssg.Site, error) {

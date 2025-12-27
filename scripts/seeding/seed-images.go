@@ -17,12 +17,12 @@ import (
 )
 
 type ImageMapping struct {
-	FileName    string
-	ContentRef  string
-	SectionRef  string // If set, this is a section image (use section name, e.g., "root")
-	AltText     string
-	Title       string
-	Purpose     string // header, content, thumbnail, blog_header
+	FileName   string
+	ContentRef string
+	SectionRef string // If set, this is a section image (use section name, e.g., "root")
+	AltText    string
+	Title      string
+	Purpose    string // header, content, thumbnail, blog_header
 }
 
 func main() {

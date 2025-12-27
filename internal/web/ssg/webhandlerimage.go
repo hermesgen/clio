@@ -316,7 +316,6 @@ func (h *WebHandler) renderImageForm(w http.ResponseWriter, r *http.Request, for
 		page.Form.SetSubmitButtonText("Update")
 	}
 
-
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-image")
 	if err != nil {
 		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
@@ -403,8 +402,8 @@ func (h *WebHandler) CreateImageVariant(w http.ResponseWriter, r *http.Request) 
 	featImageVariant.ImageID = imageID
 	featImageVariant.Kind = form.Name
 	featImageVariant.BlobRef = "/static/images/" + uuid.New().String() + ".jpg" // Use BlobRef and generate a new unique name
-	featImageVariant.Mime = "image/jpeg"                                         // Default mime type
-	featImageVariant.FilesizeByte = 0                                            // Size unknown for generated variants
+	featImageVariant.Mime = "image/jpeg"                                        // Default mime type
+	featImageVariant.FilesizeByte = 0                                           // Size unknown for generated variants
 	featImageVariant.Width = parentImage.Width
 	featImageVariant.Height = parentImage.Height
 
@@ -504,8 +503,8 @@ func (h *WebHandler) UpdateImageVariant(w http.ResponseWriter, r *http.Request) 
 	featImageVariant.ImageID = imageID
 	featImageVariant.Kind = form.Name
 	featImageVariant.BlobRef = "/static/images/" + uuid.New().String() + ".jpg" // Use BlobRef and generate a new unique name
-	featImageVariant.Mime = "image/jpeg"                                         // Default mime type
-	featImageVariant.FilesizeByte = 0                                            // Size unknown for generated variants
+	featImageVariant.Mime = "image/jpeg"                                        // Default mime type
+	featImageVariant.FilesizeByte = 0                                           // Size unknown for generated variants
 	featImageVariant.Width = parentImage.Width
 	featImageVariant.Height = parentImage.Height
 

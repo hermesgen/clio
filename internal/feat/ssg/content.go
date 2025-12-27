@@ -178,6 +178,6 @@ func (c Content) String() string {
 	if len(bodyPreview) > 50 {
 		bodyPreview = bodyPreview[:47] + "..."
 	}
-	return fmt.Sprintf("Content{ID: %s, Heading: %q, Body: %q, Draft: %t}", 
+	return fmt.Sprintf("Content{ID: %s, Heading: %q, Body: %q, Draft: %t}",
 		c.ID.String()[:8]+"...", c.Heading, bodyPreview, c.Draft)
 }

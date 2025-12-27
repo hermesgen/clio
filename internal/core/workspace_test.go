@@ -14,28 +14,29 @@ import (
 func TestWorkspaceSetup(t *testing.T) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		t.Fatalf("could not get user home directory: %v", err)
+		t.Fatalf("os.UserHomeDir: %v", err)
 	}
 
 	tempDir, err := os.MkdirTemp("", "clio-test-*")
 	if err != nil {
-		t.Fatalf("could not create temp dir: %v", err)
+		t.Fatalf("os.MkdirTemp: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
 
 	originalWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("could not get working directory: %v", err)
+		t.Fatalf("os.Getwd: %v", err)
 	}
 	if err := os.Chdir(tempDir); err != nil {
-		t.Fatalf("could not change to temp dir: %v", err)
+		t.Fatalf("os.Chdir: %v", err)
 	}
 	defer os.Chdir(originalWd)
 
-	testCases := []struct {
+	tests := []struct {
 		name          string
 		env           string
 		expectedPaths map[string]string
+		expectedDirs  []string
 	}{
 		{
 			name: "dev mode",
@@ -43,53 +44,54 @@ func TestWorkspaceSetup(t *testing.T) {
 			expectedPaths: map[string]string{
 				hm.Key.DBSQLiteDSN:       "file:" + filepath.Join(tempDir, "_workspace", "db", "clio.db") + "?cache=shared&mode=rwc",
 				ssg.SSGKey.WorkspacePath: filepath.Join(tempDir, "_workspace"),
-				ssg.SSGKey.DocsPath:      filepath.Join(tempDir, "_workspace", "documents"),
-				ssg.SSGKey.MarkdownPath:  filepath.Join(tempDir, "_workspace", "documents", "markdown"),
-				ssg.SSGKey.HTMLPath:      filepath.Join(tempDir, "_workspace", "documents", "html"),
-				ssg.SSGKey.AssetsPath:    filepath.Join(tempDir, "_workspace", "documents", "assets"),
-				ssg.SSGKey.ImagesPath:    filepath.Join(tempDir, "_workspace", "documents", "assets", "images"),
+				ssg.SSGKey.SitesBasePath: filepath.Join(tempDir, "_workspace", "sites"),
+			},
+			expectedDirs: []string{
+				filepath.Join(tempDir, "_workspace", "config"),
+				filepath.Join(tempDir, "_workspace", "db"),
+				filepath.Join(tempDir, "_workspace", "sites"),
 			},
 		},
 		{
 			name: "prod mode",
 			env:  "prod",
 			expectedPaths: map[string]string{
-				ssg.SSGKey.WorkspacePath: filepath.Join(homeDir, ".clio"),
-				ssg.SSGKey.DocsPath:      filepath.Join(homeDir, "Documents", "Clio"),
-				ssg.SSGKey.MarkdownPath:  filepath.Join(homeDir, "Documents", "Clio", "markdown"),
-				ssg.SSGKey.HTMLPath:      filepath.Join(homeDir, "Documents", "Clio", "html"),
-				ssg.SSGKey.AssetsPath:    filepath.Join(homeDir, "Documents", "Clio", "assets"),
-				ssg.SSGKey.ImagesPath:    filepath.Join(homeDir, "Documents", "Clio", "assets", "images"),
+				hm.Key.DBSQLiteDSN:       "file:" + filepath.Join(homeDir, ".clio", "clio.db") + "?cache=shared&mode=rwc",
+				ssg.SSGKey.WorkspacePath: filepath.Join(homeDir, "Documents", "Clio"),
+				ssg.SSGKey.SitesBasePath: filepath.Join(homeDir, "Documents", "Clio", "sites"),
+			},
+			expectedDirs: []string{
+				filepath.Join(homeDir, ".clio"),
+				filepath.Join(homeDir, ".config", "clio"),
+				filepath.Join(homeDir, "Documents", "Clio", "sites"),
 			},
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			cfg := hm.NewConfig()
-			cfg.Set(hm.Key.AppEnv, tc.env)
+			cfg.Set(hm.Key.AppEnv, tt.env)
 
 			logger := hm.NewLogger("")
-			ws := core.NewWorkspace(hm.WithCfg(cfg), hm.WithLog(logger))
+			params := hm.XParams{Cfg: cfg, Log: logger}
+			ws := core.NewWorkspace(params)
 
 			if err := ws.Setup(context.Background()); err != nil {
-				t.Fatalf("ws.Setup() failed: %v", err)
+				t.Fatalf("Setup: %v", err)
 			}
 
-			for key, expectedPath := range tc.expectedPaths {
-				actualPath := cfg.StrValOrDef(key, "")
-				if actualPath != expectedPath {
-					t.Errorf("config value for key %q: got %q, want %q", key, actualPath, expectedPath)
+			for key, want := range tt.expectedPaths {
+				got := cfg.StrValOrDef(key, "")
+				if got != want {
+					t.Errorf("cfg.Get(%q) = %q, want %q", key, got, want)
 				}
 			}
 
-			if tc.name == "dev mode" {
-				for key, path := range tc.expectedPaths {
-					if key == hm.Key.DBSQLiteDSN {
-						continue
-					}
-					if _, err := os.Stat(path); os.IsNotExist(err) {
-						t.Errorf("directory %q should have been created in dev mode", path)
+			if tt.env == "dev" {
+				for _, dir := range tt.expectedDirs {
+					if _, err := os.Stat(dir); os.IsNotExist(err) {
+						t.Errorf("directory not created: %q", dir)
 					}
 				}
 			}

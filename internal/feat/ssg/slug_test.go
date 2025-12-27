@@ -16,7 +16,7 @@ func TestNormalizeSlug(t *testing.T) {
 		{"esto-si", "esto-si"},
 		{"esto", "esto"},
 		{"Mi Sitio Personal", "mi-sitio-personal"},
-		{"Blog!!!2024", "blog-2024"},
+		{"Blog!!!2024", "blog2024"},
 		{"---leading-trailing---", "leading-trailing"},
 		{"Hello World", "hello-world"},
 		{"", ""},

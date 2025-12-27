@@ -10,9 +10,9 @@ import (
 // Image represents an image asset with its metadata.
 type Image struct {
 	// Common
-	ID       uuid.UUID `json:"id" db:"id"`
-	ShortID  string    `json:"-" db:"short_id"`
-	ref      string    `json:"-"`
+	ID      uuid.UUID `json:"id" db:"id"`
+	ShortID string    `json:"-" db:"short_id"`
+	ref     string    `json:"-"`
 
 	// Site relationship
 	SiteID uuid.UUID `json:"site_id" db:"site_id"`

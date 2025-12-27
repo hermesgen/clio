@@ -107,7 +107,7 @@ func (sm *SiteManager) createSiteDirectories(slug string) error {
 	sitesBasePath := sm.Cfg().StrValOrDef(SSGKey.SitesBasePath, "_workspace/sites")
 
 	dirs := []string{
-		GetSiteDBPath(sitesBasePath, slug),    // e.g., _workspace/sites/slug/db/clio.db
+		GetSiteDBPath(sitesBasePath, slug), // e.g., _workspace/sites/slug/db/clio.db
 		GetSiteMarkdownPath(sitesBasePath, slug),
 		GetSiteHTMLPath(sitesBasePath, slug),
 		GetSiteImagesPath(sitesBasePath, slug),

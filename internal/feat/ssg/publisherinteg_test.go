@@ -1,3 +1,5 @@
+//go:build integration
+
 package ssg_test
 
 import (
@@ -239,7 +241,8 @@ func TestPublisherIntegration(t *testing.T) {
 			require.NoError(t, err)
 
 			logger := hm.NewLogger("info")
-			publisher := ssg.NewPublisher(gitClient, hm.WithLog(logger))
+			params := hm.XParams{Log: logger}
+			publisher := ssg.NewPublisher(gitClient, params)
 
 			pubCfg := ssg.PublisherConfig{
 				RepoURL:     authRepoURL, // NOTE: We wse the authenticated

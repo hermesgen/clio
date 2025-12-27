@@ -25,6 +25,7 @@ func GetContentPath(content Content, mode string) string {
 // In structured mode:
 //   - blog posts: /{section-path}/blog/ or /blog/ for root
 //   - other types: /{section-path}/
+//
 // In blog mode: all content goes to /
 func GetIndexPath(sectionPath string, contentType string, mode string) string {
 	if mode == "blog" {

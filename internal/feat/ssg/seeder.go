@@ -267,7 +267,7 @@ func (s *Seeder) seedData(ctx context.Context, data *SeedFile) error {
 		p := Param{
 			SiteID:      siteID,
 			Name:        pMap["name"].(string),
-			Description:pMap["description"].(string),
+			Description: pMap["description"].(string),
 			Value:       pMap["value"].(string),
 			RefKey:      pMap["ref_key"].(string),
 			System:      systemVal,
